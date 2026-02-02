@@ -1,77 +1,110 @@
 import express from 'express';
 import axios from 'axios';
 import { UserToken } from '../models/UserToken.js';
-// IMPORTANTE: Importamos la función que arranca el listener
-import { startTwitchListener } from '../services/twitchListener.js'; 
+import { startTwitchListener } from '../services/twitchListener.js';
 
 const router = express.Router();
 
-router.post('/twitch/callback', async (req, res) => {
-  const { code } = req.body;
-  
-  if (!code) return res.status(400).json({ error: 'Falta el código' });
+/**
+ * 1️⃣ INICIO LOGIN TWITCH
+ * GET /auth/twitch
+ */
+router.get('/twitch', (req, res) => {
+  const params = new URLSearchParams({
+    client_id: process.env.TWITCH_CLIENT_ID,
+    redirect_uri: process.env.TWITCH_REDIRECT_URI,
+    response_type: 'code',
+    scope: 'channel:read:redemptions channel:manage:redemptions',
+  });
+
+  const twitchAuthUrl = `https://id.twitch.tv/oauth2/authorize?${params.toString()}`;
+
+  res.redirect(twitchAuthUrl);
+});
+
+/**
+ * 2️⃣ CALLBACK DE TWITCH
+ * GET /auth/twitch/callback?code=XXX
+ */
+router.get('/twitch/callback', async (req, res) => {
+  const { code } = req.query;
+
+  if (!code) {
+    return res.status(400).json({ error: 'Falta el código de Twitch' });
+  }
 
   try {
-    console.log("🔄 Intercambiando código por token con Twitch...");
+    console.log('🔄 Intercambiando código por token con Twitch...');
 
-    // 1. Canjear código por tokens
-    const tokenResponse = await axios.post('https://id.twitch.tv/oauth2/token', null, {
+    // 1. Canjear code por token
+    const tokenResponse = await axios.post(
+      'https://id.twitch.tv/oauth2/token',
+      null,
+      {
         params: {
-            client_id: process.env.TWITCH_CLIENT_ID,
-            client_secret: process.env.TWITCH_CLIENT_SECRET,
-            code: code,
-            grant_type: 'authorization_code',
-            redirect_uri: 'http://localhost:5173/auth-callback'
-        }
-    });
+          client_id: process.env.TWITCH_CLIENT_ID,
+          client_secret: process.env.TWITCH_CLIENT_SECRET,
+          code,
+          grant_type: 'authorization_code',
+          redirect_uri: process.env.TWITCH_REDIRECT_URI,
+        },
+      }
+    );
 
-    // --- EL CHISMOSO: VERIFICAMOS PERMISOS ---
-    console.log("👀 SCOPES RECIBIDOS DE TWITCH:", tokenResponse.data.scope);
-    // ----------------------------------------
+    const { access_token, refresh_token, expires_in, scope } =
+      tokenResponse.data;
 
-    const { access_token, refresh_token, expires_in } = tokenResponse.data;
+    console.log('👀 SCOPES RECIBIDOS:', scope);
 
-    // 2. Obtener datos del usuario
-    const userResponse = await axios.get('https://api.twitch.tv/helix/users', {
+    // 2. Obtener usuario
+    const userResponse = await axios.get(
+      'https://api.twitch.tv/helix/users',
+      {
         headers: {
-            'Client-ID': process.env.TWITCH_CLIENT_ID,
-            'Authorization': `Bearer ${access_token}`
-        }
-    });
+          'Client-ID': process.env.TWITCH_CLIENT_ID,
+          Authorization: `Bearer ${access_token}`,
+        },
+      }
+    );
 
     const userData = userResponse.data.data[0];
     const userId = userData.id;
 
-    // 3. Guardar en MongoDB
+    // 3. Guardar en Mongo
     await UserToken.findOneAndUpdate(
-        { userId },
-        {
-            userId,
-            username: userData.login,
-            accessToken: access_token,
-            refreshToken: refresh_token,
-            expiresIn: expires_in,
-            obtainmentTimestamp: Date.now(),
-            scope: tokenResponse.data.scope
-        },
-        { upsert: true, new: true }
+      { userId },
+      {
+        userId,
+        username: userData.login,
+        accessToken: access_token,
+        refreshToken: refresh_token,
+        expiresIn: expires_in,
+        obtainmentTimestamp: Date.now(),
+        scope,
+      },
+      { upsert: true, new: true }
     );
 
-    console.log(`✅ ¡Login Exitoso! Usuario: ${userData.display_name} (${userId})`);
+    console.log(`✅ Login Twitch OK: ${userData.display_name}`);
 
-    // 4. Arrancar el listener inmediatamente
+    // 4. Arrancar listener
     try {
-        await startTwitchListener(userId); 
-        console.log("🎧 Listener invocado correctamente.");
-    } catch (listenerError) {
-        console.error("⚠️ Error al arrancar listener:", listenerError.message);
+      await startTwitchListener(userId);
+      console.log('🎧 Listener iniciado');
+    } catch (e) {
+      console.error('⚠️ Error listener:', e.message);
     }
-    
-    res.json({ success: true, userId, name: userData.display_name });
+
+    // ⚠️ POR AHORA RESPONDEMOS TEXTO
+    // luego el front va a manejar esto
+    res.send(`Login OK. Usuario ${userData.display_name}`);
 
   } catch (error) {
-    console.error("❌ Error en Auth:", error.response?.data || error.message);
-    res.status(500).json({ error: 'Falló la autenticación con Twitch' });
+    console.error(
+      '❌ Error OAuth Twitch:',
+      error.response?.data || error.message
+    );
+    res.status(500).json({ error: 'Falló autenticación con Twitch' });
   }
 });
 
