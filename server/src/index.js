@@ -17,21 +17,27 @@ import { Trigger } from './models/Trigger.js';
 import { startTwitchListener } from './services/twitchListener.js';
 import { UserToken } from './models/UserToken.js';
 
-// --- CONFIG ---
+// ----------------------------------------------------
+// CONFIG
+// ----------------------------------------------------
 dotenv.config();
 
 const app = express();
 const httpServer = createServer(app);
 
-// --- SOCKET.IO ---
+// ----------------------------------------------------
+// SOCKET.IO
+// ----------------------------------------------------
 export const io = new Server(httpServer, {
   cors: {
-    origin: "*", // después lo cerramos
+    origin: "*",
     methods: ["GET", "POST"]
   }
 });
 
-// --- MIDDLEWARES ---
+// ----------------------------------------------------
+// MIDDLEWARES
+// ----------------------------------------------------
 app.use(cors());
 app.use(express.json());
 
@@ -46,10 +52,17 @@ app.use('/api', limiter);
 app.use('/upload', limiter);
 
 // ----------------------------------------------------
-// 🔥 FIREBASE CONFIG (RAILWAY / PRODUCCIÓN)
+// HEALTH CHECK (CLAVE PARA RAILWAY)
+// ----------------------------------------------------
+app.get('/', (req, res) => {
+  res.status(200).send('OK');
+});
+
+// ----------------------------------------------------
+// FIREBASE CONFIG (PRODUCCIÓN)
 // ----------------------------------------------------
 if (!process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
-  console.error("❌ ERROR CRÍTICO: Falta FIREBASE_SERVICE_ACCOUNT_JSON");
+  console.error("❌ Falta FIREBASE_SERVICE_ACCOUNT_JSON");
   process.exit(1);
 }
 
@@ -64,17 +77,23 @@ initializeApp({
 
 const bucket = getStorage().bucket();
 
-// --- MULTER ---
+// ----------------------------------------------------
+// MULTER
+// ----------------------------------------------------
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 } // 5MB
 });
 
-// --- RUTAS ---
+// ----------------------------------------------------
+// RUTAS
+// ----------------------------------------------------
 app.use('/auth', authRoutes);
 app.use('/api', apiRoutes);
 
-// --- SUBIDA DE ARCHIVOS ---
+// ----------------------------------------------------
+// SUBIDA DE ARCHIVOS
+// ----------------------------------------------------
 app.post('/upload', upload.single('video'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'No se subió ningún archivo' });
@@ -119,7 +138,9 @@ app.post('/upload', upload.single('video'), async (req, res) => {
   }
 });
 
-// --- TEST MANUAL ---
+// ----------------------------------------------------
+// TEST MANUAL
+// ----------------------------------------------------
 app.post('/test-trigger', async (req, res) => {
   const { twitchRewardId, userId } = req.body;
 
@@ -136,14 +157,18 @@ app.post('/test-trigger', async (req, res) => {
   res.json({ success: true });
 });
 
-// --- SOCKETS ---
+// ----------------------------------------------------
+// SOCKETS
+// ----------------------------------------------------
 io.on('connection', (socket) => {
   socket.on('join-overlay', (userId) => {
     if (userId) socket.join(`overlay-${userId}`);
   });
 });
 
-// --- RESTORE LISTENERS ---
+// ----------------------------------------------------
+// RESTORE LISTENERS
+// ----------------------------------------------------
 async function restoreListeners() {
   console.log("🔄 Restaurando listeners de Twitch...");
   const users = await UserToken.find({});
@@ -154,24 +179,31 @@ async function restoreListeners() {
   }
 }
 
-// --- DB & SERVER ---
+// ----------------------------------------------------
+// SERVER FIRST (CLAVE PARA RAILWAY)
+// ----------------------------------------------------
 const PORT = process.env.PORT || 3000;
+
+httpServer.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Server corriendo en puerto ${PORT}`);
+});
+
+// ----------------------------------------------------
+// MONGO EN BACKGROUND
+// ----------------------------------------------------
 const MONGO_URI = process.env.MONGO_URI;
 
 if (!MONGO_URI) {
   console.error("❌ Falta MONGO_URI");
-  process.exit(1);
+} else {
+  mongoose.connect(MONGO_URI)
+    .then(() => {
+      console.log("✅ Mongo conectado");
+      restoreListeners();
+    })
+    .catch(err => {
+      console.error("❌ Error conectando a Mongo:", err);
+    });
 }
 
-mongoose.connect(MONGO_URI)
-  .then(() => {
-    httpServer.listen(PORT, '0.0.0.0', () => {
-      console.log(`🚀 Server corriendo en puerto ${PORT}`);
-      restoreListeners();
-    });
-  })
-  .catch(err => {
-    console.error('❌ Error conectando a Mongo:', err);
-    process.exit(1);
-  });
 export default app;
