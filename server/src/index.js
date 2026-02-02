@@ -5,10 +5,10 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import multer from 'multer';
+import rateLimit from 'express-rate-limit';
+
 import { initializeApp, cert } from 'firebase-admin/app';
 import { getStorage } from 'firebase-admin/storage';
-import { createRequire } from 'module'; 
-import rateLimit from 'express-rate-limit';
 
 // IMPORTAMOS RUTAS Y MODELOS
 import apiRoutes from './routes/api.js';
@@ -17,64 +17,55 @@ import { Trigger } from './models/Trigger.js';
 import { startTwitchListener } from './services/twitchListener.js';
 import { UserToken } from './models/UserToken.js';
 
-// --- CONFIGURACIÓN ---
+// --- CONFIG ---
 dotenv.config();
-const require = createRequire(import.meta.url);
 
 const app = express();
 const httpServer = createServer(app);
 
 // --- SOCKET.IO ---
-export const io = new Server(httpServer, { 
-  cors: { 
-    origin: "*", // En producción cambiar por tu dominio real
+export const io = new Server(httpServer, {
+  cors: {
+    origin: "*", // después lo cerramos
     methods: ["GET", "POST"]
-  } 
-}); 
+  }
+});
 
-// --- MIDDLEWARES DE SEGURIDAD ---
-app.use(cors()); 
+// --- MIDDLEWARES ---
+app.use(cors());
 app.use(express.json());
 
-// Limitador de peticiones (Rate Limit)
+// Rate limit
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, 
-  max: 100, 
+  windowMs: 15 * 60 * 1000,
+  max: 100,
   message: "Demasiadas peticiones desde esta IP, intentá más tarde."
 });
 
 app.use('/api', limiter);
 app.use('/upload', limiter);
 
-// --- FIREBASE CONFIG (MODO HÍBRIDO: LOCAL vs NUBE) ---
-let serviceAccount;
-
-if (process.env.FIREBASE_CREDENTIALS) {
-    // 1. MODO PRODUCCIÓN (Railway/Docker): Leemos la variable de entorno Base64
-    console.log("🔥 Cargando credenciales de Firebase desde ENV (Base64)");
-    const buffer = Buffer.from(process.env.FIREBASE_CREDENTIALS, 'base64');
-    serviceAccount = JSON.parse(buffer.toString('utf-8'));
-} else {
-    // 2. MODO DESARROLLO (Local): Leemos el archivo físico
-    try {
-        console.log("📂 Cargando credenciales de Firebase desde archivo local");
-        serviceAccount = require('../serviceAccountKey.json');
-    } catch (error) {
-        console.error("❌ ERROR CRÍTICO: No se encontraron credenciales de Firebase.");
-        console.error("   - Asegurate de tener 'serviceAccountKey.json' en local.");
-        console.error("   - O la variable 'FIREBASE_CREDENTIALS' en producción.");
-    }
+// ----------------------------------------------------
+// 🔥 FIREBASE CONFIG (RAILWAY / PRODUCCIÓN)
+// ----------------------------------------------------
+if (!process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
+  console.error("❌ ERROR CRÍTICO: Falta FIREBASE_SERVICE_ACCOUNT_JSON");
+  process.exit(1);
 }
+
+const serviceAccount = JSON.parse(
+  process.env.FIREBASE_SERVICE_ACCOUNT_JSON
+);
 
 initializeApp({
   credential: cert(serviceAccount),
-  storageBucket: 'triggerapp-dd86c.firebasestorage.app' // Tu bucket
+  storageBucket: 'triggerapp-dd86c.firebasestorage.app'
 });
 
 const bucket = getStorage().bucket();
 
 // --- MULTER ---
-const upload = multer({ 
+const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 } // 5MB
 });
@@ -83,14 +74,12 @@ const upload = multer({
 app.use('/auth', authRoutes);
 app.use('/api', apiRoutes);
 
-// Subida de Archivos
+// --- SUBIDA DE ARCHIVOS ---
 app.post('/upload', upload.single('video'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'No se subió ningún archivo' });
     if (!req.body.twitchRewardId) return res.status(400).json({ error: 'Falta el twitchRewardId' });
     if (!req.body.userId) return res.status(400).json({ error: 'Falta el userId' });
-
-    console.log(`Subiendo archivo para ${req.body.userId}...`);
 
     const fileName = `triggers/${Date.now()}_${req.file.originalname}`;
     const file = bucket.file(fileName);
@@ -103,23 +92,23 @@ app.post('/upload', upload.single('video'), async (req, res) => {
 
     stream.on('finish', async () => {
       try {
-        await file.makePublic(); 
+        await file.makePublic();
+
         const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
-        
+
         const trigger = await Trigger.findOneAndUpdate(
-            { twitchRewardId: req.body.twitchRewardId }, 
-            { 
-                videoUrl: publicUrl,
-                fileName: fileName,
-                twitchRewardId: req.body.twitchRewardId,
-                userId: req.body.userId 
-            },
-            { new: true, upsert: true } 
+          { twitchRewardId: req.body.twitchRewardId, userId: req.body.userId },
+          {
+            videoUrl: publicUrl,
+            fileName,
+            twitchRewardId: req.body.twitchRewardId,
+            userId: req.body.userId
+          },
+          { new: true, upsert: true }
         );
-        
-        console.log("✅ Trigger guardado:", trigger.fileName);
+
         res.json({ status: 'success', trigger });
-      } catch (dbError) {
+      } catch {
         res.status(500).json({ error: 'Error al guardar en BD' });
       }
     });
@@ -130,54 +119,59 @@ app.post('/upload', upload.single('video'), async (req, res) => {
   }
 });
 
-// Testeo Manual (Multi-Tenant)
+// --- TEST MANUAL ---
 app.post('/test-trigger', async (req, res) => {
   const { twitchRewardId, userId } = req.body;
-  
-  const trigger = await Trigger.findOne({ twitchRewardId, userId });
-  
-  if (!trigger) return res.status(404).json({ error: 'Alerta no encontrada para este usuario.' });
 
-  console.log(`🧪 Testeando trigger para ${userId}`);
+  const trigger = await Trigger.findOne({ twitchRewardId, userId });
+  if (!trigger) return res.status(404).json({ error: 'Alerta no encontrada.' });
 
   io.to(`overlay-${userId}`).emit('media-trigger', {
-      url: trigger.videoUrl,
-      type: 'video',
-      volume: 1.0,
-      rewardId: twitchRewardId
+    url: trigger.videoUrl,
+    type: 'video',
+    volume: 1.0,
+    rewardId: twitchRewardId
   });
 
-  res.json({ success: true, message: 'Evento enviado' });
+  res.json({ success: true });
 });
 
 // --- SOCKETS ---
 io.on('connection', (socket) => {
-  console.log('Cliente conectado al Socket', socket.id);
   socket.on('join-overlay', (userId) => {
-      if(userId) {
-        socket.join(`overlay-${userId}`);
-        console.log(`Socket ${socket.id} -> overlay-${userId}`);
-      }
+    if (userId) socket.join(`overlay-${userId}`);
   });
 });
 
 // --- RESTORE LISTENERS ---
 async function restoreListeners() {
-    console.log("🔄 Restaurando listeners de Twitch...");
-    const users = await UserToken.find({});
-    for (const user of users) {
-        startTwitchListener(user.userId).catch(e => console.error(`Error listener ${user.userId}`, e));
-    }
+  console.log("🔄 Restaurando listeners de Twitch...");
+  const users = await UserToken.find({});
+  for (const user of users) {
+    startTwitchListener(user.userId).catch(e =>
+      console.error(`Error listener ${user.userId}`, e)
+    );
+  }
 }
 
-// --- DB & SERVER START ---
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://admin:password123@localhost:27017/triggerapp?authSource=admin';
+// --- DB & SERVER ---
+const PORT = process.env.PORT || 3000;
+const MONGO_URI = process.env.MONGO_URI;
+
+if (!MONGO_URI) {
+  console.error("❌ Falta MONGO_URI");
+  process.exit(1);
+}
 
 mongoose.connect(MONGO_URI)
   .then(() => {
-    httpServer.listen(3000, () => {
-        console.log('🚀 Server Cloud-Native corriendo en puerto 3000');
-        restoreListeners(); 
+    httpServer.listen(PORT, '0.0.0.0', () => {
+      console.log(`🚀 Server corriendo en puerto ${PORT}`);
+      restoreListeners();
     });
   })
-  .catch(err => console.error('❌ Error conectando a Mongo:', err));
+  .catch(err => {
+    console.error('❌ Error conectando a Mongo:', err);
+    process.exit(1);
+  });
+export default app;
