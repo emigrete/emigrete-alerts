@@ -1,0 +1,35 @@
+# Dependencias de Node (pesadísimo, nunca se sube)
+node_modules/
+
+# Builds de producción
+dist/
+build/
+
+# Variables de entorno (SECRETOS)
+.env
+.env.local
+
+# Archivos de Base de Datos (PESADO)
+mongo-data/
+
+# Logs del sistema
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Archivos de Sistema Operativo
+.DS_Store
+Thumbs.db
+
+# JSONs (Para bloquear el serviceAccountKey)
+*.json
+
+# ¡EXCEPCIONES! (Estos JSONs SÍ los queremos subir)
+!package.json
+!package-lock.json
+!tsconfig.json
+!jsconfig.json
+!client/package.json
+!client/package-lock.json
+!server/package.json
+!server/package-lock.json

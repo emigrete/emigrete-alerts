@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  # 1. Base de Datos
+  mongo:
+    image: mongo
+    container_name: trigger_mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+    volumes:
+      - mongo_data:/data/db
+
+  # 2. Backend API
+  server:
+    build: ./server
+    container_name: trigger_server
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - MONGO_URI=mongodb://admin:password123@mongo:27017/triggerapp?authSource=admin
+      # Pasamos las credenciales desde tu archivo .env local
+      - TWITCH_CLIENT_ID=${TWITCH_CLIENT_ID}
+      - TWITCH_CLIENT_SECRET=${TWITCH_CLIENT_SECRET}
+    depends_on:
+      - mongo
+    volumes:
+      # Mapeamos las keys de Firebase para que el container las vea
+      - ./server/serviceAccountKey.json:/app/serviceAccountKey.json
+
+  # 3. Frontend (React)
+  client:
+    build: ./client
+    container_name: trigger_client
+    restart: always
+    ports:
+      - "5173:80" # Mapeamos el puerto 80 del container al 5173 de tu PC
+    depends_on:
+      - server
+
+volumes:
+  mongo_data: 
