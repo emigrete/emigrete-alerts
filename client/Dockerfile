@@ -4,15 +4,23 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
-# Esto crea la carpeta 'dist' con tu web optimizada
+
+# --- MAGIA AQUÍ ---
+# Declaramos que vamos a recibir estas variables
+ARG VITE_API_URL
+ARG VITE_REDIRECT_URI
+
+# Las convertimos en variables de entorno para que Vite las vea
+ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_REDIRECT_URI=$VITE_REDIRECT_URI
+# ------------------
+
+# Ahora sí, construimos con las variables adentro
 RUN npm run build
 
 # --- ETAPA 2: PRODUCTION SERVER (NGINX) ---
 FROM nginx:alpine
-# Copiamos solo los archivos compilados de la etapa anterior
 COPY --from=builder /app/dist /usr/share/nginx/html
-# Copiamos nuestra config de nginx
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
