@@ -4,7 +4,7 @@ export const Header = ({ username, userId, onLogout }) => (
   <header className="flex justify-between items-center mb-8 pb-6 border-b-2 border-primary/20">
     <div>
       <h1 className="text-4xl font-black bg-gradient-to-r from-primary to-pink-500 bg-clip-text text-transparent mb-2">
-        Tu Dashboard
+        {username ? `Dashboard de ${username}` : 'Tu Dashboard'}
       </h1>
       <div className="flex items-center gap-3">
         <span className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />

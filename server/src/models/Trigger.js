@@ -37,9 +37,8 @@ const TriggerSchema = new mongoose.Schema({
 });
 
 // Auto-actualizar updatedAt
-TriggerSchema.pre('save', function(next) {
+TriggerSchema.pre('save', function() {
   this.updatedAt = Date.now();
-  next();
 });
 
 export const Trigger = mongoose.model('Trigger', TriggerSchema);

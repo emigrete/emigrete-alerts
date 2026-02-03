@@ -206,6 +206,20 @@ export default function Dashboard() {
         {/* Header */}
         <Header username={username} userId={userId} onLogout={handleLogout} />
 
+        {/* Advertencia de desarrollo */}
+        <div className="mb-6 p-4 bg-yellow-500/10 border-l-4 border-yellow-500 rounded-lg">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl">⚠️</span>
+            <div>
+              <h3 className="text-yellow-500 font-bold mb-1">App en Desarrollo</h3>
+              <p className="text-sm text-dark-muted">
+                Esta aplicación está en fase beta. Podés encontrar errores o funcionalidades incompletas. 
+                Si experimentás algún problema, contactate con el desarrollador.
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Step Guide */}
         <StepGuide />
 
