@@ -53,6 +53,43 @@ export const TTSConfig = ({ triggerId, initialConfig, onClose, onUpdate, userId 
     }
 
     setTesting(true);
+    // helper: speak via browser Web Speech API
+    const speakWithBrowser = async (text) => {
+      try {
+        if (!('speechSynthesis' in window)) {
+          toast.error('SpeechSynthesis no soportado en este navegador');
+          return false;
+        }
+
+        const speakNow = () => {
+          const utter = new SpeechSynthesisUtterance(text);
+          utter.lang = 'es-ES';
+          const voices = window.speechSynthesis.getVoices();
+          const v = voices.find(v => v.lang && v.lang.startsWith('es')) || voices[0];
+          if (v) utter.voice = v;
+          window.speechSynthesis.cancel();
+          window.speechSynthesis.speak(utter);
+        };
+
+        // Some browsers populate voices asynchronously
+        let voices = window.speechSynthesis.getVoices();
+        if (!voices || voices.length === 0) {
+          await new Promise((resolve) => {
+            window.speechSynthesis.onvoiceschanged = () => {
+              resolve();
+            };
+            // safety timeout
+            setTimeout(resolve, 500);
+          });
+        }
+        speakNow();
+        return true;
+      } catch (e) {
+        console.error('Fallback TTS error', e);
+        return false;
+      }
+    };
+
     try {
       const testText = config.readUsername 
         ? `Usuario dice: ${config.text || 'Gracias por el canje'}`
@@ -83,8 +120,21 @@ export const TTSConfig = ({ triggerId, initialConfig, onClose, onUpdate, userId 
       }
     } catch (error) {
       console.error('Error al generar TTS:', error);
-      const message = error.response?.data?.error || 'Error al generar audio';
-      toast.error(message);
+      const message = error.response?.data?.error || error.message || 'Error al generar audio';
+
+      // Si ElevenLabs bloqueó por actividad inusual, usar fallback del navegador
+      const msgStr = typeof message === 'string' ? message : JSON.stringify(message);
+      if (msgStr.includes('detected_unusual_activity') || msgStr.includes('Free Tier usage disabled')) {
+        toast.warning('ElevenLabs bloqueó la petición. Usando TTS del navegador como fallback.');
+        const ok = await speakWithBrowser(testText);
+        if (ok) {
+          toast.success('Muestra reproducida (fallback navegador)');
+        } else {
+          toast.error('No se pudo reproducir fallback de TTS');
+        }
+      } else {
+        toast.error(msgStr);
+      }
     } finally {
       setTesting(false);
     }
