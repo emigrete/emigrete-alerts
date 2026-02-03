@@ -548,3 +548,4 @@ router.get('/admin/users', async (req, res) => {
   }
 });
 
+export default router;
