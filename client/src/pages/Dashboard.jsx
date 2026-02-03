@@ -194,7 +194,22 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-dark-bg via-dark-bg to-dark-secondary text-dark-text p-5 lg:p-12">
+    <div className="min-h-screen text-dark-text p-5 lg:p-12 relative overflow-hidden">
+      {/* Líneas decorativas sutiles */}
+      <div className="fixed inset-0 z-0 pointer-events-none opacity-5">
+        <svg className="w-full h-full" viewBox="0 0 1440 800" preserveAspectRatio="xMidYMid slice">
+          <defs>
+            <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#9146FF" />
+              <stop offset="100%" stopColor="#FF6B9D" />
+            </linearGradient>
+          </defs>
+          <circle cx="200" cy="200" r="150" stroke="url(#grad1)" strokeWidth="2" fill="none" />
+          <circle cx="1200" cy="600" r="200" stroke="url(#grad1)" strokeWidth="2" fill="none" />
+          <path d="M 100 400 Q 300 200 500 400" stroke="url(#grad1)" strokeWidth="2" fill="none" />
+        </svg>
+      </div>
+      
       {isDemo && (
         <div className="fixed top-0 left-0 right-0 bg-gradient-to-r from-yellow-600 to-yellow-500 text-white py-3 px-4 text-center font-bold z-50 shadow-lg">
           MODO DEMO - Usalo sin iniciar sesión
@@ -202,7 +217,7 @@ export default function Dashboard() {
       )}
       <Toaster position="top-right" theme="dark" richColors />
 
-      <div className={`max-w-7xl mx-auto ${isDemo ? 'pt-12' : ''}`}>
+      <div className={`max-w-7xl mx-auto ${isDemo ? 'pt-12' : ''} relative z-10`}>
         {/* Header */}
         <Header username={username} userId={userId} onLogout={handleLogout} />
 
