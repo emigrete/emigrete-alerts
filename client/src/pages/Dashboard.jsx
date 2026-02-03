@@ -209,6 +209,28 @@ export default function Dashboard() {
         {/* Navigation */}
         <Navigation />
 
+        {/* Alertas Overview */}
+        <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="p-5 bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/30 rounded-2xl">
+            <h4 className="text-lg font-bold text-white mb-2">Alertas Multimedia</h4>
+            <p className="text-dark-muted text-sm mb-3">
+              Alertas con video, audio o GIF (sin TTS)
+            </p>
+            <div className="text-3xl font-black text-blue-400">
+              {triggers.filter(t => !t.ttsConfig?.enabled).length}
+            </div>
+          </div>
+          <div className="p-5 bg-gradient-to-br from-primary/10 to-pink-500/5 border border-primary/30 rounded-2xl">
+            <h4 className="text-lg font-bold text-white mb-2">Alertas con TTS</h4>
+            <p className="text-dark-muted text-sm mb-3">
+              Alertas con voz IA activa
+            </p>
+            <div className="text-3xl font-black text-primary">
+              {triggers.filter(t => t.ttsConfig?.enabled).length}
+            </div>
+          </div>
+        </div>
+
         {/* Aviso de beta */}
         <div className="mb-10 p-5 bg-yellow-500/10 border-l-4 border-yellow-500 rounded-2xl">
           <div className="flex items-start gap-3">
@@ -228,12 +250,12 @@ export default function Dashboard() {
         {/* Main Content (una arriba de la otra) */}
         <div className="space-y-10 mt-2">
           {/* Multimedia Alerts */}
-          <section className="bg-gradient-to-br from-dark-card to-dark-secondary p-7 lg:p-12 rounded-[28px] border border-primary/15 shadow-xl hover:shadow-2xl transition-shadow">
+          <section className="bg-gradient-to-br from-blue-500/10 via-blue-600/5 to-dark-secondary p-7 lg:p-12 rounded-[28px] border border-blue-500/20 shadow-xl hover:shadow-2xl transition-shadow">
             <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-              <h3 className="m-0 text-2xl font-black">
+              <h3 className="m-0 text-2xl font-black text-blue-400">
                 Alertas Multimedia
               </h3>
-              <span className="text-xs text-dark-muted bg-white/5 px-3 py-1.5 rounded-full border border-white/10">
+              <span className="text-xs text-blue-300 bg-blue-500/10 px-3 py-1.5 rounded-full border border-blue-500/30">
                 Video, audio o GIF
               </span>
             </div>
@@ -261,9 +283,9 @@ export default function Dashboard() {
           </section>
 
           {/* Triggers Card */}
-          <section className="bg-gradient-to-br from-dark-card to-dark-secondary p-7 lg:p-12 rounded-[28px] border border-primary/15 shadow-xl hover:shadow-2xl transition-shadow">
+          <section className="bg-gradient-to-br from-blue-500/10 via-blue-600/5 to-dark-secondary p-7 lg:p-12 rounded-[28px] border border-blue-500/20 shadow-xl hover:shadow-2xl transition-shadow">
             <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
-              <h3 className="m-0 text-2xl font-black">
+              <h3 className="m-0 text-2xl font-black text-blue-400">
                 Alertas Activas
               </h3>
               <AlertsBadge count={triggers.length} />

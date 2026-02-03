@@ -261,37 +261,66 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
       {triggersWithTTS.length > 0 ? (
         <div className="mt-9">
           <h3 className="text-xl font-bold text-white mb-4">Alertas con TTS activo</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="space-y-4">
             {triggersWithTTS.map(trigger => {
               const reward = rewards.find(r => r.id === trigger.twitchRewardId);
+              const specificLink = `${window.location.protocol}//${window.location.host}/overlay?user=${userId}&reward=${trigger.twitchRewardId}`;
+              
               return (
                 <div
                   key={trigger._id}
-                  className="bg-dark-card border border-dark-border rounded-2xl p-5 hover:border-primary/50 transition-all cursor-pointer group"
-                  onClick={() => setSelectedTriggerId(trigger._id)}
+                  className="bg-dark-card border border-dark-border rounded-2xl p-5 hover:border-primary/50 transition-all"
                 >
-                  <div className="flex items-start justify-between mb-3">
+                  <div className="flex flex-col lg:flex-row items-start justify-between gap-4 mb-4">
                     <div className="flex-1">
-                      <h4 className="font-bold text-primary text-sm mb-1">
+                      <h4 className="font-bold text-primary text-base mb-1">
                         {reward?.title || 'Recompensa'}
                       </h4>
-                      <p className="text-xs text-dark-muted">
+                      <p className="text-xs text-dark-muted mb-2">
                         Voz: {ELEVENLABS_VOICES.find(v => v.id === trigger.ttsConfig.voiceId)?.name || 'Desconocida'}
                       </p>
+                      <div className="flex gap-2 flex-wrap text-xs text-dark-muted">
+                        {trigger.ttsConfig.readUsername && (
+                          <span className="px-2 py-1 rounded bg-dark-secondary border border-dark-border">✓ Incluye nombre</span>
+                        )}
+                        {trigger.ttsConfig.useViewerMessage && (
+                          <span className="px-2 py-1 rounded bg-dark-secondary border border-dark-border">✓ Lee mensaje</span>
+                        )}
+                      </div>
                     </div>
-                    <span className="px-2 py-1 rounded-lg bg-green-500/10 border border-green-500/30 text-green-500 text-xs font-semibold">
-                      Activo
+                    <span className="px-3 py-1.5 rounded-lg bg-green-500/10 border border-green-500/30 text-green-500 text-xs font-semibold whitespace-nowrap">
+                      TTS Activo
                     </span>
                   </div>
-                  <div className="text-xs text-dark-muted space-y-1">
-                    {trigger.ttsConfig.readUsername && (
-                      <p>✓ Incluye nombre del usuario</p>
-                    )}
-                    {trigger.ttsConfig.useViewerMessage && (
-                      <p>✓ Lee el mensaje del espectador</p>
-                    )}
+
+                  {/* Link único para esta alerta */}
+                  <div className="mb-3">
+                    <label className="block text-xs font-semibold text-dark-muted uppercase tracking-wider mb-2">
+                      Link para OBS
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        readOnly
+                        value={specificLink}
+                        className="flex-1 bg-black border border-dark-border px-3 py-2 rounded-lg text-green-400 text-xs font-mono focus:outline-none focus:border-primary"
+                      />
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(specificLink);
+                          if (typeof toast !== 'undefined') toast.success('Link copiado');
+                        }}
+                        className="bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:opacity-90 transition whitespace-nowrap text-sm"
+                      >
+                        Copiar
+                      </button>
+                    </div>
                   </div>
-                  <button className="mt-3 w-full py-2 px-4 rounded-lg bg-primary/10 border border-primary/30 text-primary text-sm font-semibold hover:bg-primary/20 transition-all group-hover:border-primary">
+
+                  <button 
+                    onClick={() => setSelectedTriggerId(trigger._id)}
+                    className="w-full py-2 px-4 rounded-lg bg-primary/10 border border-primary/30 text-primary text-sm font-semibold hover:bg-primary/20 transition-all"
+                  >
                     Editar configuración
                   </button>
                 </div>
