@@ -90,12 +90,12 @@ export default function Overlay() {
       
       if (ttsConfig.useViewerMessage) {
         if (ttsConfig.readUsername && viewerUsername) {
-          textToSpeak = `${viewerUsername} dice: ${viewerMessage || 'Gracias por el canje!'}`;
+          textToSpeak = `${viewerUsername} dice: ${viewerMessage || 'Gracias por el canje.'}`;
         } else {
-          textToSpeak = viewerMessage || 'Gracias por el canje!';
+          textToSpeak = viewerMessage || 'Gracias por el canje.';
         }
       } else {
-        textToSpeak = ttsConfig.text || 'Gracias por el canje!';
+        textToSpeak = ttsConfig.text || 'Gracias por el canje.';
       }
 
       console.log('🎤 Generando TTS:', textToSpeak);

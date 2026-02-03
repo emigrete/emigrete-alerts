@@ -16,12 +16,12 @@ export const FileUploadSection = ({
   isDemo,
   triggers
 }) => {
-  // Modal para crear recompensa sin salir de acá
+  // Modal de recompensa
   const [showRewardCreator, setShowRewardCreator] = useState(false);
-  // Tipo de media para mostrar la vista previa como corresponde
+  // Tipo de media para vista previa
   const [mediaType, setMediaType] = useState(null);
 
-  // Detectamos el tipo de archivo y delegamos el cambio
+  // Detecta tipo de archivo
   const handleFileChange = (e) => {
     const selected = e.target.files[0];
     if (selected) {
@@ -35,10 +35,10 @@ export const FileUploadSection = ({
     onFileChange(e);
   };
 
-  // Vista previa según el tipo (así se entiende qué subiste)
+  // Vista previa según tipo
   const getPreviewContent = () => {
     if (!previewUrl) {
-      return <div className="text-gray-600 italic">Todavía no subiste nada</div>;
+      return <div className="text-gray-600 italic">Sin archivo aún</div>;
     }
 
     switch (mediaType) {
@@ -55,16 +55,16 @@ export const FileUploadSection = ({
       case 'gif':
         return <img src={previewUrl} alt="Preview" className="max-w-full max-h-full" />;
       default:
-        return <div className="text-gray-600 italic">Todavía no subiste nada</div>;
+        return <div className="text-gray-600 italic">Sin archivo aún</div>;
     }
   };
 
-  // Tipos permitidos (esto define el input de archivos)
+  // Tipos permitidos
   const getAcceptTypes = () => {
     return 'video/mp4,video/webm,audio/mpeg,audio/wav,audio/ogg,image/gif';
   };
 
-  // Título dinámico para el label
+  // Título dinámico
   const getMediaTypeLabel = () => {
     if (!mediaType) return 'Archivo Multimedia';
     return {
@@ -74,15 +74,15 @@ export const FileUploadSection = ({
     }[mediaType];
   };
 
-  // Si no hay recompensas, mostramos pantalla de inicio
+  // Si no hay recompensas, pantalla de inicio
   if (rewards.length === 0) {
     return (
       <>
         <div className="text-center py-14">
           <div className="mb-8">
             <span className="text-7xl block mb-4">🎬</span>
-            <h2 className="text-2xl font-bold text-dark-text mb-2">¡Armá tu primera alerta!</h2>
-            <p className="text-dark-muted mb-8">Enganchá tus clips favoritos con los canjes de Twitch</p>
+            <h2 className="text-2xl font-bold text-dark-text mb-2">Creá tu primera alerta</h2>
+            <p className="text-dark-muted mb-8">Vinculá tus clips con los canjes de Twitch</p>
           </div>
 
           <button
@@ -90,15 +90,15 @@ export const FileUploadSection = ({
             className="inline-flex flex-col items-center gap-3 px-8 py-6 bg-gradient-to-br from-primary to-pink-500 text-white rounded-2xl font-bold hover:shadow-2xl hover:scale-105 transition-all text-lg"
           >
             <span className="text-4xl">+</span>
-            Crear Nueva Alerta
+            Crear nueva alerta
           </button>
 
           <div className="mt-12 text-left max-w-2xl mx-auto">
-            <h3 className="text-lg font-semibold text-dark-text mb-4">¿Cómo va la mano?</h3>
+            <h3 className="text-lg font-semibold text-dark-text mb-4">Cómo funciona</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="p-4 bg-dark-secondary rounded-lg border border-dark-border">
                 <div className="text-3xl mb-2">1️⃣</div>
-                <p className="text-sm text-dark-muted">Creá una recompensa con tu nombre y costo</p>
+                <p className="text-sm text-dark-muted">Creá una recompensa con nombre y costo</p>
               </div>
               <div className="p-4 bg-dark-secondary rounded-lg border border-dark-border">
                 <div className="text-3xl mb-2">2️⃣</div>
@@ -106,13 +106,13 @@ export const FileUploadSection = ({
               </div>
               <div className="p-4 bg-dark-secondary rounded-lg border border-dark-border">
                 <div className="text-3xl mb-2">3️⃣</div>
-                <p className="text-sm text-dark-muted">Pegá el link en OBS y listo</p>
+                <p className="text-sm text-dark-muted">Pegá el link en OBS</p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Modal para crear recompensa */}
+        {/* Modal de recompensa */}
         {showRewardCreator && (
           <RewardCreator
             userId={userId}
@@ -128,7 +128,7 @@ export const FileUploadSection = ({
     );
   }
 
-  // Si hay recompensas, mostramos el formulario normal
+  // Si hay recompensas, formulario normal
   return (
     <>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
@@ -164,12 +164,12 @@ export const FileUploadSection = ({
             </button>
           </div>
 
-          {/* Info si ya hay alertas creadas */}
+          {/* Info si ya hay alertas */}
           {triggers && triggers.length > 0 && (
             <div className="mb-7 p-4 bg-primary/10 border border-primary/25 rounded-xl">
-              <p className="text-sm text-primary font-semibold mb-2">💡 Tip:</p>
+              <p className="text-sm text-primary font-semibold mb-2">💡 Nota:</p>
               <p className="text-sm text-dark-muted">
-                Ya tenés <strong>{triggers.length} alerta{triggers.length > 1 ? 's' : ''} armada{triggers.length > 1 ? 's' : ''}</strong>. Podés sumar más media a una recompensa o crear otra nueva.
+                Tenés <strong>{triggers.length} alerta{triggers.length > 1 ? 's' : ''}</strong>. Podés sumar media o crear otra.
               </p>
             </div>
           )}
@@ -201,7 +201,7 @@ export const FileUploadSection = ({
                 <span className="text-dark-text font-bold text-center">{file.name}</span>
               ) : (
                 <div className="text-center">
-                  <span className="block">Arrastrá o clickeá para subir</span>
+                  <span className="block">Arrastrá o hacé clic para subir</span>
                   <small className="text-dark-muted">Video (.mp4, .webm), Audio (.mp3, .wav, .ogg) o GIF</small>
                 </div>
               )}
@@ -232,7 +232,7 @@ export const FileUploadSection = ({
         </div>
       </div>
 
-      {/* Modal para crear recompensa */}
+      {/* Modal de recompensa */}
       {showRewardCreator && (
         <RewardCreator
           userId={userId}

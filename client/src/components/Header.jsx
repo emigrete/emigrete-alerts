@@ -18,7 +18,7 @@ export const Header = ({ username, userId, onLogout }) => (
       onClick={onLogout}
       className="bg-red-500/10 border border-red-500/30 text-red-400 px-6 py-2 rounded-lg hover:bg-red-500/20 hover:border-red-500 transition-all font-semibold"
     >
-      Desloguearse
+      Cerrar sesión
     </button>
   </header>
 );

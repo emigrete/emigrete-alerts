@@ -1,10 +1,10 @@
 import { copyToClipboard } from '../utils/helpers';
 
 export const TriggersTable = ({ triggers, rewards, userId, onDelete, onRefresh }) => {
-  // Link base del overlay (después le pegamos el reward específico)
+  // Link base del overlay
   const overlayBaseUrl = `${window.location.protocol}//${window.location.host}/overlay?user=${userId}`;
 
-  // Íconos para que se entienda rápido qué tipo de media hay
+  // Íconos por tipo de media
   const getMediaIcon = (type) => {
     switch(type) {
       case 'video': return '[Video]';
@@ -17,8 +17,8 @@ export const TriggersTable = ({ triggers, rewards, userId, onDelete, onRefresh }
   if (triggers.length === 0) {
     return (
       <div className="text-center py-16 border-2 border-dashed border-dark-secondary rounded-2xl text-dark-muted">
-        <p className="text-lg font-semibold">Todavía no tenés alertas activas</p>
-        <p className="text-sm mt-2">Armá la primera arriba y sale con fritas</p>
+        <p className="text-lg font-semibold">No hay alertas activas</p>
+        <p className="text-sm mt-2">Creá la primera arriba</p>
       </div>
     );
   }
@@ -37,7 +37,7 @@ export const TriggersTable = ({ triggers, rewards, userId, onDelete, onRefresh }
           </thead>
           <tbody className="[&_tr]:border-b [&_tr]:border-dark-border">
             {triggers.map(t => {
-              // Link específico para cada canje
+              // Link por canje
               const specificLink = `${overlayBaseUrl}&reward=${t.twitchRewardId}`;
               const rewardTitle = rewards.find(r => r.id === t.twitchRewardId)?.title || 'Desconocido';
 

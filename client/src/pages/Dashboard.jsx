@@ -16,7 +16,7 @@ import { FeedbackForm } from '../components/FeedbackForm';
 import { TTSManager } from '../components/TTSManager';
 
 export default function Dashboard() {
-  // Modo demo: solo en desarrollo
+  // Modo demo: solo desarrollo
   const isDevelopment = import.meta.env.DEV;
   const isDemo = isDevelopment && new URLSearchParams(window.location.search).get('demo') === 'true';
   
@@ -57,7 +57,7 @@ export default function Dashboard() {
   const [fileError, setFileError] = useState('');
   const loginUrl = `${API_URL}/auth/twitch`;
 
-  // Fetch data on mount
+  // Cargar datos al iniciar
   useEffect(() => {
     if (userId) {
       fetchRewards();
@@ -198,7 +198,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gradient-to-br from-dark-bg via-dark-bg to-dark-secondary text-dark-text p-5 lg:p-12">
       {isDemo && (
         <div className="fixed top-0 left-0 right-0 bg-gradient-to-r from-yellow-600 to-yellow-500 text-white py-3 px-4 text-center font-bold z-50 shadow-lg">
-          MODO DEMO - Probalo sin loguearte
+          MODO DEMO - Usalo sin iniciar sesión
         </div>
       )}
       <Toaster position="top-right" theme="dark" richColors />
@@ -207,96 +207,90 @@ export default function Dashboard() {
         {/* Header */}
         <Header username={username} userId={userId} onLogout={handleLogout} />
 
-        {/* Advertencia de desarrollo (para no olvidarnos que esto está en beta) */}
+        {/* Aviso de beta */}
         <div className="mb-10 p-5 bg-yellow-500/10 border-l-4 border-yellow-500 rounded-2xl">
           <div className="flex items-start gap-3">
             <span className="text-2xl">⚠️</span>
             <div>
-              <h3 className="text-yellow-500 font-bold mb-1">App en beta, ojo</h3>
+              <h3 className="text-yellow-500 font-bold mb-1">App en beta</h3>
               <p className="text-sm text-dark-muted">
-                Puede faltar alguna cosita. Si algo te hace ruido, avisame y lo arreglamos.
+                Puede haber ajustes pendientes. Si detectás algo, avisá.
               </p>
             </div>
           </div>
         </div>
 
-        {/* Step Guide (pasos simples y al pie) */}
+        {/* Step Guide */}
         <StepGuide />
 
-        {/* Main Content (más aire para que no quede todo apretado) */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 xl:gap-12 mt-2">
-          {/* Columna Principal (2/3) */}
-          <div className="lg:col-span-2 space-y-10">
-            {/* Multimedia Alerts */}
-            <section className="bg-gradient-to-br from-dark-card to-dark-secondary p-7 lg:p-12 rounded-[28px] border border-primary/15 shadow-xl hover:shadow-2xl transition-shadow">
-              <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-                <h3 className="m-0 text-2xl font-black">
-                  Alertas Multimedia
-                </h3>
-                <span className="text-xs text-dark-muted bg-white/5 px-3 py-1.5 rounded-full border border-white/10">
-                  Video, audio o GIF
-                </span>
-              </div>
+        {/* Main Content (una arriba de la otra) */}
+        <div className="space-y-10 mt-2">
+          {/* Multimedia Alerts */}
+          <section className="bg-gradient-to-br from-dark-card to-dark-secondary p-7 lg:p-12 rounded-[28px] border border-primary/15 shadow-xl hover:shadow-2xl transition-shadow">
+            <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+              <h3 className="m-0 text-2xl font-black">
+                Alertas Multimedia
+              </h3>
+              <span className="text-xs text-dark-muted bg-white/5 px-3 py-1.5 rounded-full border border-white/10">
+                Video, audio o GIF
+              </span>
+            </div>
               <p className="text-sm text-dark-muted mb-8">
-                Subí el archivo, elegí el canje y guardá. Simple y al toque.
+                Subí el archivo, elegí el canje y guardá.
               </p>
-              <FileUploadSection
-                file={file}
-                previewUrl={previewUrl}
-                selectedReward={selectedReward}
-                rewards={rewards}
-                uploading={uploading}
-                fileError={fileError}
-                onFileChange={handleFileChange}
-                onUpload={handleUpload}
-                onRewardChange={setSelectedReward}
-                userId={userId}
-                isDemo={isDemo}
-                triggers={triggers}
-                onRewardCreated={(newReward) => {
-                  setRewards([...rewards, newReward]);
-                  setSelectedReward(newReward.id);
-                }}
-              />
-            </section>
-
-            {/* Triggers Card */}
-            <section className="bg-gradient-to-br from-dark-card to-dark-secondary p-7 lg:p-12 rounded-[28px] border border-primary/15 shadow-xl hover:shadow-2xl transition-shadow">
-              <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
-                <h3 className="m-0 text-2xl font-black">
-                  Alertas Activas
-                </h3>
-                <AlertsBadge count={triggers.length} />
-              </div>
-              <TriggersTable 
-                triggers={triggers} 
-                rewards={rewards} 
-                userId={userId}
-                onDelete={handleDelete}
-                onRefresh={fetchTriggers}
-              />
-            </section>
-          </div>
-
-          {/* Columna Lateral (1/3) */}
-          <div className="space-y-10">
-            {/* TTS Manager */}
-            <TTSManager
-              triggers={triggers}
+            <FileUploadSection
+              file={file}
+              previewUrl={previewUrl}
+              selectedReward={selectedReward}
               rewards={rewards}
+              uploading={uploading}
+              fileError={fileError}
+              onFileChange={handleFileChange}
+              onUpload={handleUpload}
+              onRewardChange={setSelectedReward}
               userId={userId}
               isDemo={isDemo}
-              onRefresh={fetchTriggers}
-              onCreated={(newTrigger) => {
-                if (isDemo && newTrigger) {
-                  setTriggers((prev) => [...prev, newTrigger]);
-                }
+              triggers={triggers}
+              onRewardCreated={(newReward) => {
+                setRewards([...rewards, newReward]);
+                setSelectedReward(newReward.id);
               }}
             />
+          </section>
 
-            {/* Feedback Form */}
-            <FeedbackForm />
-          </div>
+          {/* TTS Manager */}
+          <TTSManager
+            triggers={triggers}
+            rewards={rewards}
+            userId={userId}
+            isDemo={isDemo}
+            onRefresh={fetchTriggers}
+            onCreated={(newTrigger) => {
+              if (isDemo && newTrigger) {
+                setTriggers((prev) => [...prev, newTrigger]);
+              }
+            }}
+          />
+
+          {/* Triggers Card */}
+          <section className="bg-gradient-to-br from-dark-card to-dark-secondary p-7 lg:p-12 rounded-[28px] border border-primary/15 shadow-xl hover:shadow-2xl transition-shadow">
+            <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
+              <h3 className="m-0 text-2xl font-black">
+                Alertas Activas
+              </h3>
+              <AlertsBadge count={triggers.length} />
+            </div>
+            <TriggersTable 
+              triggers={triggers} 
+              rewards={rewards} 
+              userId={userId}
+              onDelete={handleDelete}
+              onRefresh={fetchTriggers}
+            />
+          </section>
+
+          {/* Feedback Form */}
+          <FeedbackForm />
         </div>
 
         {/* Donation Footer - Ancho completo */}

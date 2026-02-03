@@ -208,7 +208,7 @@ export const TTSConfig = ({ triggerId, initialConfig, onClose, onUpdate, userId 
                 className="w-5 h-5"
               />
               <label htmlFor="use-viewer-message" className="text-dark-text text-sm">
-                Leer mensaje del espectador que canjea
+                Leer mensaje del espectador
               </label>
             </div>
 
@@ -222,7 +222,7 @@ export const TTSConfig = ({ triggerId, initialConfig, onClose, onUpdate, userId 
                 className="w-5 h-5"
               />
               <label htmlFor="read-username" className="text-dark-text text-sm">
-                Incluir nombre del usuario en el mensaje
+                Incluir nombre del usuario
               </label>
             </div>
 

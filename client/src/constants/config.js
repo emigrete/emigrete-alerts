@@ -23,21 +23,21 @@ export const STEP_GUIDES = [
   {
     id: 1,
     title: 'Crea tu canje',
-    description: 'Anda a tu panel de Twitch y crea una recompensa nueva.'
+    description: 'Entrá al panel de Twitch y creá una recompensa.'
   },
   {
     id: 2,
     title: 'Vincula el video',
-    description: 'Elegi la recompensa abajo y subi tu archivo de video.'
+    description: 'Elegí la recompensa y subí tu archivo.'
   },
   {
     id: 3,
     title: 'Configura OBS',
-    description: 'Copia el link para OBS y ponelo como Fuente de Navegador.'
+    description: 'Copiá el link y agregalo como fuente de navegador.'
   },
   {
     id: 4,
     title: '¡A disfrutar!',
-    description: 'Probalo en el chat. Funciona al instante!'
+    description: 'Probalo en el chat. Respuesta inmediata.'
   }
 ];

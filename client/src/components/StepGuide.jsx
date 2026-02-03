@@ -1,6 +1,6 @@
 import { STEP_GUIDES } from '../constants/config';
 
-// Pasos cortitos para no marear al usuario
+// Guía breve de inicio
 export const StepGuide = () => (
   <div className="mb-12">
     <h2 className="text-2xl font-bold mb-6 text-dark-text">

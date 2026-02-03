@@ -7,7 +7,7 @@ export const TTSGuide = () => {
           ¿Cómo funciona?
         </h3>
         <p className="text-dark-muted text-sm">
-          Crea alertas con voces IA de ElevenLabs. Personaliza cada aspecto de la voz y el mensaje.
+          Creá alertas con voces IA de ElevenLabs. Idioma: español.
         </p>
       </div>
 
@@ -19,7 +19,7 @@ export const TTSGuide = () => {
           </div>
           <div>
             <h4 className="font-bold text-primary text-sm">Crear con TTS</h4>
-            <p className="text-xs text-dark-muted">Elige "Alerta con TTS" al crear una nueva alerta arriba</p>
+            <p className="text-xs text-dark-muted">Elegí "Alerta con TTS" al crear una alerta</p>
           </div>
         </div>
 
@@ -29,7 +29,7 @@ export const TTSGuide = () => {
           </div>
           <div>
             <h4 className="font-bold text-primary text-sm">Configurar Voz</h4>
-            <p className="text-xs text-dark-muted">Selecciona entre 7 voces naturales disponibles</p>
+            <p className="text-xs text-dark-muted">Seleccioná entre 7 voces disponibles</p>
           </div>
         </div>
 
@@ -39,7 +39,7 @@ export const TTSGuide = () => {
           </div>
           <div>
             <h4 className="font-bold text-primary text-sm">Editar Después</h4>
-            <p className="text-xs text-dark-muted">Tus alertas con TTS aparecerán abajo para modificarlas</p>
+            <p className="text-xs text-dark-muted">Las alertas con TTS aparecen abajo para editar</p>
           </div>
         </div>
       </div>
@@ -48,6 +48,7 @@ export const TTSGuide = () => {
       <div className="mt-6 pt-6 border-t border-dark-border">
         <div className="space-y-2 text-xs text-dark-muted">
           <p><strong className="text-primary">7 voces</strong> naturales disponibles</p>
+          <p><strong className="text-primary">Idioma</strong> español</p>
           <p><strong className="text-primary">Límite mensual</strong> de caracteres por usuario</p>
           <p><strong className="text-primary">Personalizable</strong> - nombre, mensaje, estabilidad</p>
         </div>
