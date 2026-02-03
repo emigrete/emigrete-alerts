@@ -1,9 +1,6 @@
-import { useState } from 'react';
 import { copyToClipboard } from '../utils/helpers';
-import { TTSConfig } from './TTSConfig';
 
 export const TriggersTable = ({ triggers, rewards, userId, onDelete, onRefresh }) => {
-  const [ttsModalTriggerId, setTtsModalTriggerId] = useState(null);
   const overlayBaseUrl = `${window.location.protocol}//${window.location.host}/overlay?user=${userId}`;
 
   const getMediaIcon = (type) => {
@@ -14,8 +11,6 @@ export const TriggersTable = ({ triggers, rewards, userId, onDelete, onRefresh }
       default: return '[Medio]';
     }
   };
-
-  const selectedTrigger = triggers.find(t => t._id === ttsModalTriggerId);
 
   if (triggers.length === 0) {
     return (
@@ -34,7 +29,6 @@ export const TriggersTable = ({ triggers, rewards, userId, onDelete, onRefresh }
             <tr>
               <th className="text-left px-4 py-3 text-dark-muted text-xs font-bold uppercase tracking-widest">Recompensa</th>
               <th className="text-left px-4 py-3 text-dark-muted text-xs font-bold uppercase tracking-widest">Medias</th>
-              <th className="text-left px-4 py-3 text-dark-muted text-xs font-bold uppercase tracking-widest">TTS</th>
               <th className="text-left px-4 py-3 text-dark-muted text-xs font-bold uppercase tracking-widest">Link para OBS</th>
               <th className="text-right px-4 py-3 text-dark-muted text-xs font-bold uppercase tracking-widest">Acciones</th>
             </tr>
@@ -76,16 +70,6 @@ export const TriggersTable = ({ triggers, rewards, userId, onDelete, onRefresh }
                     </div>
                   </td>
                   <td className="px-4 py-4">
-                    {t.ttsConfig?.enabled ? (
-                      <div className="flex items-center gap-2">
-                        <span className="text-green-500">✅</span>
-                        <span className="text-xs text-green-500 font-semibold">Activo</span>
-                      </div>
-                    ) : (
-                      <span className="text-xs text-dark-muted">Desactivado</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-4">
                     <div className="bg-black p-3 rounded-lg border border-dark-border flex items-center justify-between gap-3 font-mono text-sm text-green-400">
                       <span className="overflow-hidden text-ellipsis whitespace-nowrap max-w-xs">
                         {specificLink}
@@ -101,21 +85,15 @@ export const TriggersTable = ({ triggers, rewards, userId, onDelete, onRefresh }
                   </td>
                   <td className="px-4 py-4">
                     <div className="flex justify-end gap-2">
-                      <button
-                        onClick={() => setTtsModalTriggerId(t._id)}
-                        className={`font-black py-2 px-4 rounded-xl transition-all ${
-                          t.ttsConfig?.enabled 
-                            ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg hover:shadow-2xl scale-105'
-                            : 'bg-gradient-to-r from-primary to-pink-500 text-white hover:shadow-xl'
-                        }`}
-                        title="Configurar TTS"
-                      >
-                        {t.ttsConfig?.enabled ? '🎤 TTS ACTIVO' : '🎤 Activar TTS'}
-                      </button>
+                      {t.ttsConfig?.enabled && (
+                        <span className="px-3 py-2 rounded-lg bg-green-500/10 border border-green-500/30 text-green-500 text-xs font-semibold">
+                          TTS Activo
+                        </span>
+                      )}
                       {t.videoUrl && (
                         <a href={t.videoUrl} target="_blank" rel="noreferrer">
-                          <button className="bg-transparent border border-dark-border text-dark-muted px-3 py-2 rounded-lg hover:border-primary hover:text-primary transition" title="Ver video">
-                            👁️
+                          <button className="bg-transparent border border-dark-border text-dark-muted px-3 py-2 rounded-lg hover:border-primary hover:text-primary transition" title="Ver multimedia">
+                            Ver
                           </button>
                         </a>
                       )}
@@ -124,7 +102,7 @@ export const TriggersTable = ({ triggers, rewards, userId, onDelete, onRefresh }
                         className="bg-transparent border border-red-500 text-red-500 px-3 py-2 rounded-lg hover:bg-red-500/10 transition"
                         title="Eliminar"
                       >
-                        🗑️
+                        Eliminar
                       </button>
                     </div>
                   </td>
@@ -134,20 +112,6 @@ export const TriggersTable = ({ triggers, rewards, userId, onDelete, onRefresh }
           </tbody>
         </table>
       </div>
-
-      {/* TTS Config Modal */}
-      {ttsModalTriggerId && selectedTrigger && (
-        <TTSConfig
-          triggerId={ttsModalTriggerId}
-          initialConfig={selectedTrigger.ttsConfig}
-          userId={userId}
-          onClose={() => setTtsModalTriggerId(null)}
-          onUpdate={() => {
-            setTtsModalTriggerId(null);
-            onRefresh();
-          }}
-        />
-      )}
     </>
   );
 };

@@ -62,7 +62,15 @@ export const FeedbackForm = () => {
             <label className="block mb-2 font-semibold text-dark-muted text-sm uppercase tracking-wider">
               Tipo
             </label>
-            <select className="w-full p-3 rounded-lg border border-dark-border bg-black text-white outline-none focus:border-primary transition">
+            <select className="w-full p-3 rounded-lg border-2 border-dark-border bg-gradient-to-br from-dark-card to-dark-secondary text-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all appearance-none cursor-pointer hover:border-primary/50 font-semibold"
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239146FF'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'right 0.75rem center',
+                backgroundSize: '1.5em 1.5em',
+                paddingRight: '2.5rem'
+              }}
+            >
               <option value="suggestion">💡 Sugerencia</option>
               <option value="bug">🐛 Reporte de Bug</option>
               <option value="feature">✨ Solicitud de Feature</option>
@@ -99,7 +107,7 @@ export const FeedbackForm = () => {
 
         {/* Info */}
         <p className="text-xs text-dark-muted text-center">
-          También puedes contactarnos a <strong>theodorewelyczko@gmail.com</strong>
+          También puedes contactarnos a <strong>teodorowelyczko@gmail.com</strong>
         </p>
       </form>
     </section>

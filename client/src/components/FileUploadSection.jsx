@@ -146,7 +146,14 @@ export const FileUploadSection = ({
           </label>
           <div className="flex gap-2 mb-5">
             <select 
-              className="flex-1 p-3 rounded-lg border border-dark-border bg-black text-white outline-none focus:border-primary transition"
+              className="flex-1 p-3 rounded-lg border-2 border-dark-border bg-gradient-to-br from-dark-card to-dark-secondary text-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all appearance-none cursor-pointer hover:border-primary/50 font-semibold"
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239146FF'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'right 0.75rem center',
+                backgroundSize: '1.5em 1.5em',
+                paddingRight: '2.5rem'
+              }}
               value={selectedReward} 
               onChange={(e) => onRewardChange(e.target.value)}
             >
@@ -212,17 +219,36 @@ export const FileUploadSection = ({
 
           {/* Sección TTS */}
           <div className="mt-6 pt-6 border-t border-dark-border">
-            <div className="flex items-center gap-3 mb-4">
-              <input
-                type="checkbox"
-                id="tts-enabled"
-                checked={ttsConfig?.enabled || false}
-                onChange={(e) => onTtsConfigChange({ ...ttsConfig, enabled: e.target.checked })}
-                className="w-5 h-5"
-              />
-              <label htmlFor="tts-enabled" className="font-semibold text-dark-text flex items-center gap-2">
-                <span>🎤</span> Agregar Text-to-Speech
-              </label>
+            <label className="block mb-3 font-semibold text-dark-muted text-sm uppercase tracking-wider">
+              3. Tipo de Alerta
+            </label>
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <button
+                type="button"
+                onClick={() => onTtsConfigChange({ ...ttsConfig, enabled: false })}
+                className={`p-4 rounded-xl border-2 transition-all ${
+                  !ttsConfig?.enabled
+                    ? 'border-primary bg-primary/10 text-primary'
+                    : 'border-dark-border bg-dark-secondary/30 text-dark-muted hover:border-primary/50'
+                }`}
+              >
+                <div className="text-2xl mb-2">📹</div>
+                <div className="font-bold text-sm">Alerta Normal</div>
+                <div className="text-xs mt-1 opacity-70">Solo multimedia</div>
+              </button>
+              <button
+                type="button"
+                onClick={() => onTtsConfigChange({ ...ttsConfig, enabled: true })}
+                className={`p-4 rounded-xl border-2 transition-all ${
+                  ttsConfig?.enabled
+                    ? 'border-primary bg-primary/10 text-primary'
+                    : 'border-dark-border bg-dark-secondary/30 text-dark-muted hover:border-primary/50'
+                }`}
+              >
+                <div className="text-2xl mb-2">🎤</div>
+                <div className="font-bold text-sm">Alerta con TTS</div>
+                <div className="text-xs mt-1 opacity-70">Multimedia + Voz IA</div>
+              </button>
             </div>
 
             {ttsConfig?.enabled && (
@@ -234,7 +260,14 @@ export const FileUploadSection = ({
                   <select
                     value={ttsConfig?.voiceId || 'pNInz6obpgDQGcFmaJgB'}
                     onChange={(e) => onTtsConfigChange({ ...ttsConfig, voiceId: e.target.value })}
-                    className="w-full p-2 rounded-lg border border-dark-border bg-black text-white outline-none focus:border-primary transition text-sm"
+                    className="w-full p-2 rounded-lg border-2 border-primary/30 bg-gradient-to-br from-dark-card to-dark-secondary text-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-sm appearance-none cursor-pointer hover:border-primary font-semibold"
+                    style={{
+                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239146FF'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                      backgroundRepeat: 'no-repeat',
+                      backgroundPosition: 'right 0.5rem center',
+                      backgroundSize: '1.25em 1.25em',
+                      paddingRight: '2rem'
+                    }}
                   >
                     {ELEVENLABS_VOICES.map(voice => (
                       <option key={voice.id} value={voice.id}>{voice.name}</option>
