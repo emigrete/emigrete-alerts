@@ -11,6 +11,7 @@ export const AdminDashboard = () => {
   const [userId] = useState(localStorage.getItem('twitchUserId'));
   const [username] = useState(localStorage.getItem('twitchUsername'));
   const [isAdmin, setIsAdmin] = useState(false);
+  const [successMessage, setSuccessMessage] = useState(null);
   const [stats, setStats] = useState({
     totalAlerts: 0,
     totalTTS: 0,
@@ -90,10 +91,19 @@ export const AdminDashboard = () => {
     return 'text-green-500';
   };
 
-  const handleChangeTier = async (targetUserId, newTier) => {
-    if (!window.confirm(`¿Cambiar plan de usuario a ${newTier.toUpperCase()}?`)) {
+  const handleChangeTier = async (targetUserId, newTier, username) => {
+    if (!window.confirm(`¿Cambiar plan de @${username} a ${newTier.toUpperCase()}?`)) {
       return;
     }
+
+    // Mostrar loading en el usuario específico
+    setUsers(prevUsers => 
+      prevUsers.map(u => 
+        u.userId === targetUserId 
+          ? { ...u, isChangingTier: true }
+          : u
+      )
+    );
 
     try {
       await axios.put(`${API_URL}/api/admin/users/${targetUserId}/tier`, {
@@ -103,14 +113,24 @@ export const AdminDashboard = () => {
 
       // Recargar usuarios
       await fetchUsers();
-      alert('Plan cambiado exitosamente');
+      
+      // Notificación de éxito
+      setSuccessMessage(`✅ Plan de @${username} cambiado a ${newTier.toUpperCase()} exitosamente`);
+      setTimeout(() => setSuccessMessage(null), 5000);
     } catch (error) {
       console.error('Error cambiando tier:', error);
+      setUsers(prevUsers => 
+        prevUsers.map(u => 
+          u.userId === targetUserId 
+            ? { ...u, isChangingTier: false }
+            : u
+        )
+      );
       alert(error.response?.data?.error || 'Error al cambiar tier');
     }
   };
 
-  const handleResetLimit = async (targetUserId, type, displayName) => {
+  const handleResetLimit = async (targetUserId, type, username) => {
     const typeLabels = {
       'alerts': 'contador de alertas',
       'tts': 'caracteres TTS usados',
@@ -118,7 +138,7 @@ export const AdminDashboard = () => {
       'all': 'TODOS los límites'
     };
 
-    if (!window.confirm(`¿Resetear ${typeLabels[type]} de ${displayName}?`)) {
+    if (!window.confirm(`¿Resetear ${typeLabels[type]} de @${username}?`)) {
       return;
     }
 
@@ -130,7 +150,10 @@ export const AdminDashboard = () => {
 
       // Recargar usuarios
       await fetchUsers();
-      alert('Límites reseteados exitosamente');
+      
+      // Notificación de éxito
+      setSuccessMessage(`✅ Límites de @${username} reseteados exitosamente`);
+      setTimeout(() => setSuccessMessage(null), 5000);
     } catch (error) {
       console.error('Error reseteando límites:', error);
       alert(error.response?.data?.error || 'Error al resetear límites');
@@ -185,6 +208,15 @@ export const AdminDashboard = () => {
             ← Volver
           </button>
         </div>
+
+        {/* Notificación de éxito */}
+        {successMessage && (
+          <div className="mb-6 animate-fade-in-down">
+            <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-2 border-green-500/50 rounded-xl p-4 shadow-lg">
+              <p className="text-green-300 font-semibold text-center text-lg">{successMessage}</p>
+            </div>
+          </div>
+        )}
 
         {/* Estadísticas globales */}
         <div className="mb-8">
@@ -248,19 +280,26 @@ export const AdminDashboard = () => {
                     <tr key={user.userId} className="hover:bg-primary/5 transition-colors">
                       <td className="px-6 py-4">
                         <div>
-                          <p className="font-bold text-white text-base">{user.displayName}</p>                        <p className="text-sm text-primary font-semibold">@{user.username}</p>                          <p className="text-xs text-dark-muted font-mono">{user.userId}</p>
+                          <p className="font-bold text-white text-base">@{user.username}</p>
+                          <p className="text-xs text-dark-muted font-mono">{user.userId}</p>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <select
-                          value={user.tier}
-                          onChange={(e) => handleChangeTier(user.userId, e.target.value)}
-                          className={`px-3 py-1.5 rounded-full text-xs font-bold text-white bg-gradient-to-r ${getTierColor(user.tier)} shadow-lg cursor-pointer hover:opacity-80 transition appearance-none border-2 border-white/20`}
-                        >
-                          <option value="free" className="bg-gray-800">Free</option>
-                          <option value="pro" className="bg-gray-800">Pro</option>
-                          <option value="premium" className="bg-gray-800">Premium</option>
-                        </select>
+                        {user.isChangingTier ? (
+                          <div className="px-3 py-1.5 rounded-full text-xs font-bold text-white bg-gradient-to-r from-gray-600 to-gray-700 shadow-lg animate-pulse border-2 border-white/20">
+                            Cambiando...
+                          </div>
+                        ) : (
+                          <select
+                            value={user.tier}
+                            onChange={(e) => handleChangeTier(user.userId, e.target.value, user.username)}
+                            className={`px-3 py-1.5 rounded-full text-xs font-bold text-white bg-gradient-to-r ${getTierColor(user.tier)} shadow-lg cursor-pointer hover:opacity-80 transition appearance-none border-2 border-white/20`}
+                          >
+                            <option value="free" className="bg-gray-800">Free</option>
+                            <option value="pro" className="bg-gray-800">Pro</option>
+                            <option value="premium" className="bg-gray-800">Premium</option>
+                          </select>
+                        )}
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm">
@@ -333,7 +372,7 @@ export const AdminDashboard = () => {
                       <td className="px-6 py-4">
                         <div className="flex gap-2">
                           <button
-                            onClick={() => handleResetLimit(user.userId, 'all', user.displayName)}
+                            onClick={() => handleResetLimit(user.userId, 'all', user.username)}
                             className="px-3 py-1.5 bg-red-500/20 border border-red-500/50 text-red-400 rounded-lg hover:bg-red-500/30 transition text-xs font-semibold"
                             title="Resetear todos los límites"
                           >

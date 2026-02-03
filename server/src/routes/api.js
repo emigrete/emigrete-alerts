@@ -483,6 +483,29 @@ router.put('/triggers/:id/tts', async (req, res) => {
 });
 
 /**
+ * VERIFICAR SI USUARIO ES ADMIN
+ * GET /api/admin/check
+ * Query: ?userId={user_id}
+ */
+router.get('/admin/check', async (req, res) => {
+  try {
+    const { userId } = req.query;
+    
+    if (!userId) {
+      return res.json({ isAdmin: false });
+    }
+
+    const ADMIN_USER_IDS = process.env.ADMIN_USER_IDS?.split(',') || [];
+    const isAdmin = ADMIN_USER_IDS.includes(userId);
+
+    res.json({ isAdmin });
+  } catch (error) {
+    console.error('❌ Error verificando admin:', error);
+    res.json({ isAdmin: false });
+  }
+});
+
+/**
  * ADMIN: OBTENER TODOS LOS USUARIOS Y SUS USOS
  * GET /api/admin/users
  * Query: ?adminId={tu_user_id}
@@ -498,7 +521,7 @@ router.get('/admin/users', async (req, res) => {
     }
 
     // Obtener todos los usuarios con tokens (usuarios activos)
-    const userTokens = await UserToken.find().select('userId displayName username');
+    const userTokens = await UserToken.find().select('userId username');
     
     const usersData = [];
     
@@ -509,7 +532,6 @@ router.get('/admin/users', async (req, res) => {
         
         usersData.push({
           userId: userToken.userId,
-          displayName: userToken.displayName,
           username: userToken.username,
           tier: status.subscription.tier,
           triggers: triggerCount,

@@ -15,6 +15,7 @@ export const Header = ({
 }) => {
   const [subscription, setSubscription] = useState(null);
   const [loadingSubscription, setLoadingSubscription] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -34,7 +35,20 @@ export const Header = ({
       }
     };
 
+    const checkAdmin = async () => {
+      if (!userId) return;
+      
+      try {
+        const res = await axios.get(`${API_URL}/api/admin/check?userId=${userId}`);
+        setIsAdmin(res.data.isAdmin);
+      } catch (error) {
+        console.error('Error checking admin:', error);
+        setIsAdmin(false);
+      }
+    };
+
     fetchSubscription();
+    checkAdmin();
   }, [userId]);
 
   const getTierColor = (tier) => {
@@ -85,7 +99,7 @@ export const Header = ({
 
       <div className="flex flex-wrap gap-3 items-center">
         {rightSlot}
-        {process.env.REACT_APP_ADMIN_IDS?.split(',').includes(userId) && (
+        {isAdmin && (
           <button
             onClick={() => navigate('/admin/dashboard')}
             className="bg-amber-500/10 border border-amber-500/30 text-amber-400 px-4 py-2 rounded-lg hover:bg-amber-500/20 hover:border-amber-500 transition-all font-semibold text-sm"
