@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Overlay from './pages/Overlay';
 import Dashboard from './pages/Dashboard';
 import AuthCallback from './pages/AuthCallback';
+import TTSPage from './pages/TTS';
 
 function App() {
   return (
@@ -9,6 +10,7 @@ function App() {
       <Routes>
         <Route path="/overlay" element={<Overlay />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route path="/tts" element={<TTSPage />} />
         <Route path="/" element={<Dashboard />} />
       </Routes>
     </BrowserRouter>

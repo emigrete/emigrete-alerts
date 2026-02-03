@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { API_URL } from '../constants/config';
 import { TTSGuide } from './TTSGuide';
 import { TTSConfig } from './TTSConfig';
-import { RewardCreator } from './RewardCreator';
+import { RewardCreatorTTS } from './RewardCreatorTTS';
 
 export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCreated }) => {
   const [selectedTriggerId, setSelectedTriggerId] = useState(null);
@@ -322,10 +322,9 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
 
       {/* Crear recompensa desde TTS */}
       {showRewardCreator && (
-        <RewardCreator
+        <RewardCreatorTTS
           userId={userId}
           isDemo={isDemo}
-          defaultRequireInput={true}
           onCancel={() => setShowRewardCreator(false)}
           onRewardCreated={(reward) => {
             // Cerrar modal

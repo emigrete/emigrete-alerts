@@ -18,33 +18,33 @@ export const FeedbackForm = () => {
     }
 
     setSending(true);
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    const TIMEOUT_MS = 20000;
+    const RETRY_DELAY_MS = 1200;
+    const isRetryableError = (err) => {
+      const code = err?.code;
+      return code === 'ECONNABORTED' || code === 'ERR_NETWORK';
+    };
     try {
-      await axios.post(
-        `${API_URL}/api/feedback`,
-        {
-          feedback,
-          email,
-          type
-        },
-        {
-          signal: controller.signal
-        }
-      );
+      const payload = { feedback, email, type };
+      try {
+        await axios.post(`${API_URL}/api/feedback`, payload, { timeout: TIMEOUT_MS });
+      } catch (err) {
+        if (!isRetryableError(err)) throw err;
+        await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
+        await axios.post(`${API_URL}/api/feedback`, payload, { timeout: TIMEOUT_MS });
+      }
 
       toast.success('Gracias por tu comentario.');
       setFeedback('');
       setEmail('');
       setType('suggestion');
     } catch (error) {
-      if (error?.name === 'CanceledError') {
-        toast.error('El envío tardó demasiado. Intentá de nuevo.');
+      if (error?.code === 'ECONNABORTED' || error?.code === 'ERR_NETWORK') {
+        toast.error('El servidor está lento. Intentá de nuevo en unos segundos.');
       } else {
         toast.error('No se pudo enviar el comentario. Intentá de nuevo.');
       }
     } finally {
-      clearTimeout(timeoutId);
       setSending(false);
     }
   };

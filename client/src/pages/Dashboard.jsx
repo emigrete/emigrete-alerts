@@ -7,13 +7,12 @@ import { validateFile, validateUpload } from '../utils/helpers';
 // Components
 import { LoginCard } from '../components/LoginCard';
 import { Header } from '../components/Header';
+import { Navigation } from '../components/Navigation';
 import { StepGuide } from '../components/StepGuide';
 import { FileUploadSection } from '../components/FileUploadSection';
 import { TriggersTable } from '../components/TriggersTable';
 import { DonationFooter } from '../components/DonationFooter';
 import { AlertsBadge } from '../components/AlertsBadge';
-import { FeedbackForm } from '../components/FeedbackForm';
-import { TTSManager } from '../components/TTSManager';
 
 export default function Dashboard() {
   // Modo demo: solo desarrollo
@@ -207,6 +206,9 @@ export default function Dashboard() {
         {/* Header */}
         <Header username={username} userId={userId} onLogout={handleLogout} />
 
+        {/* Navigation */}
+        <Navigation />
+
         {/* Aviso de beta */}
         <div className="mb-10 p-5 bg-yellow-500/10 border-l-4 border-yellow-500 rounded-2xl">
           <div className="flex items-start gap-3">
@@ -258,20 +260,6 @@ export default function Dashboard() {
             />
           </section>
 
-          {/* TTS Manager */}
-          <TTSManager
-            triggers={triggers}
-            rewards={rewards}
-            userId={userId}
-            isDemo={isDemo}
-            onRefresh={fetchTriggers}
-            onCreated={(newTrigger) => {
-              if (isDemo && newTrigger) {
-                setTriggers((prev) => [...prev, newTrigger]);
-              }
-            }}
-          />
-
           {/* Triggers Card */}
           <section className="bg-gradient-to-br from-dark-card to-dark-secondary p-7 lg:p-12 rounded-[28px] border border-primary/15 shadow-xl hover:shadow-2xl transition-shadow">
             <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
@@ -288,9 +276,6 @@ export default function Dashboard() {
               onRefresh={fetchTriggers}
             />
           </section>
-
-          {/* Feedback Form */}
-          <FeedbackForm />
         </div>
 
         {/* Donation Footer - Ancho completo */}
