@@ -1,9 +1,23 @@
+@import "tailwindcss";
+
+@theme {
+  --color-dark-bg: #09090b;
+  --color-dark-card: #18181b;
+  --color-dark-secondary: #27272a;
+  --color-primary: #9146FF;
+  --color-dark-text: #e4e4e7;
+  --color-dark-muted: #a1a1aa;
+  --color-dark-border: #27272a;
+  --color-cafecito: #0ec2c2;
+  --color-paypal: #0070ba;
+}
+
 html, body, #root {
   height: 100%;
   width: 100%;
   margin: 0;
   padding: 0;
-  background: #09090b; /* tu fondo */
+  @apply bg-dark-bg;
 }
 
 * {

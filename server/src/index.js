@@ -53,12 +53,30 @@ app.use('/upload', limiter);
 app.get('/', (req, res) => res.status(200).send('OK'));
 
 // Firebase (service account por env)
-if (!process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
-  console.error('❌ Falta FIREBASE_SERVICE_ACCOUNT_JSON');
+const firebaseJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON || process.env.FIREBASE_CREDENTIALS;
+
+if (!firebaseJson) {
+  console.error('❌ Falta FIREBASE_SERVICE_ACCOUNT_JSON o FIREBASE_CREDENTIALS');
   process.exit(1);
 }
 
-const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+let serviceAccount;
+try {
+  // Si es Base64, decodificar
+  if (firebaseJson.length > 100) {
+    try {
+      serviceAccount = JSON.parse(Buffer.from(firebaseJson, 'base64').toString());
+    } catch {
+      // Si no es Base64, intentar JSON directo
+      serviceAccount = JSON.parse(firebaseJson);
+    }
+  } else {
+    serviceAccount = JSON.parse(firebaseJson);
+  }
+} catch (e) {
+  console.error('❌ Error decodificando Firebase JSON:', e.message);
+  process.exit(1);
+}
 
 initializeApp({
   credential: cert(serviceAccount),
@@ -77,14 +95,23 @@ const upload = multer({
 app.use('/auth', authRoutes);
 app.use('/api', apiRoutes);
 
-// Upload video
+// Detectar tipo de media según MIME type
+function getMediaType(mimeType) {
+  if (mimeType.includes('video')) return 'video';
+  if (mimeType.includes('audio')) return 'audio';
+  if (mimeType.includes('gif') || mimeType.includes('image')) return 'gif';
+  return 'video'; // default
+}
+
+// Upload media (video, audio, gif)
 app.post('/upload', upload.single('video'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'No se subió ningún archivo' });
     if (!req.body.twitchRewardId) return res.status(400).json({ error: 'Falta el twitchRewardId' });
     if (!req.body.userId) return res.status(400).json({ error: 'Falta el userId' });
 
-    const fileName = `triggers/${Date.now()}_${req.file.originalname}`;
+    const mediaType = getMediaType(req.file.mimetype);
+    const fileName = `triggers/${mediaType}/${Date.now()}_${req.file.originalname}`;
     const file = bucket.file(fileName);
 
     const stream = file.createWriteStream({
@@ -98,19 +125,59 @@ app.post('/upload', upload.single('video'), async (req, res) => {
         await file.makePublic();
         const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
 
-        const trigger = await Trigger.findOneAndUpdate(
-          { twitchRewardId: req.body.twitchRewardId, userId: req.body.userId },
-          {
-            videoUrl: publicUrl,
-            fileName,
-            twitchRewardId: req.body.twitchRewardId,
-            userId: req.body.userId
-          },
-          { new: true, upsert: true }
-        );
+        // Agregar nueva media al array de medias
+        const trigger = await Trigger.findOne({
+          twitchRewardId: req.body.twitchRewardId,
+          userId: req.body.userId
+        });
 
-        res.json({ status: 'success', trigger });
-      } catch {
+        if (trigger) {
+          // Actualizar trigger existente: agregar nueva media
+          trigger.medias.push({
+            type: mediaType,
+            url: publicUrl,
+            fileName,
+            volume: 1.0
+          });
+          // Mantener compatibilidad con videoUrl si es video
+          if (mediaType === 'video') {
+            trigger.videoUrl = publicUrl;
+          }
+          await trigger.save();
+          res.json({ 
+            status: 'success', 
+            trigger,
+            media: {
+              type: mediaType,
+              url: publicUrl
+            }
+          });
+        } else {
+          // Crear nuevo trigger
+          const newTrigger = await Trigger.create({
+            userId: req.body.userId,
+            twitchRewardId: req.body.twitchRewardId,
+            medias: [{
+              type: mediaType,
+              url: publicUrl,
+              fileName,
+              volume: 1.0
+            }],
+            videoUrl: mediaType === 'video' ? publicUrl : undefined,
+            fileName: mediaType === 'video' ? fileName : undefined
+          });
+
+          res.json({ 
+            status: 'success', 
+            trigger: newTrigger,
+            media: {
+              type: mediaType,
+              url: publicUrl
+            }
+          });
+        }
+      } catch (error) {
+        console.error('Error al guardar en BD:', error);
         res.status(500).json({ error: 'Error al guardar en BD' });
       }
     });
