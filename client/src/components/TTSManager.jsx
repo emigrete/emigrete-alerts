@@ -168,7 +168,6 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
           <ul className="text-xs text-purple-300 space-y-1 ml-4 list-disc">
             <li>Si quieres leer el mensaje del espectador → <strong>Activa "Requerir mensaje del espectador"</strong> al crear la recompensa</li>
             <li>Selecciona una <strong>voz</strong> abajo (es obligatorio)</li>
-            <li>Los fans necesitan estar en una plataforma que soporte TTS (Discord, etc.)</li>
           </ul>
         </div>
 
