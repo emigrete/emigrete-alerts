@@ -115,16 +115,6 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
       {/* Guía */}
       <TTSGuide />
 
-      {/* Nota informativa */}
-      <div className="mt-8 p-4 bg-primary/10 border border-primary/30 rounded-xl">
-        <p className="text-sm text-white mb-2">
-          💡 <strong>Opción recomendada:</strong> Activa TTS directamente al crear una nueva recompensa en la sección "Alertas Multimedia" para configurarlo todo en un solo paso.
-        </p>
-        <p className="text-xs text-dark-muted mt-2">
-          O usa esta sección para agregar TTS a recompensas existentes.
-        </p>
-      </div>
-
       {/* Límite mensual */}
       {usage && !loadingUsage && (
         <div className={`mt-8 p-4 rounded-2xl border ${
@@ -159,25 +149,15 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
       {/* Crear TTS */}
       <div className="mt-8 bg-dark-card/70 border border-dark-border rounded-2xl p-7">
         <h3 className="text-xl font-bold text-white mb-4">Agregar TTS a una recompensa</h3>
-        
-        {/* Info importante */}
-        <div className="mb-6 p-4 bg-purple-500/10 border border-purple-500/30 rounded-lg">
-          <p className="text-sm text-purple-300 mb-2">
-            <strong>⚡ Para que el TTS funcione:</strong>
-          </p>
-          <ul className="text-xs text-purple-300 space-y-1 ml-4 list-disc">
-            <li>Si quieres leer el mensaje del espectador → <strong>Activa "Requerir mensaje del espectador"</strong> al crear la recompensa</li>
-            <li>Selecciona una <strong>voz</strong> abajo (es obligatorio)</li>
-          </ul>
-        </div>
 
-        <div className="space-y-5">
+        <div className="space-y-4">
+          {/* Canje */}
           <div>
             <label className="block mb-2 font-semibold text-dark-muted text-xs uppercase tracking-wider">
               Canje
             </label>
             <select
-              className="w-full p-3 rounded-lg border-2 border-dark-border bg-gradient-to-br from-dark-card to-dark-secondary text-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all appearance-none cursor-pointer hover:border-primary/50 font-semibold"
+              className="w-full p-3 rounded-lg border-2 border-dark-border bg-gradient-to-br from-dark-card to-dark-secondary text-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all appearance-none cursor-pointer hover:border-primary/50 font-semibold text-sm"
               style={{
                 backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239146FF'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
                 backgroundRepeat: 'no-repeat',
@@ -188,71 +168,60 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
               value={selectedReward}
               onChange={(e) => setSelectedReward(e.target.value)}
             >
-              <option value="" style={{ backgroundColor: '#1a1a2e', color: '#fff' }}>-- Seleccioná un canje --</option>
+              <option value="" style={{ backgroundColor: '#1a1a2e', color: '#fff' }}>Seleccioná un canje</option>
               {rewards.map(r => (
                 <option key={r.id} value={r.id} style={{ backgroundColor: '#1a1a2e', color: '#fff' }}>{r.title}</option>
               ))}
             </select>
-            <div className="mt-2 flex gap-2">
-              <button
-                type="button"
-                onClick={() => setShowRewardCreator(true)}
-                className="text-xs font-semibold px-3 py-2 rounded-lg bg-dark-secondary border border-dark-border hover:border-primary transition"
-              >
-                Crear nueva alerta
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => setShowRewardCreator(true)}
+              className="mt-2 text-xs font-semibold px-3 py-2 rounded-lg bg-primary/20 border border-primary/30 hover:border-primary text-primary transition w-full"
+            >
+              + Crear nueva alerta
+            </button>
           </div>
 
+          {/* Voz */}
           <div>
             <label className="block mb-2 font-semibold text-dark-muted text-xs uppercase tracking-wider">
-              Voz 🎙️
+              🎙️ Voz (obligatorio)
             </label>
-            <p className="text-xs text-dark-muted mb-3 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-              <strong>Importante:</strong> Selecciona una voz para darle sonido al TTS. Podés elegir entre las voces disponibles o pegar el ID de una voz personalizada de ElevenLabs.
-            </p>
             <select
               value={ttsConfig.voiceId}
               onChange={(e) => setTtsConfig({ ...ttsConfig, voiceId: e.target.value })}
-              className="w-full p-2 rounded-lg border-2 border-primary/30 bg-gradient-to-br from-dark-card to-dark-secondary text-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-sm appearance-none cursor-pointer hover:border-primary font-semibold"
+              className="w-full p-3 rounded-lg border-2 border-primary/30 bg-gradient-to-br from-dark-card to-dark-secondary text-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all appearance-none cursor-pointer hover:border-primary font-semibold text-sm"
               style={{
                 backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239146FF'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
                 backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'right 0.5rem center',
-                backgroundSize: '1.25em 1.25em',
-                paddingRight: '2rem'
+                backgroundPosition: 'right 0.75rem center',
+                backgroundSize: '1.5em 1.5em',
+                paddingRight: '2.5rem'
               }}
             >
               {ELEVENLABS_VOICES.map(voice => (
                 <option key={voice.id} value={voice.id} style={{ backgroundColor: '#1a1a2e', color: '#fff' }}>{voice.name}</option>
               ))}
             </select>
-            <p className="text-xs text-dark-muted mt-2">Voces disponibles: {ELEVENLABS_VOICES.length}</p>
-            <input
-              type="text"
-              value={ttsConfig.voiceId || ''}
-              onChange={(e) => setTtsConfig({ ...ttsConfig, voiceId: e.target.value.trim() })}
-              placeholder="ID de voz en español (pega el ID aquí)"
-              className="mt-2 w-full p-2 rounded-lg border border-dark-border bg-black text-white outline-none focus:border-primary transition text-xs"
-            />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <label className="flex items-center gap-3 text-xs text-dark-text">
+          {/* Opciones */}
+          <div className="space-y-3">
+            <label className="flex items-center gap-3 text-xs text-dark-text cursor-pointer">
               <input
                 type="checkbox"
                 checked={ttsConfig.readUsername !== false}
                 onChange={(e) => setTtsConfig({ ...ttsConfig, readUsername: e.target.checked })}
-                className="w-4 h-4"
+                className="w-4 h-4 rounded accent-primary"
               />
               Incluir nombre del usuario
             </label>
-            <label className="flex items-center gap-3 text-xs text-dark-text">
+            <label className="flex items-center gap-3 text-xs text-dark-text cursor-pointer">
               <input
                 type="checkbox"
                 checked={ttsConfig.useViewerMessage !== false}
                 onChange={(e) => setTtsConfig({ ...ttsConfig, useViewerMessage: e.target.checked })}
-                className="w-4 h-4"
+                className="w-4 h-4 rounded accent-primary"
               />
               Leer mensaje del espectador
             </label>
@@ -266,9 +235,10 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
               <textarea
                 value={ttsConfig.text}
                 onChange={(e) => setTtsConfig({ ...ttsConfig, text: e.target.value })}
-                placeholder="Escribí el texto..."
+                placeholder="Texto a decir..."
                 maxLength={300}
-                className="w-full p-2 rounded-lg border border-dark-border bg-black text-white outline-none focus:border-primary transition text-xs h-20 resize-none"
+                rows={2}
+                className="w-full p-2 rounded-lg border border-dark-border bg-dark-secondary text-white outline-none focus:border-primary transition text-xs resize-none"
               />
               <small className="text-dark-muted">{(ttsConfig.text || '').length}/300</small>
             </div>
@@ -277,9 +247,9 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
           <button
             onClick={handleCreateTTS}
             disabled={creating || !selectedReward}
-            className="w-full bg-primary text-white font-bold py-3.5 px-6 rounded-lg hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+            className="w-full bg-primary text-white font-bold py-3 px-4 rounded-lg hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed transition-all text-sm"
           >
-            {creating ? 'Guardando...' : 'Guardar TTS'}
+            {creating ? '⏳ Guardando...' : '💾 Guardar TTS'}
           </button>
         </div>
       </div>
