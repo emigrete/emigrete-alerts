@@ -4,12 +4,14 @@ import { toast } from 'sonner';
 import { API_URL } from '../constants/config';
 import { TTSGuide } from './TTSGuide';
 import { TTSConfig } from './TTSConfig';
+import { RewardCreator } from './RewardCreator';
 
 export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCreated }) => {
   // Trigger seleccionado
   const [selectedTriggerId, setSelectedTriggerId] = useState(null);
   // Canje elegido
   const [selectedReward, setSelectedReward] = useState('');
+  const [showRewardCreator, setShowRewardCreator] = useState(false);
   // Estado de guardado
   const [creating, setCreating] = useState(false);
   // Uso mensual de TTS
@@ -172,6 +174,15 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
                 <option key={r.id} value={r.id} style={{ backgroundColor: '#1a1a2e', color: '#fff' }}>{r.title}</option>
               ))}
             </select>
+            <div className="mt-2 flex gap-2">
+              <button
+                type="button"
+                onClick={() => setShowRewardCreator(true)}
+                className="text-xs font-semibold px-3 py-2 rounded-lg bg-dark-secondary border border-dark-border hover:border-primary transition"
+              >
+                Crear nueva alerta
+              </button>
+            </div>
           </div>
 
           <div>
@@ -312,6 +323,21 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
           onUpdate={() => {
             setSelectedTriggerId(null);
             onRefresh();
+          }}
+        />
+      )}
+
+      {/* Crear recompensa desde TTS */}
+      {showRewardCreator && (
+        <RewardCreator
+          userId={userId}
+          isDemo={isDemo}
+          onCancel={() => setShowRewardCreator(false)}
+          onRewardCreated={(reward) => {
+            // Seleccionar la recompensa recién creada
+            setSelectedReward(reward.id);
+            setShowRewardCreator(false);
+            if (onRefresh) onRefresh();
           }}
         />
       )}
