@@ -1,16 +1,5 @@
 import { useState } from 'react';
-import { FILE_CONFIG } from '../constants/config';
 import { RewardCreator } from './RewardCreator';
-
-const ELEVENLABS_VOICES = [
-  { id: 'pNInz6obpgDQGcFmaJgB', name: 'Adam (Masculino, profundo)' },
-  { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Sarah (Femenino, suave)' },
-  { id: 'ErXwobaYiN019PkySvjV', name: 'Antoni (Masculino, cálido)' },
-  { id: 'VR6AewLTigWG4xSOukaG', name: 'Arnold (Masculino, autoritario)' },
-  { id: 'MF3mGyEYCl7XYWbV9V6O', name: 'Elli (Femenino, juvenil)' },
-  { id: 'ThT5KcBeYPX3keUQqHPh', name: 'Dorothy (Femenino, británico)' },
-  { id: 'onwK4e9ZLuTAKqWW03F9', name: 'Daniel (Masculino, británico)' },
-];
 
 export const FileUploadSection = ({ 
   file, 
@@ -25,9 +14,7 @@ export const FileUploadSection = ({
   userId,
   onRewardCreated,
   isDemo,
-  triggers,
-  ttsConfig,
-  onTtsConfigChange
+  triggers
 }) => {
   const [showRewardCreator, setShowRewardCreator] = useState(false);
   const [mediaType, setMediaType] = useState(null);
@@ -47,7 +34,7 @@ export const FileUploadSection = ({
 
   const getPreviewContent = () => {
     if (!previewUrl) {
-      return <div className="text-gray-600 italic">Sin archivo seleccionado</div>;
+      return <div className="text-gray-600 italic">Todavía no subiste nada</div>;
     }
 
     switch (mediaType) {
@@ -64,7 +51,7 @@ export const FileUploadSection = ({
       case 'gif':
         return <img src={previewUrl} alt="Preview" className="max-w-full max-h-full" />;
       default:
-        return <div className="text-gray-600 italic">Sin archivo seleccionado</div>;
+        return <div className="text-gray-600 italic">Todavía no subiste nada</div>;
     }
   };
 
@@ -88,8 +75,8 @@ export const FileUploadSection = ({
         <div className="text-center py-12">
           <div className="mb-8">
             <span className="text-7xl block mb-4">🎬</span>
-            <h2 className="text-2xl font-bold text-dark-text mb-2">¡Crea tu primera alerta!</h2>
-            <p className="text-dark-muted mb-8">Conecta tus videos favoritos con tus canjes de Twitch</p>
+            <h2 className="text-2xl font-bold text-dark-text mb-2">¡Armá tu primera alerta!</h2>
+            <p className="text-dark-muted mb-8">Enganchá tus clips favoritos con los canjes de Twitch</p>
           </div>
 
           <button
@@ -101,19 +88,19 @@ export const FileUploadSection = ({
           </button>
 
           <div className="mt-12 text-left max-w-2xl mx-auto">
-            <h3 className="text-lg font-semibold text-dark-text mb-4">¿Cómo funciona?</h3>
+            <h3 className="text-lg font-semibold text-dark-text mb-4">¿Cómo va la mano?</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="p-4 bg-dark-secondary rounded-lg border border-dark-border">
                 <div className="text-3xl mb-2">1️⃣</div>
-                <p className="text-sm text-dark-muted">Crea una nueva recompensa con tu nombre y costo</p>
+                <p className="text-sm text-dark-muted">Creá una recompensa con tu nombre y costo</p>
               </div>
               <div className="p-4 bg-dark-secondary rounded-lg border border-dark-border">
                 <div className="text-3xl mb-2">2️⃣</div>
-                <p className="text-sm text-dark-muted">Sube tu video, audio o GIF</p>
+                <p className="text-sm text-dark-muted">Subí tu video, audio o GIF</p>
               </div>
               <div className="p-4 bg-dark-secondary rounded-lg border border-dark-border">
                 <div className="text-3xl mb-2">3️⃣</div>
-                <p className="text-sm text-dark-muted">¡Usa el link en OBS y listo!</p>
+                <p className="text-sm text-dark-muted">Pegá el link en OBS y listo</p>
               </div>
             </div>
           </div>
@@ -142,7 +129,7 @@ export const FileUploadSection = ({
         {/* Left: Upload Form */}
         <div>
           <label className="block mb-2 font-semibold text-dark-muted text-sm uppercase tracking-wider">
-            1. Recompensa de Twitch
+            1. Elegí el canje
           </label>
           <div className="flex gap-2 mb-5">
             <select 
@@ -157,7 +144,7 @@ export const FileUploadSection = ({
               value={selectedReward} 
               onChange={(e) => onRewardChange(e.target.value)}
             >
-              <option value="" style={{ backgroundColor: '#1a1a2e', color: '#fff' }}>-- Seleccionar Canje --</option>
+              <option value="" style={{ backgroundColor: '#1a1a2e', color: '#fff' }}>-- Elegí un canje --</option>
               {rewards.map(r => (
                 <option key={r.id} value={r.id} style={{ backgroundColor: '#1a1a2e', color: '#fff' }}>{r.title}</option>
               ))}
@@ -176,7 +163,7 @@ export const FileUploadSection = ({
             <div className="mb-6 p-4 bg-primary/10 border border-primary/30 rounded-lg">
               <p className="text-sm text-primary font-semibold mb-2">💡 Tip:</p>
               <p className="text-sm text-dark-muted">
-                Ya tienes <strong>{triggers.length} alerta{triggers.length > 1 ? 's' : ''} creada{triggers.length > 1 ? 's' : ''}</strong>. Puedes agregar más medias a una recompensa existente o crear una nueva.
+                Ya tenés <strong>{triggers.length} alerta{triggers.length > 1 ? 's' : ''} armada{triggers.length > 1 ? 's' : ''}</strong>. Podés sumar más media a una recompensa o crear otra nueva.
               </p>
             </div>
           )}
@@ -208,7 +195,7 @@ export const FileUploadSection = ({
                 <span className="text-dark-text font-bold text-center">{file.name}</span>
               ) : (
                 <div className="text-center">
-                  <span className="block">Arrastra o clickea para subir</span>
+                  <span className="block">Arrastrá o clickeá para subir</span>
                   <small className="text-dark-muted">Video (.mp4, .webm), Audio (.mp3, .wav, .ogg) o GIF</small>
                 </div>
               )}
@@ -216,109 +203,6 @@ export const FileUploadSection = ({
           </div>
 
           {fileError && <p className="text-red-500 text-sm mb-4">{fileError}</p>}
-
-          {/* Sección TTS */}
-          <div className="mt-6 pt-6 border-t border-dark-border">
-            <label className="block mb-3 font-semibold text-dark-muted text-sm uppercase tracking-wider">
-              3. Tipo de Alerta
-            </label>
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <button
-                type="button"
-                onClick={() => onTtsConfigChange({ ...ttsConfig, enabled: false })}
-                className={`p-4 rounded-xl border-2 transition-all ${
-                  !ttsConfig?.enabled
-                    ? 'border-primary bg-primary/10 text-primary'
-                    : 'border-dark-border bg-dark-secondary/30 text-dark-muted hover:border-primary/50'
-                }`}
-              >
-                <div className="text-2xl mb-2">📹</div>
-                <div className="font-bold text-sm">Alerta Normal</div>
-                <div className="text-xs mt-1 opacity-70">Solo multimedia</div>
-              </button>
-              <button
-                type="button"
-                onClick={() => onTtsConfigChange({ ...ttsConfig, enabled: true })}
-                className={`p-4 rounded-xl border-2 transition-all ${
-                  ttsConfig?.enabled
-                    ? 'border-primary bg-primary/10 text-primary'
-                    : 'border-dark-border bg-dark-secondary/30 text-dark-muted hover:border-primary/50'
-                }`}
-              >
-                <div className="text-2xl mb-2">🎤</div>
-                <div className="font-bold text-sm">Alerta con TTS</div>
-                <div className="text-xs mt-1 opacity-70">Multimedia + Voz IA</div>
-              </button>
-            </div>
-
-            {ttsConfig?.enabled && (
-              <div className="bg-dark-secondary/50 border border-primary/30 rounded-xl p-4 space-y-4">
-                <div>
-                  <label className="block mb-2 font-semibold text-dark-muted text-xs uppercase tracking-wider">
-                    Voz
-                  </label>
-                  <select
-                    value={ttsConfig?.voiceId || 'pNInz6obpgDQGcFmaJgB'}
-                    onChange={(e) => onTtsConfigChange({ ...ttsConfig, voiceId: e.target.value })}
-                    className="w-full p-2 rounded-lg border-2 border-primary/30 bg-gradient-to-br from-dark-card to-dark-secondary text-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-sm appearance-none cursor-pointer hover:border-primary font-semibold"
-                    style={{
-                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239146FF'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                      backgroundRepeat: 'no-repeat',
-                      backgroundPosition: 'right 0.5rem center',
-                      backgroundSize: '1.25em 1.25em',
-                      paddingRight: '2rem'
-                    }}
-                  >
-                    {ELEVENLABS_VOICES.map(voice => (
-                      <option key={voice.id} value={voice.id} style={{ backgroundColor: '#1a1a2e', color: '#fff' }}>{voice.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    id="read-username"
-                    checked={ttsConfig?.readUsername !== false}
-                    onChange={(e) => onTtsConfigChange({ ...ttsConfig, readUsername: e.target.checked })}
-                    className="w-4 h-4"
-                  />
-                  <label htmlFor="read-username" className="text-dark-text text-xs">
-                    Decir nombre del usuario
-                  </label>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    id="use-viewer-message"
-                    checked={ttsConfig?.useViewerMessage !== false}
-                    onChange={(e) => onTtsConfigChange({ ...ttsConfig, useViewerMessage: e.target.checked })}
-                    className="w-4 h-4"
-                  />
-                  <label htmlFor="use-viewer-message" className="text-dark-text text-xs">
-                    Leer mensaje del viewer
-                  </label>
-                </div>
-
-                {!ttsConfig?.useViewerMessage && (
-                  <div>
-                    <label className="block mb-2 font-semibold text-dark-muted text-xs uppercase tracking-wider">
-                      Texto personalizado
-                    </label>
-                    <textarea
-                      value={ttsConfig?.text || ''}
-                      onChange={(e) => onTtsConfigChange({ ...ttsConfig, text: e.target.value })}
-                      placeholder="Escribe lo que el TTS dirá..."
-                      maxLength={300}
-                      className="w-full p-2 rounded-lg border border-dark-border bg-black text-white outline-none focus:border-primary transition text-xs h-16 resize-none"
-                    />
-                    <small className="text-dark-muted">{(ttsConfig?.text || '').length}/300</small>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
 
           <div className="text-right mt-5">
             <button

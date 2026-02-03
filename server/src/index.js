@@ -114,10 +114,16 @@ app.post('/upload', upload.single('video'), async (req, res) => {
       mimeType: req.file?.mimetype
     });
 
-    if (!req.file) {
-      console.error('❌ No se subió archivo');
-      return res.status(400).json({ error: 'No se subió ningún archivo' });
+    let ttsConfig = undefined;
+    if (req.body.ttsConfig) {
+      try {
+        ttsConfig = JSON.parse(req.body.ttsConfig);
+      } catch (e) {
+        console.warn('⚠️ Error parseando ttsConfig:', e);
+      }
     }
+    const hasTTS = !!ttsConfig?.enabled;
+
     if (!req.body.twitchRewardId) {
       console.error('❌ Falta twitchRewardId');
       return res.status(400).json({ error: 'Falta el twitchRewardId' });
@@ -125,6 +131,42 @@ app.post('/upload', upload.single('video'), async (req, res) => {
     if (!req.body.userId) {
       console.error('❌ Falta userId');
       return res.status(400).json({ error: 'Falta el userId' });
+    }
+
+    // Permitir TTS-only (sin archivo)
+    if (!req.file) {
+      if (!hasTTS) {
+        console.error('❌ No se subió archivo ni TTS habilitado');
+        return res.status(400).json({ error: 'Falta archivo o TTS' });
+      }
+
+      const trigger = await Trigger.findOne({
+        twitchRewardId: req.body.twitchRewardId,
+        userId: req.body.userId
+      });
+
+      if (trigger) {
+        trigger.ttsConfig = ttsConfig;
+        await trigger.save();
+        return res.json({
+          status: 'success',
+          trigger,
+          media: null
+        });
+      }
+
+      const newTrigger = await Trigger.create({
+        userId: req.body.userId,
+        twitchRewardId: req.body.twitchRewardId,
+        medias: [],
+        ttsConfig
+      });
+
+      return res.json({
+        status: 'success',
+        trigger: newTrigger,
+        media: null
+      });
     }
 
     const mediaType = getMediaType(req.file.mimetype);
@@ -171,6 +213,9 @@ app.post('/upload', upload.single('video'), async (req, res) => {
           if (mediaType === 'video') {
             trigger.videoUrl = publicUrl;
           }
+          if (ttsConfig) {
+            trigger.ttsConfig = ttsConfig;
+          }
           await trigger.save();
           console.log('✅ Trigger actualizado exitosamente');
           
@@ -187,15 +232,6 @@ app.post('/upload', upload.single('video'), async (req, res) => {
         } else {
           console.log('➕ Creando nuevo trigger...');
           // Crear nuevo trigger
-          let ttsConfig = undefined;
-          if (req.body.ttsConfig) {
-            try {
-              ttsConfig = JSON.parse(req.body.ttsConfig);
-            } catch (e) {
-              console.warn('⚠️ Error parseando ttsConfig:', e);
-            }
-          }
-
           const newTrigger = await Trigger.create({
             userId: req.body.userId,
             twitchRewardId: req.body.twitchRewardId,
@@ -251,11 +287,19 @@ app.post('/test-trigger', async (req, res) => {
   const trigger = await Trigger.findOne({ twitchRewardId, userId });
   if (!trigger) return res.status(404).json({ error: 'Alerta no encontrada.' });
 
+  const lastMedia = trigger.medias?.length
+    ? trigger.medias[trigger.medias.length - 1]
+    : null;
+
+  const type = lastMedia?.type || (trigger.videoUrl ? 'video' : 'tts');
+  const url = lastMedia?.url || trigger.videoUrl;
+
   io.to(`overlay-${userId}`).emit('media-trigger', {
-    url: trigger.videoUrl,
-    type: 'video',
-    volume: 1.0,
-    rewardId: twitchRewardId
+    url,
+    type,
+    volume: lastMedia?.volume ?? 1.0,
+    rewardId: twitchRewardId,
+    ttsConfig: trigger.ttsConfig
   });
 
   res.json({ success: true });

@@ -70,13 +70,23 @@ export async function startTwitchListener(userId) {
         return;
       }
 
-      console.log(`🎬 Disparando alerta: ${trigger.fileName}`);
+      const lastMedia = trigger.medias?.length
+        ? trigger.medias[trigger.medias.length - 1]
+        : null;
+
+      const type = lastMedia?.type || (trigger.videoUrl ? 'video' : 'tts');
+      const url = lastMedia?.url || trigger.videoUrl;
+
+      console.log(`🎬 Disparando alerta (${type}): ${trigger.fileName || 'TTS'}`);
 
       io.to(`overlay-${userId}`).emit('media-trigger', {
-        url: trigger.videoUrl,
-        type: 'video',
-        volume: 1.0,
-        rewardId: event.rewardId
+        url,
+        type,
+        volume: lastMedia?.volume ?? 1.0,
+        rewardId: event.rewardId,
+        ttsConfig: trigger.ttsConfig,
+        viewerMessage: event.input || event.userInput || '',
+        viewerUsername: event.userDisplayName || event.userName || event.userId
       });
     });
 

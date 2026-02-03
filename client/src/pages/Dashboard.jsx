@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Toaster, toast } from 'sonner';
-import { API_URL, FILE_CONFIG } from '../constants/config';
+import { API_URL } from '../constants/config';
 import { validateFile, validateUpload } from '../utils/helpers';
 
 // Components
@@ -55,16 +55,6 @@ export default function Dashboard() {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [fileError, setFileError] = useState('');
-  const [ttsConfig, setTtsConfig] = useState({
-    enabled: false,
-    voiceId: 'pNInz6obpgDQGcFmaJgB',
-    text: '',
-    useViewerMessage: true,
-    readUsername: true,
-    stability: 0.5,
-    similarityBoost: 0.75
-  });
-
   const loginUrl = `${API_URL}/auth/twitch`;
 
   // Fetch data on mount
@@ -140,8 +130,7 @@ export default function Dashboard() {
             url: demoUrl,
             fileName: `triggers/${demoMediaType}/demo_${Date.now()}.${file.name.split('.').pop()}`
           }],
-          videoUrl: demoMediaType === 'video' ? demoUrl : undefined,
-          ttsConfig: ttsConfig
+          videoUrl: demoMediaType === 'video' ? demoUrl : undefined
         };
 
         setTriggers([...triggers, demoTrigger]);
@@ -149,21 +138,18 @@ export default function Dashboard() {
         setFile(null);
         setPreviewUrl(null);
         setSelectedReward('');
-        setTtsConfig({ enabled: false, voiceId: 'pNInz6obpgDQGcFmaJgB', text: '', useViewerMessage: true, readUsername: true, stability: 0.5, similarityBoost: 0.75 });
       } else {
         // En producción, subir a servidor
         const formData = new FormData();
         formData.append('twitchRewardId', selectedReward);
         formData.append('video', file);
         formData.append('userId', userId);
-        formData.append('ttsConfig', JSON.stringify(ttsConfig));
 
         await axios.post(`${API_URL}/upload`, formData);
         toast.success('¡Alerta guardada!', { id: toastId });
         setFile(null);
         setPreviewUrl(null);
         setSelectedReward('');
-        setTtsConfig({ enabled: false, voiceId: 'pNInz6obpgDQGcFmaJgB', text: '', useViewerMessage: true, readUsername: true, stability: 0.5, similarityBoost: 0.75 });
         fetchTriggers();
       }
     } catch (error) {
@@ -209,10 +195,10 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-dark-bg via-dark-bg to-dark-secondary text-dark-text p-5 lg:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-dark-bg via-dark-bg to-dark-secondary text-dark-text p-5 lg:p-10">
       {isDemo && (
         <div className="fixed top-0 left-0 right-0 bg-gradient-to-r from-yellow-600 to-yellow-500 text-white py-3 px-4 text-center font-bold z-50 shadow-lg">
-          MODO DEMO - Vista previa sin autenticación
+          MODO DEMO - Probalo sin loguearte
         </div>
       )}
       <Toaster position="top-right" theme="dark" richColors />
@@ -222,14 +208,13 @@ export default function Dashboard() {
         <Header username={username} userId={userId} onLogout={handleLogout} />
 
         {/* Advertencia de desarrollo */}
-        <div className="mb-6 p-4 bg-yellow-500/10 border-l-4 border-yellow-500 rounded-lg">
+        <div className="mb-8 p-4 bg-yellow-500/10 border-l-4 border-yellow-500 rounded-xl">
           <div className="flex items-start gap-3">
             <span className="text-2xl">⚠️</span>
             <div>
-              <h3 className="text-yellow-500 font-bold mb-1">App en Desarrollo</h3>
+              <h3 className="text-yellow-500 font-bold mb-1">App en beta, ojo</h3>
               <p className="text-sm text-dark-muted">
-                Esta aplicación está en fase beta. Podés encontrar errores o funcionalidades incompletas. 
-                Si experimentás algún problema, contactate con el desarrollador.
+                Puede pinchar o faltar alguna cosita. Si algo te hace ruido, avisame y lo arreglamos.
               </p>
             </div>
           </div>
@@ -238,15 +223,20 @@ export default function Dashboard() {
         {/* Step Guide */}
         <StepGuide />
 
-        {/* Main Content - Grid Layout Mejorado */}
+        {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Columna Principal (2/3) */}
           <div className="lg:col-span-2 space-y-8">
-            {/* File Upload Card */}
-            <section className="bg-gradient-to-br from-dark-card to-dark-secondary p-6 lg:p-10 rounded-2xl border border-primary/20 shadow-xl hover:shadow-2xl transition-shadow">
-              <h3 className="mt-0 mb-8 text-2xl font-bold">
-                Nueva Alerta
-              </h3>
+            {/* Multimedia Alerts */}
+            <section className="bg-gradient-to-br from-dark-card to-dark-secondary p-6 lg:p-10 rounded-3xl border border-primary/20 shadow-xl hover:shadow-2xl transition-shadow">
+              <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+                <h3 className="m-0 text-2xl font-black">
+                  Alertas Multimedia
+                </h3>
+                <span className="text-xs text-dark-muted bg-white/5 px-3 py-1 rounded-full border border-white/10">
+                  Video, audio o GIF
+                </span>
+              </div>
               <FileUploadSection
                 file={file}
                 previewUrl={previewUrl}
@@ -260,8 +250,6 @@ export default function Dashboard() {
                 userId={userId}
                 isDemo={isDemo}
                 triggers={triggers}
-                ttsConfig={ttsConfig}
-                onTtsConfigChange={setTtsConfig}
                 onRewardCreated={(newReward) => {
                   setRewards([...rewards, newReward]);
                   setSelectedReward(newReward.id);
@@ -270,9 +258,9 @@ export default function Dashboard() {
             </section>
 
             {/* Triggers Card */}
-            <section className="bg-gradient-to-br from-dark-card to-dark-secondary p-6 lg:p-10 rounded-2xl border border-primary/20 shadow-xl hover:shadow-2xl transition-shadow">
+            <section className="bg-gradient-to-br from-dark-card to-dark-secondary p-6 lg:p-10 rounded-3xl border border-primary/20 shadow-xl hover:shadow-2xl transition-shadow">
               <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
-                <h3 className="m-0 text-2xl font-bold">
+                <h3 className="m-0 text-2xl font-black">
                   Alertas Activas
                 </h3>
                 <AlertsBadge count={triggers.length} />
@@ -294,7 +282,13 @@ export default function Dashboard() {
               triggers={triggers}
               rewards={rewards}
               userId={userId}
+              isDemo={isDemo}
               onRefresh={fetchTriggers}
+              onCreated={(newTrigger) => {
+                if (isDemo && newTrigger) {
+                  setTriggers((prev) => [...prev, newTrigger]);
+                }
+              }}
             />
 
             {/* Feedback Form */}

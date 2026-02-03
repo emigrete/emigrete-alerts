@@ -17,7 +17,7 @@ export const validateFile = (file) => {
 
 export const validateUpload = (file, selectedReward) => {
   if (!file || !selectedReward) {
-    toast.warning('Falta elegir recompensa y video.');
+    toast.warning('Te falta elegir canje y archivo, che.');
     return false;
   }
   return true;

@@ -10,7 +10,6 @@ export default function Overlay() {
   const [queue, setQueue] = useState([]);
   const [currentMedia, setCurrentMedia] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [ttsAudio, setTtsAudio] = useState(null);
 
   const videoRef = useRef(null);
   const audioRef = useRef(null);
@@ -56,6 +55,14 @@ export default function Overlay() {
       await playTTS(mediaData);
     }
 
+    const hasRenderableMedia = !!mediaData.url && ['video', 'audio', 'gif'].includes(mediaData.type);
+
+    // Si es TTS-only, terminamos acá
+    if (!hasRenderableMedia && mediaData.type === 'tts') {
+      handleEnded();
+      return;
+    }
+
     // Luego reproducir el video/audio/gif
     if (mediaData.type === 'video' && videoRef.current) {
       videoRef.current.volume = mediaData.volume || 1.0;
@@ -91,7 +98,8 @@ export default function Overlay() {
         text: textToSpeak,
         voiceId: ttsConfig.voiceId,
         stability: ttsConfig.stability,
-        similarityBoost: ttsConfig.similarityBoost
+        similarityBoost: ttsConfig.similarityBoost,
+        userId
       });
 
       if (response.data.audio) {
@@ -114,7 +122,6 @@ export default function Overlay() {
   const handleEnded = () => {
     setCurrentMedia(null);
     setIsPlaying(false);
-    setTtsAudio(null);
   };
 
   if (!currentMedia) return null;
@@ -156,6 +163,11 @@ export default function Overlay() {
           alt="GIF"
           style={{ maxWidth: '100%', maxHeight: '100%' }}
         />
+      )}
+      {currentMedia.type === 'tts' && (
+        <div style={{ textAlign: 'center', color: 'white', fontSize: '4rem' }}>
+          🎤
+        </div>
       )}
     </div>
   );
