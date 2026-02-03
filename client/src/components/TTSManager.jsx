@@ -103,6 +103,55 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
     }
   };
 
+  // Crear alerta TTS directamente para una recompensa (sin subir media)
+  const createTtsForReward = async (rewardId) => {
+    if (!rewardId) {
+      toast.error('Falta el ID de la recompensa');
+      return;
+    }
+
+    setCreating(true);
+    const toastId = toast.loading('Creando alerta TTS...');
+
+    try {
+      if (isDemo) {
+        const demoTrigger = {
+          _id: `demo_tts_${Date.now()}`,
+          twitchRewardId: rewardId,
+          medias: [],
+          ttsConfig: { ...ttsConfig, enabled: true }
+        };
+        if (onCreated) onCreated(demoTrigger);
+        toast.success('Alerta TTS creada (demo).', { id: toastId });
+      } else {
+        const formData = new FormData();
+        formData.append('twitchRewardId', rewardId);
+        formData.append('userId', userId);
+        formData.append('ttsConfig', JSON.stringify({ ...ttsConfig, enabled: true }));
+
+        const res = await axios.post(`${API_URL}/upload`, formData);
+        if (onCreated && res.data?.trigger) onCreated(res.data.trigger);
+        toast.success('Alerta TTS creada.', { id: toastId });
+        if (onRefresh) onRefresh();
+      }
+
+      setSelectedReward('');
+      setTtsConfig({
+        enabled: true,
+        voiceId: 'FGY2WhTYpP6BYn95B7S6',
+        text: '',
+        useViewerMessage: true,
+        readUsername: true,
+        stability: 0.5,
+        similarityBoost: 0.75
+      });
+    } catch (error) {
+      toast.error('Error al crear alerta: ' + (error.response?.data?.error || error.message), { id: toastId });
+    } finally {
+      setCreating(false);
+    }
+  };
+
   return (
     <section className="bg-gradient-to-br from-primary/10 via-pink-500/5 to-dark-secondary border border-primary/25 rounded-[28px] p-9">
       {/* Header */}
@@ -334,10 +383,11 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
           isDemo={isDemo}
           onCancel={() => setShowRewardCreator(false)}
           onRewardCreated={(reward) => {
-            // Seleccionar la recompensa recién creada
-            setSelectedReward(reward.id);
+            // Seleccionar la recompensa recién creada y crear la alerta TTS automáticamente
             setShowRewardCreator(false);
-            if (onRefresh) onRefresh();
+            setSelectedReward(reward.id);
+            // Crear la alerta TTS usando la config actual
+            createTtsForReward(reward.id);
           }}
         />
       )}
