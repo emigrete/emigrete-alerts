@@ -7,13 +7,9 @@ import { TTSConfig } from './TTSConfig';
 import { RewardCreator } from './RewardCreator';
 
 export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCreated }) => {
-  // Trigger seleccionado
   const [selectedTriggerId, setSelectedTriggerId] = useState(null);
-  // Canje elegido
   const [selectedReward, setSelectedReward] = useState('');
   const [showRewardCreator, setShowRewardCreator] = useState(false);
-  const [manualTitle, setManualTitle] = useState('');
-  // Estado de guardado
   const [creating, setCreating] = useState(false);
   // Uso mensual de TTS
   const [usage, setUsage] = useState(null);
@@ -50,7 +46,7 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
     fetchUsage();
   }, [userId]);
 
-  // Alta TTS sin media
+  // Crear alerta TTS desde recompensa existente
   const handleCreateTTS = async () => {
     if (!selectedReward) {
       toast.warning('Seleccioná un canje.');
@@ -104,65 +100,6 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
     }
   };
 
-  // Crear alerta TTS directamente para una recompensa (sin subir media)
-  // acepta opcionalmente un título (alertTitle). Si rewardId es una id generada para TTS-only,
-  // la alerta se crea sin dependencia de Twitch.
-  const createTtsForReward = async (rewardId, alertTitle) => {
-    if (!rewardId) {
-      toast.error('Falta el ID de la recompensa');
-      return;
-    }
-
-    setCreating(true);
-    const toastId = toast.loading('Creando alerta TTS...');
-
-    try {
-      if (isDemo) {
-        const demoTrigger = {
-          _id: `demo_tts_${Date.now()}`,
-          twitchRewardId: rewardId,
-          medias: [],
-          ttsConfig: { ...ttsConfig, enabled: true }
-        };
-        if (onCreated) onCreated(demoTrigger);
-        toast.success('Alerta TTS creada (demo).', { id: toastId });
-      } else {
-        const formData = new FormData();
-        formData.append('twitchRewardId', rewardId);
-        formData.append('userId', userId);
-        if (alertTitle) formData.append('alertTitle', alertTitle);
-        formData.append('ttsConfig', JSON.stringify({ ...ttsConfig, enabled: true }));
-
-        const res = await axios.post(`${API_URL}/upload`, formData);
-        if (onCreated && res.data?.trigger) onCreated(res.data.trigger);
-        toast.success('Alerta TTS creada.', { id: toastId });
-        if (onRefresh) onRefresh();
-      }
-
-      setSelectedReward('');
-      setTtsConfig({
-        enabled: true,
-        voiceId: 'FGY2WhTYpP6BYn95B7S6',
-        text: '',
-        useViewerMessage: true,
-        readUsername: true,
-        stability: 0.5,
-        similarityBoost: 0.75
-      });
-    } catch (error) {
-      toast.error('Error al crear alerta: ' + (error.response?.data?.error || error.message), { id: toastId });
-    } finally {
-      setCreating(false);
-    }
-  };
-
-  // Crear alerta TTS manual (sin Twitch) - genera un id interno y usa alertTitle
-  const createManualTtsAlert = async (title) => {
-    const manualId = `tts_manual_${userId}_${Date.now()}`;
-    await createTtsForReward(manualId, title);
-    setManualTitle('');
-  };
-
   return (
     <section className="bg-gradient-to-br from-primary/10 via-pink-500/5 to-dark-secondary border border-primary/25 rounded-[28px] p-9">
       {/* Header */}
@@ -177,6 +114,16 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
 
       {/* Guía */}
       <TTSGuide />
+
+      {/* Nota informativa */}
+      <div className="mt-8 p-4 bg-primary/10 border border-primary/30 rounded-xl">
+        <p className="text-sm text-white mb-2">
+          💡 <strong>Opción recomendada:</strong> Activa TTS directamente al crear una nueva recompensa en la sección "Alertas Multimedia" para configurarlo todo en un solo paso.
+        </p>
+        <p className="text-xs text-dark-muted mt-2">
+          O usa esta sección para agregar TTS a recompensas existentes.
+        </p>
+      </div>
 
       {/* Límite mensual */}
       {usage && !loadingUsage && (
@@ -211,37 +158,8 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
 
       {/* Crear TTS */}
       <div className="mt-8 bg-dark-card/70 border border-dark-border rounded-2xl p-7">
-        <h3 className="text-xl font-bold text-white mb-4">Crear alerta TTS</h3>
+        <h3 className="text-xl font-bold text-white mb-4">Agregar TTS a una recompensa</h3>
         <div className="space-y-5">
-          {/* Nuevo: Crear alerta TTS manual (sin Twitch) */}
-          <div className="mb-4 p-4 rounded-xl border border-dark-border bg-dark-secondary">
-            <h4 className="text-sm font-bold text-white mb-2">Crear alerta TTS (manual)</h4>
-            <p className="text-xs text-dark-muted mb-3">Crea una alerta TTS independiente de Twitch. Podés incluir texto personalizado aquí.</p>
-            <input
-              type="text"
-              value={manualTitle}
-              onChange={(e) => setManualTitle(e.target.value)}
-              placeholder="Nombre de la alerta TTS"
-              className="w-full p-2 rounded-lg border border-dark-border bg-black text-white outline-none mb-2"
-            />
-            {!ttsConfig.useViewerMessage && (
-              <textarea
-                value={ttsConfig.text}
-                onChange={(e) => setTtsConfig({ ...ttsConfig, text: e.target.value })}
-                placeholder="Texto a decir..."
-                maxLength={300}
-                className="w-full p-2 rounded-lg border border-dark-border bg-black text-white outline-none h-20 resize-none mb-2"
-              />
-            )}
-            <div className="flex gap-2">
-              <button
-                onClick={() => createManualTtsAlert(manualTitle || `Alerta TTS ${Date.now()}`)}
-                className="flex-1 bg-primary text-white font-bold py-2 px-4 rounded-lg hover:opacity-90 transition"
-              >
-                Crear alerta TTS
-              </button>
-            </div>
-          </div>
           <div>
             <label className="block mb-2 font-semibold text-dark-muted text-xs uppercase tracking-wider">
               Canje
@@ -425,11 +343,13 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
           defaultRequireInput={true}
           onCancel={() => setShowRewardCreator(false)}
           onRewardCreated={(reward) => {
-            // Seleccionar la recompensa recién creada and create TTS
+            // Cerrar modal
             setShowRewardCreator(false);
-            setSelectedReward(reward.id);
-            // Crear la alerta TTS usando la config actual y el título de la recompensa
-            createTtsForReward(reward.id, reward.title);
+            setSelectedReward('');
+            // Refrescar lista de triggers si no es demo
+            if (!isDemo) {
+              onRefresh();
+            }
           }}
         />
       )}

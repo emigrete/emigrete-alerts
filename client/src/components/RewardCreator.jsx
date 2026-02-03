@@ -10,6 +10,9 @@ export const RewardCreator = ({ userId, onRewardCreated, onCancel, isDemo, defau
   const [backgroundColor, setBackgroundColor] = useState('#9146FF');
   const [requireInput, setRequireInput] = useState(defaultRequireInput);
   const [loading, setLoading] = useState(false);
+  const [enableTTS, setEnableTTS] = useState(false);
+  const [ttsText, setTtsText] = useState('');
+  const [ttsUseViewerMessage, setTtsUseViewerMessage] = useState(true);
 
   const handleCreate = async (e) => {
     e.preventDefault();
@@ -53,7 +56,10 @@ export const RewardCreator = ({ userId, onRewardCreated, onCancel, isDemo, defau
           cost: parseInt(cost),
           prompt,
           backgroundColor,
-          isUserInputRequired: requireInput
+          isUserInputRequired: requireInput,
+          enableTTS,
+          ttsText: enableTTS ? ttsText : '',
+          ttsUseViewerMessage: enableTTS ? ttsUseViewerMessage : true
         });
 
         toast.success('¡Recompensa creada!', { id: toastId });
@@ -61,6 +67,9 @@ export const RewardCreator = ({ userId, onRewardCreated, onCancel, isDemo, defau
         setTitle('');
         setCost('500');
         setPrompt('');
+        setEnableTTS(false);
+        setTtsText('');
+        setTtsUseViewerMessage(true);
       }
     } catch (error) {
       toast.error(error.response?.data?.error || 'Error al crear recompensa', { id: toastId });
@@ -136,6 +145,50 @@ export const RewardCreator = ({ userId, onRewardCreated, onCancel, isDemo, defau
               className="w-4 h-4"
             />
             <label htmlFor="require-input" className="text-dark-text text-sm">Requerir mensaje del espectador (texto)</label>
+          </div>
+
+          {/* TTS */}
+          <div className="border-t border-dark-border pt-4">
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                id="enable-tts"
+                checked={enableTTS}
+                onChange={(e) => setEnableTTS(e.target.checked)}
+                className="w-4 h-4"
+              />
+              <label htmlFor="enable-tts" className="text-dark-text text-sm font-semibold">Activar TTS (texto a voz)</label>
+            </div>
+
+            {enableTTS && (
+              <div className="mt-4 space-y-3 p-3 bg-dark-secondary rounded-lg border border-dark-border">
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    id="use-viewer-message"
+                    checked={ttsUseViewerMessage}
+                    onChange={(e) => setTtsUseViewerMessage(e.target.checked)}
+                    className="w-4 h-4"
+                  />
+                  <label htmlFor="use-viewer-message" className="text-dark-text text-xs">Leer mensaje del espectador</label>
+                </div>
+
+                {!ttsUseViewerMessage && (
+                  <textarea
+                    value={ttsText}
+                    onChange={(e) => setTtsText(e.target.value)}
+                    placeholder="Texto a decir (máx 300 caracteres)"
+                    maxLength={300}
+                    rows={3}
+                    className="w-full bg-dark-secondary border border-dark-border px-3 py-2 rounded-lg text-dark-text placeholder-dark-muted focus:outline-none focus:border-primary transition resize-none text-sm"
+                  />
+                )}
+                
+                <p className="text-xs text-dark-muted mt-2">
+                  💡 El TTS se puede editar luego desde la sección de "Módulo TTS"
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Color */}

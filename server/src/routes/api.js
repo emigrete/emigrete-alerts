@@ -42,7 +42,16 @@ router.get('/twitch/rewards', async (req, res) => {
  * POST /api/create-reward
  */
 router.post('/create-reward', async (req, res) => {
-  const { userId, title, cost, prompt, backgroundColor } = req.body;
+  const { 
+    userId, 
+    title, 
+    cost, 
+    prompt, 
+    backgroundColor,
+    enableTTS,
+    ttsText,
+    ttsUseViewerMessage
+  } = req.body;
 
   if (!userId || !title || !cost) {
     return res.status(400).json({ 
@@ -78,6 +87,33 @@ router.post('/create-reward', async (req, res) => {
     );
 
     const newReward = response.data.data[0];
+
+    // Si TTS está habilitado, crear el trigger con configuración TTS
+    if (enableTTS) {
+      const ttsConfig = {
+        enabled: true,
+        voiceId: 'FGY2WhTYpP6BYn95B7S6',
+        text: ttsUseViewerMessage ? '' : (ttsText || ''),
+        useViewerMessage: ttsUseViewerMessage ?? true,
+        readUsername: true,
+        stability: 0.5,
+        similarityBoost: 0.75
+      };
+
+      const trigger = await Trigger.create({
+        userId,
+        twitchRewardId: newReward.id,
+        medias: [],
+        ttsConfig,
+        alertConfig: {
+          displayName: title,
+          backgroundColor: backgroundColor || '#9146FF',
+          showInChat: true
+        }
+      });
+
+      console.log(`✅ Trigger TTS creado: ${trigger._id} para recompensa ${newReward.id}`);
+    }
 
     res.json({
       success: true,
