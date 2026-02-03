@@ -12,6 +12,7 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
   // Canje elegido
   const [selectedReward, setSelectedReward] = useState('');
   const [showRewardCreator, setShowRewardCreator] = useState(false);
+  const [manualTitle, setManualTitle] = useState('');
   // Estado de guardado
   const [creating, setCreating] = useState(false);
   // Uso mensual de TTS
@@ -104,7 +105,9 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
   };
 
   // Crear alerta TTS directamente para una recompensa (sin subir media)
-  const createTtsForReward = async (rewardId) => {
+  // acepta opcionalmente un título (alertTitle). Si rewardId es una id generada para TTS-only,
+  // la alerta se crea sin dependencia de Twitch.
+  const createTtsForReward = async (rewardId, alertTitle) => {
     if (!rewardId) {
       toast.error('Falta el ID de la recompensa');
       return;
@@ -127,6 +130,7 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
         const formData = new FormData();
         formData.append('twitchRewardId', rewardId);
         formData.append('userId', userId);
+        if (alertTitle) formData.append('alertTitle', alertTitle);
         formData.append('ttsConfig', JSON.stringify({ ...ttsConfig, enabled: true }));
 
         const res = await axios.post(`${API_URL}/upload`, formData);
@@ -150,6 +154,13 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
     } finally {
       setCreating(false);
     }
+  };
+
+  // Crear alerta TTS manual (sin Twitch) - genera un id interno y usa alertTitle
+  const createManualTtsAlert = async (title) => {
+    const manualId = `tts_manual_${userId}_${Date.now()}`;
+    await createTtsForReward(manualId, title);
+    setManualTitle('');
   };
 
   return (
@@ -202,6 +213,35 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
       <div className="mt-8 bg-dark-card/70 border border-dark-border rounded-2xl p-7">
         <h3 className="text-xl font-bold text-white mb-4">Crear alerta TTS</h3>
         <div className="space-y-5">
+          {/* Nuevo: Crear alerta TTS manual (sin Twitch) */}
+          <div className="mb-4 p-4 rounded-xl border border-dark-border bg-dark-secondary">
+            <h4 className="text-sm font-bold text-white mb-2">Crear alerta TTS (manual)</h4>
+            <p className="text-xs text-dark-muted mb-3">Crea una alerta TTS independiente de Twitch. Podés incluir texto personalizado aquí.</p>
+            <input
+              type="text"
+              value={manualTitle}
+              onChange={(e) => setManualTitle(e.target.value)}
+              placeholder="Nombre de la alerta TTS"
+              className="w-full p-2 rounded-lg border border-dark-border bg-black text-white outline-none mb-2"
+            />
+            {!ttsConfig.useViewerMessage && (
+              <textarea
+                value={ttsConfig.text}
+                onChange={(e) => setTtsConfig({ ...ttsConfig, text: e.target.value })}
+                placeholder="Texto a decir..."
+                maxLength={300}
+                className="w-full p-2 rounded-lg border border-dark-border bg-black text-white outline-none h-20 resize-none mb-2"
+              />
+            )}
+            <div className="flex gap-2">
+              <button
+                onClick={() => createManualTtsAlert(manualTitle || `Alerta TTS ${Date.now()}`)}
+                className="flex-1 bg-primary text-white font-bold py-2 px-4 rounded-lg hover:opacity-90 transition"
+              >
+                Crear alerta TTS
+              </button>
+            </div>
+          </div>
           <div>
             <label className="block mb-2 font-semibold text-dark-muted text-xs uppercase tracking-wider">
               Canje
@@ -257,6 +297,7 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
                 <option key={voice.id} value={voice.id} style={{ backgroundColor: '#1a1a2e', color: '#fff' }}>{voice.name}</option>
               ))}
             </select>
+            <p className="text-xs text-dark-muted mt-2">Voces disponibles: {ELEVENLABS_VOICES.length}</p>
             <input
               type="text"
               value={ttsConfig.voiceId || ''}
@@ -381,13 +422,14 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
         <RewardCreator
           userId={userId}
           isDemo={isDemo}
+          defaultRequireInput={true}
           onCancel={() => setShowRewardCreator(false)}
           onRewardCreated={(reward) => {
-            // Seleccionar la recompensa recién creada y crear la alerta TTS automáticamente
+            // Seleccionar la recompensa recién creada and create TTS
             setShowRewardCreator(false);
             setSelectedReward(reward.id);
-            // Crear la alerta TTS usando la config actual
-            createTtsForReward(reward.id);
+            // Crear la alerta TTS usando la config actual y el título de la recompensa
+            createTtsForReward(reward.id, reward.title);
           }}
         />
       )}

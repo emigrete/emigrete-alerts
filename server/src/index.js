@@ -151,6 +151,11 @@ app.post('/upload', upload.single('video'), async (req, res) => {
       if (trigger) {
         // Si ya existía, solo actualizamos el TTS
         trigger.ttsConfig = ttsConfig;
+        // Actualizar titulo si viene
+        if (req.body.alertTitle) {
+          trigger.alertConfig = trigger.alertConfig || {};
+          trigger.alertConfig.displayName = req.body.alertTitle;
+        }
         await trigger.save();
         return res.json({
           status: 'success',
@@ -164,7 +169,8 @@ app.post('/upload', upload.single('video'), async (req, res) => {
         userId: req.body.userId,
         twitchRewardId: req.body.twitchRewardId,
         medias: [],
-        ttsConfig
+        ttsConfig,
+        alertConfig: req.body.alertTitle ? { displayName: req.body.alertTitle } : undefined
       });
 
       return res.json({
@@ -222,6 +228,11 @@ app.post('/upload', upload.single('video'), async (req, res) => {
           if (ttsConfig) {
             trigger.ttsConfig = ttsConfig;
           }
+          // actualizar título si viene
+          if (req.body.alertTitle) {
+            trigger.alertConfig = trigger.alertConfig || {};
+            trigger.alertConfig.displayName = req.body.alertTitle;
+          }
           await trigger.save();
           console.log('✅ Trigger actualizado exitosamente');
           
@@ -249,7 +260,8 @@ app.post('/upload', upload.single('video'), async (req, res) => {
             }],
             videoUrl: mediaType === 'video' ? publicUrl : undefined,
             fileName: mediaType === 'video' ? fileName : undefined,
-            ttsConfig: ttsConfig
+            ttsConfig: ttsConfig,
+            alertConfig: req.body.alertTitle ? { displayName: req.body.alertTitle } : undefined
           });
           console.log('✅ Nuevo trigger creado:', newTrigger._id);
 

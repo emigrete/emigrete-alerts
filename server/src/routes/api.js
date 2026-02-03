@@ -63,7 +63,7 @@ router.post('/create-reward', async (req, res) => {
         prompt: prompt || '',
         background_color: backgroundColor || '#9146FF',
         is_enabled: true,
-        is_user_input_required: false,
+        is_user_input_required: !!req.body.isUserInputRequired,
         is_max_per_stream_enabled: false,
         is_global_cooldown_enabled: false
       },

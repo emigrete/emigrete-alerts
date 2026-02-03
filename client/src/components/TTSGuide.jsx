@@ -29,7 +29,7 @@ export const TTSGuide = () => {
           </div>
           <div>
             <h4 className="font-bold text-primary text-sm">Configurar Voz</h4>
-            <p className="text-xs text-dark-muted">Seleccioná entre 7 voces disponibles</p>
+            <p className="text-xs text-dark-muted">Seleccioná entre 4 voces disponibles</p>
           </div>
         </div>
 
@@ -47,7 +47,7 @@ export const TTSGuide = () => {
       {/* Info adicional */}
       <div className="mt-6 pt-6 border-t border-dark-border">
         <div className="space-y-2 text-xs text-dark-muted">
-          <p><strong className="text-primary">7 voces</strong> naturales disponibles</p>
+          <p><strong className="text-primary">4 voces</strong> naturales disponibles</p>
           <p><strong className="text-primary">Idioma</strong> español</p>
           <p><strong className="text-primary">Límite mensual</strong> de caracteres por usuario</p>
           <p><strong className="text-primary">Personalizable</strong> - nombre, mensaje, estabilidad</p>

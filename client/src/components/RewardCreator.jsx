@@ -3,11 +3,12 @@ import axios from 'axios';
 import { Toaster, toast } from 'sonner';
 import { API_URL, COLORS } from '../constants/config';
 
-export const RewardCreator = ({ userId, onRewardCreated, onCancel, isDemo }) => {
+export const RewardCreator = ({ userId, onRewardCreated, onCancel, isDemo, defaultRequireInput = false }) => {
   const [title, setTitle] = useState('');
   const [cost, setCost] = useState('500');
   const [prompt, setPrompt] = useState('');
   const [backgroundColor, setBackgroundColor] = useState('#9146FF');
+  const [requireInput, setRequireInput] = useState(defaultRequireInput);
   const [loading, setLoading] = useState(false);
 
   const handleCreate = async (e) => {
@@ -51,7 +52,8 @@ export const RewardCreator = ({ userId, onRewardCreated, onCancel, isDemo }) => 
           title,
           cost: parseInt(cost),
           prompt,
-          backgroundColor
+          backgroundColor,
+          isUserInputRequired: requireInput
         });
 
         toast.success('¡Recompensa creada!', { id: toastId });
@@ -123,6 +125,17 @@ export const RewardCreator = ({ userId, onRewardCreated, onCancel, isDemo }) => 
               className="w-full bg-dark-secondary border border-dark-border px-4 py-2 rounded-lg text-dark-text placeholder-dark-muted focus:outline-none focus:border-primary transition resize-none"
             />
             <p className="text-xs text-dark-muted mt-1">{prompt.length}/200 caracteres</p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              id="require-input"
+              checked={requireInput}
+              onChange={(e) => setRequireInput(e.target.checked)}
+              className="w-4 h-4"
+            />
+            <label htmlFor="require-input" className="text-dark-text text-sm">Requerir mensaje del espectador (texto)</label>
           </div>
 
           {/* Color */}
