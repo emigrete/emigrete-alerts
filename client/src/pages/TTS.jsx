@@ -8,7 +8,6 @@ import { LoginCard } from '../components/LoginCard';
 import { Header } from '../components/Header';
 import { Navigation } from '../components/Navigation';
 import { TTSManager } from '../components/TTSManager';
-import { DonationFooter } from '../components/DonationFooter';
 
 export default function TTSPage() {
   // Modo demo: solo desarrollo
@@ -135,10 +134,6 @@ export default function TTSPage() {
             }
           }}
         />
-
-        <div className="mt-8">
-          <DonationFooter />
-        </div>
       </div>
     </div>
   );

@@ -11,7 +11,6 @@ import { Navigation } from '../components/Navigation';
 import { StepGuide } from '../components/StepGuide';
 import { FileUploadSection } from '../components/FileUploadSection';
 import { TriggersTable } from '../components/TriggersTable';
-import { DonationFooter } from '../components/DonationFooter';
 import { AlertsBadge } from '../components/AlertsBadge';
 import { SubscriptionStatus } from '../components/SubscriptionStatus';
 
@@ -318,11 +317,6 @@ export default function Dashboard() {
               onRefresh={fetchTriggers}
             />
           </section>
-        </div>
-
-        {/* Donation Footer - Ancho completo */}
-        <div className="mt-8">
-          <DonationFooter />
         </div>
       </div>
     </div>
