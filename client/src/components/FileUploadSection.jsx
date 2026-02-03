@@ -14,7 +14,8 @@ export const FileUploadSection = ({
   userId,
   onRewardCreated,
   isDemo,
-  triggers
+  triggers,
+  subscription
 }) => {
   // Modal de recompensa
   const [showRewardCreator, setShowRewardCreator] = useState(false);
@@ -164,15 +165,23 @@ export const FileUploadSection = ({
             </button>
           </div>
 
-          {/* Info si ya hay alertas */}
-          {triggers && triggers.length > 0 && (
-            <div className="mb-7 p-4 bg-primary/10 border border-primary/25 rounded-xl">
-              <p className="text-sm text-primary font-semibold mb-2">Nota:</p>
+          {/* Info si ya hay alertas y límites */}
+          <div className="space-y-3 mb-7">
+            {triggers && triggers.length > 0 && (
+              <div className="p-4 bg-primary/10 border border-primary/25 rounded-xl">
+                <p className="text-sm text-primary font-semibold mb-2">Nota:</p>
+                <p className="text-sm text-dark-muted">
+                  Tenés <strong>{triggers.length} alerta{triggers.length > 1 ? 's' : ''}</strong>. Podés sumar media o crear otra.
+                </p>
+              </div>
+            )}
+            <div className="p-4 bg-blue-500/10 border border-blue-500/25 rounded-xl">
+              <p className="text-sm text-blue-400 font-semibold mb-2">Tu plan:</p>
               <p className="text-sm text-dark-muted">
-                Tenés <strong>{triggers.length} alerta{triggers.length > 1 ? 's' : ''}</strong>. Podés sumar media o crear otra.
+                Tu plan te permite subir archivos hasta <strong>{subscription?.maxFileSize || '5MB'}</strong> cada uno.
               </p>
             </div>
-          )}
+          </div>
 
           <label className="block mb-2 font-semibold text-dark-muted text-sm uppercase tracking-wider">
             2. {getMediaTypeLabel()}

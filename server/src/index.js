@@ -16,7 +16,7 @@ import subscriptionRoutes from './routes/subscription.js';
 import { Trigger } from './models/Trigger.js';
 import { startTwitchListener } from './services/twitchListener.js';
 import { UserToken } from './models/UserToken.js';
-import { incrementStorageUsage } from './services/subscriptionService.js';
+import { incrementStorageUsage, getUserSubscriptionStatus, canUploadFile, canUploadStorage } from './services/subscriptionService.js';
 
 dotenv.config();
 
@@ -89,11 +89,50 @@ initializeApp({
 
 const bucket = getStorage().bucket();
 
-// Multer
+// Multer - Límite dinámico basado en planes
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 } // 5MB
+  limits: { fileSize: 10 * 1024 * 1024 * 1024 } // 10GB máximo (se valida contra el plan en el endpoint)
 });
+
+// Middleware para validar storage disponible
+const validateStorageLimit = async (req, res, next) => {
+  if (!req.file || !req.body.userId) {
+    return next();
+  }
+
+  try {
+    const fileSize = req.file.size;
+    const userId = req.body.userId;
+    
+    // Validar tamaño individual de archivo
+    const fileSizeCheck = await canUploadFile(userId, fileSize);
+    if (!fileSizeCheck.allowed) {
+      return res.status(413).json({
+        error: `${fileSizeCheck.message}. Máximo: ${Math.round(fileSizeCheck.maxFileSize / 1024 / 1024)}MB`,
+        fileSize: Math.round(fileSize / 1024 / 1024),
+        maxFileSize: Math.round(fileSizeCheck.maxFileSize / 1024 / 1024),
+        plan: fileSizeCheck.tier
+      });
+    }
+
+    // Validar storage total disponible
+    const storageCheck = await canUploadStorage(userId, fileSize);
+    if (!storageCheck.allowed) {
+      return res.status(413).json({
+        error: `No tienes suficiente storage. Necesitas ${Math.round(storageCheck.requested / 1024 / 1024)}MB más`,
+        required: Math.round(storageCheck.requested / 1024 / 1024),
+        available: Math.round(storageCheck.remaining / 1024 / 1024),
+        total: Math.round(storageCheck.limit / 1024 / 1024)
+      });
+    }
+    
+    next();
+  } catch (error) {
+    console.error('Error validando storage limit:', error);
+    next();
+  }
+};
 
 // Rutas
 app.use('/auth', authRoutes);
@@ -109,7 +148,7 @@ function getMediaType(mimeType) {
 }
 
 // Upload media (video, audio, gif) y también TTS-only (sin archivo)
-app.post('/upload', upload.single('video'), async (req, res) => {
+app.post('/upload', upload.single('video'), validateStorageLimit, async (req, res) => {
   try {
     console.log('📤 Upload request recibido:', {
       hasFile: !!req.file,

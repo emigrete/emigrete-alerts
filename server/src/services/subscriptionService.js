@@ -7,17 +7,20 @@ const LIMITS = {
   free: {
     maxAlerts: 20,
     maxTtsChars: 2000,
-    maxStorageBytes: 100 * 1024 * 1024, // 100MB
+    maxStorageBytes: 100 * 1024 * 1024, // 100MB total
+    maxFileBytes: 5 * 1024 * 1024, // 5MB por archivo
   },
   pro: {
     maxAlerts: 100,
     maxTtsChars: 20000,
-    maxStorageBytes: 1 * 1024 * 1024 * 1024, // 1GB
+    maxStorageBytes: 1 * 1024 * 1024 * 1024, // 1GB total
+    maxFileBytes: 30 * 1024 * 1024, // 30MB por archivo
   },
   premium: {
     maxAlerts: Infinity,
     maxTtsChars: Infinity,
-    maxStorageBytes: 10 * 1024 * 1024 * 1024, // 10GB
+    maxStorageBytes: 10 * 1024 * 1024 * 1024, // 10GB total
+    maxFileBytes: 500 * 1024 * 1024, // 500MB por archivo
   },
 };
 
@@ -119,7 +122,25 @@ export const canUseTTS = async (userId, charCount) => {
 };
 
 /**
- * Chequea si el usuario puede subir X bytes
+ * Chequea si el usuario puede subir un archivo individual de X bytes
+ */
+export const canUploadFile = async (userId, fileBytes) => {
+  const subscription = await getOrCreateSubscription(userId);
+  const maxFileSize = LIMITS[subscription.tier].maxFileBytes;
+
+  return fileBytes <= maxFileSize
+    ? { allowed: true }
+    : {
+        allowed: false,
+        message: `Archivo demasiado grande para tu plan`,
+        fileSize: fileBytes,
+        maxFileSize,
+        tier: subscription.tier,
+      };
+};
+
+/**
+ * Chequea si el usuario puede subir X bytes de storage total
  */
 export const canUploadStorage = async (userId, bytesCount) => {
   const subscription = await getOrCreateSubscription(userId);

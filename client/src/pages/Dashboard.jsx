@@ -294,6 +294,7 @@ export default function Dashboard() {
               userId={userId}
               isDemo={isDemo}
               triggers={triggers}
+              subscription={{ maxFileSize: '5MB' }}
               onRewardCreated={(newReward) => {
                 setRewards([...rewards, newReward]);
                 setSelectedReward(newReward.id);

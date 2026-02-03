@@ -12,7 +12,8 @@ export default function PricingPage() {
         { label: 'Alertas/mes', value: '20' },
         { label: 'Caracteres TTS/mes', value: '2.000' },
         { label: 'Voces disponibles', value: '2' },
-        { label: 'Storage', value: '100 MB' },
+        { label: 'Storage total', value: '100 MB' },
+        { label: 'Tamaño máx de archivo', value: '5 MB' },
       ],
       cta: 'Tu plan actual',
       ctaColor: 'bg-gray-500 hover:bg-gray-600'
@@ -26,7 +27,8 @@ export default function PricingPage() {
         { label: 'Alertas/mes', value: '100' },
         { label: 'Caracteres TTS/mes', value: '20.000' },
         { label: 'Voces disponibles', value: 'Todas' },
-        { label: 'Storage', value: '1 GB' },
+        { label: 'Storage total', value: '1 GB' },
+        { label: 'Tamaño máx de archivo', value: '30 MB' },
       ],
       cta: 'Upgrade a PRO',
       ctaColor: 'bg-gradient-to-r from-purple-500 to-purple-600 hover:shadow-lg hover:shadow-purple-500/50'
@@ -40,7 +42,8 @@ export default function PricingPage() {
         { label: 'Alertas/mes', value: '∞ Ilimitadas' },
         { label: 'Caracteres TTS/mes', value: '∞ Ilimitados' },
         { label: 'Voces disponibles', value: 'Todas' },
-        { label: 'Storage', value: '10 GB' },
+        { label: 'Storage total', value: '10 GB' },
+        { label: 'Tamaño máx de archivo', value: '500 MB' },
       ],
       cta: 'Upgrade a PREMIUM',
       ctaColor: 'bg-gradient-to-r from-pink-500 to-pink-600 hover:shadow-lg hover:shadow-pink-500/50'
@@ -139,14 +142,21 @@ export default function PricingPage() {
             <div>
               <h3 className="font-bold text-primary mb-2">¿Cómo funcionan los límites?</h3>
               <p className="text-dark-muted text-sm">
-                Cada plan tiene cuotas mensuales que se renuevan el 1° de cada mes. Las alertas y caracteres TTS se restablecen automáticamente.
+                Cada plan tiene dos tipos de límites: <strong>tamaño máximo por archivo</strong> (individual) y <strong>almacenamiento total</strong> (acumulado). Alertas y TTS se renuevan mensualmente, storage no.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="font-bold text-primary mb-2">¿Qué diferencia hay entre Storage y Tamaño de archivo?</h3>
+              <p className="text-dark-muted text-sm">
+                <strong>Tamaño máx de archivo</strong>: límite por cada video/audio que subas. <strong>Storage total</strong>: suma de todo lo que has subido. Ejemplo: PRO permite archivos de 30MB pero tienes 1GB total.
               </p>
             </div>
 
             <div>
               <h3 className="font-bold text-primary mb-2">¿Qué pasa si excedo el límite?</h3>
               <p className="text-dark-muted text-sm">
-                Si alcanzas el límite, no podrás crear más alertas o generar TTS hasta el próximo mes. Considera upgraar tu plan.
+                Si alcanzas el límite de archivo, no podrás subir ese video. Si alcanzas el storage total, deberás borrar alertas o upgraar tu plan.
               </p>
             </div>
 

@@ -145,36 +145,44 @@ export const TTSManager = ({ triggers, rewards, userId, username, onRefresh, isD
       {/* Guía */}
       <TTSGuide />
 
-      {/* Límite mensual */}
-      {usage && !loadingUsage && (
-        <div className={`mt-8 p-4 rounded-2xl border ${
-          usage.percentageUsed > 80
-            ? 'border-red-500/60 bg-red-500/10'
-            : usage.percentageUsed > 50
-            ? 'border-yellow-500/60 bg-yellow-500/10'
-            : 'border-green-500/60 bg-green-500/10'
-        }`}>
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-sm font-bold text-white">Límite mensual de TTS</p>
-            <span className="text-xs text-dark-muted font-semibold">{usage.percentageUsed}%</span>
+      {/* Límite mensual y aclaración */}
+      <div className="mt-8 space-y-3">
+        {usage && !loadingUsage && (
+          <div className={`p-4 rounded-2xl border ${
+            usage.percentageUsed > 80
+              ? 'border-red-500/60 bg-red-500/10'
+              : usage.percentageUsed > 50
+              ? 'border-yellow-500/60 bg-yellow-500/10'
+              : 'border-green-500/60 bg-green-500/10'
+          }`}>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm font-bold text-white">Límite mensual de TTS</p>
+              <span className="text-xs text-dark-muted font-semibold">{usage.percentageUsed}%</span>
+            </div>
+            <div className="w-full bg-dark-secondary rounded-full h-2 overflow-hidden">
+              <div
+                className={`h-full transition-all ${
+                  usage.percentageUsed > 80
+                    ? 'bg-red-500'
+                    : usage.percentageUsed > 50
+                    ? 'bg-yellow-500'
+                    : 'bg-green-500'
+                }`}
+                style={{ width: `${Math.min(usage.percentageUsed, 100)}%` }}
+              />
+            </div>
+            <p className="text-xs text-dark-muted mt-2">
+              Disponible: <strong>{usage.charsRemaining}</strong> de <strong>{usage.charsLimit}</strong> caracteres
+            </p>
           </div>
-          <div className="w-full bg-dark-secondary rounded-full h-2 overflow-hidden">
-            <div
-              className={`h-full transition-all ${
-                usage.percentageUsed > 80
-                  ? 'bg-red-500'
-                  : usage.percentageUsed > 50
-                  ? 'bg-yellow-500'
-                  : 'bg-green-500'
-              }`}
-              style={{ width: `${Math.min(usage.percentageUsed, 100)}%` }}
-            />
-          </div>
-          <p className="text-xs text-dark-muted mt-2">
-            Disponible: <strong>{usage.charsRemaining}</strong> de <strong>{usage.charsLimit}</strong> caracteres
+        )}
+        <div className="p-4 bg-purple-500/10 border border-purple-500/25 rounded-2xl">
+          <p className="text-sm text-purple-400 font-semibold mb-2">Tu plan:</p>
+          <p className="text-sm text-dark-muted">
+            Tu plan te permite hasta <strong>{usage?.charsLimit || '2.000'} caracteres de TTS</strong> por mes.
           </p>
         </div>
-      )}
+      </div>
 
       {/* Crear TTS */}
       <div className="mt-8 bg-dark-card/70 border border-dark-border rounded-2xl p-7">
