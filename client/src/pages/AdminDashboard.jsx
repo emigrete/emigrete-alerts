@@ -8,7 +8,7 @@ export const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [userId] = useState(localStorage.getItem('userId'));
+  const [userId] = useState(localStorage.getItem('twitchUserId'));
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
