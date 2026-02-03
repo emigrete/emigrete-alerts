@@ -219,6 +219,32 @@ router.delete('/triggers/:id', async (req, res) => {
     const trigger = await Trigger.findById(req.params.id);
     if (!trigger) return res.status(404).json({ error: 'Alerta no encontrada' });
 
+    // Borrar recompensa en Twitch si existe
+    if (trigger.twitchRewardId) {
+      const user = await UserToken.findOne({ userId: trigger.userId });
+      if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
+
+      try {
+        await axios.delete('https://api.twitch.tv/helix/channel_points/custom_rewards', {
+          headers: {
+            'Client-ID': process.env.TWITCH_CLIENT_ID,
+            'Authorization': `Bearer ${user.accessToken}`
+          },
+          params: {
+            broadcaster_id: trigger.userId,
+            id: trigger.twitchRewardId
+          }
+        });
+      } catch (error) {
+        const status = error.response?.status;
+        // Si ya no existe en Twitch, seguimos con el borrado local
+        if (status !== 404) {
+          console.error('❌ Error al borrar recompensa en Twitch:', error.response?.data || error.message);
+          return res.status(502).json({ error: 'No se pudo borrar la recompensa en Twitch' });
+        }
+      }
+    }
+
     // Borrar todos los archivos en Firebase
     const bucket = getStorage().bucket();
     
