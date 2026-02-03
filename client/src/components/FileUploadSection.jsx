@@ -157,9 +157,9 @@ export const FileUploadSection = ({
               value={selectedReward} 
               onChange={(e) => onRewardChange(e.target.value)}
             >
-              <option value="">-- Seleccionar Canje --</option>
+              <option value="" style={{ backgroundColor: '#1a1a2e', color: '#fff' }}>-- Seleccionar Canje --</option>
               {rewards.map(r => (
-                <option key={r.id} value={r.id}>{r.title}</option>
+                <option key={r.id} value={r.id} style={{ backgroundColor: '#1a1a2e', color: '#fff' }}>{r.title}</option>
               ))}
             </select>
             <button
@@ -270,7 +270,7 @@ export const FileUploadSection = ({
                     }}
                   >
                     {ELEVENLABS_VOICES.map(voice => (
-                      <option key={voice.id} value={voice.id}>{voice.name}</option>
+                      <option key={voice.id} value={voice.id} style={{ backgroundColor: '#1a1a2e', color: '#fff' }}>{voice.name}</option>
                     ))}
                   </select>
                 </div>

@@ -71,10 +71,10 @@ export const FeedbackForm = () => {
                 paddingRight: '2.5rem'
               }}
             >
-              <option value="suggestion">💡 Sugerencia</option>
-              <option value="bug">🐛 Reporte de Bug</option>
-              <option value="feature">✨ Solicitud de Feature</option>
-              <option value="other">💬 Otro</option>
+              <option value="suggestion" style={{ backgroundColor: '#1a1a2e', color: '#fff' }}>💡 Sugerencia</option>
+              <option value="bug" style={{ backgroundColor: '#1a1a2e', color: '#fff' }}>🐛 Reporte de Bug</option>
+              <option value="feature" style={{ backgroundColor: '#1a1a2e', color: '#fff' }}>✨ Solicitud de Feature</option>
+              <option value="other" style={{ backgroundColor: '#1a1a2e', color: '#fff' }}>💬 Otro</option>
             </select>
           </div>
         </div>

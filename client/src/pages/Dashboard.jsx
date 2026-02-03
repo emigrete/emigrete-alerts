@@ -13,6 +13,7 @@ import { TriggersTable } from '../components/TriggersTable';
 import { DonationFooter } from '../components/DonationFooter';
 import { AlertsBadge } from '../components/AlertsBadge';
 import { FeedbackForm } from '../components/FeedbackForm';
+import { TTSManager } from '../components/TTSManager';
 
 export default function Dashboard() {
   // Modo demo: solo en desarrollo
@@ -237,56 +238,72 @@ export default function Dashboard() {
         {/* Step Guide */}
         <StepGuide />
 
-        {/* Main Content Grid */}
-        <div className="space-y-8">
-          {/* File Upload Card */}
-          <section className="bg-gradient-to-br from-dark-card to-dark-secondary p-6 lg:p-10 rounded-2xl border border-primary/20 shadow-xl hover:shadow-2xl transition-shadow">
-            <h3 className="mt-0 mb-8 text-2xl font-bold">
-              Nueva Alerta
-            </h3>
-            <FileUploadSection
-              file={file}
-              previewUrl={previewUrl}
-              selectedReward={selectedReward}
-              rewards={rewards}
-              uploading={uploading}
-              fileError={fileError}
-              onFileChange={handleFileChange}
-              onUpload={handleUpload}
-              onRewardChange={setSelectedReward}
-              userId={userId}
-              isDemo={isDemo}
-              triggers={triggers}
-              ttsConfig={ttsConfig}
-              onTtsConfigChange={setTtsConfig}
-              onRewardCreated={(newReward) => {
-                setRewards([...rewards, newReward]);
-                setSelectedReward(newReward.id);
-              }}
-            />
-          </section>
-
-          {/* Triggers Card */}
-          <section className="bg-gradient-to-br from-dark-card to-dark-secondary p-6 lg:p-10 rounded-2xl border border-primary/20 shadow-xl hover:shadow-2xl transition-shadow">
-            <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
-              <h3 className="m-0 text-2xl font-bold">
-                Alertas Activas
+        {/* Main Content - Grid Layout Mejorado */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Columna Principal (2/3) */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* File Upload Card */}
+            <section className="bg-gradient-to-br from-dark-card to-dark-secondary p-6 lg:p-10 rounded-2xl border border-primary/20 shadow-xl hover:shadow-2xl transition-shadow">
+              <h3 className="mt-0 mb-8 text-2xl font-bold">
+                Nueva Alerta
               </h3>
-              <AlertsBadge count={triggers.length} />
-            </div>
-            <TriggersTable 
-              triggers={triggers} 
-              rewards={rewards} 
+              <FileUploadSection
+                file={file}
+                previewUrl={previewUrl}
+                selectedReward={selectedReward}
+                rewards={rewards}
+                uploading={uploading}
+                fileError={fileError}
+                onFileChange={handleFileChange}
+                onUpload={handleUpload}
+                onRewardChange={setSelectedReward}
+                userId={userId}
+                isDemo={isDemo}
+                triggers={triggers}
+                ttsConfig={ttsConfig}
+                onTtsConfigChange={setTtsConfig}
+                onRewardCreated={(newReward) => {
+                  setRewards([...rewards, newReward]);
+                  setSelectedReward(newReward.id);
+                }}
+              />
+            </section>
+
+            {/* Triggers Card */}
+            <section className="bg-gradient-to-br from-dark-card to-dark-secondary p-6 lg:p-10 rounded-2xl border border-primary/20 shadow-xl hover:shadow-2xl transition-shadow">
+              <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
+                <h3 className="m-0 text-2xl font-bold">
+                  Alertas Activas
+                </h3>
+                <AlertsBadge count={triggers.length} />
+              </div>
+              <TriggersTable 
+                triggers={triggers} 
+                rewards={rewards} 
+                userId={userId}
+                onDelete={handleDelete}
+                onRefresh={fetchTriggers}
+              />
+            </section>
+          </div>
+
+          {/* Columna Lateral (1/3) */}
+          <div className="space-y-8">
+            {/* TTS Manager */}
+            <TTSManager
+              triggers={triggers}
+              rewards={rewards}
               userId={userId}
-              onDelete={handleDelete}
               onRefresh={fetchTriggers}
             />
-          </section>
 
-          {/* Feedback Form */}
-          <FeedbackForm />
+            {/* Feedback Form */}
+            <FeedbackForm />
+          </div>
+        </div>
 
-          {/* Donation Footer */}
+        {/* Donation Footer - Ancho completo */}
+        <div className="mt-8">
           <DonationFooter />
         </div>
       </div>

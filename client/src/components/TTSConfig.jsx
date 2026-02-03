@@ -192,7 +192,7 @@ export const TTSConfig = ({ triggerId, initialConfig, onClose, onUpdate, userId 
                 }}
               >
                 {ELEVENLABS_VOICES.map(voice => (
-                  <option key={voice.id} value={voice.id}>{voice.name}</option>
+                  <option key={voice.id} value={voice.id} style={{ backgroundColor: '#1a1a2e', color: '#fff' }}>{voice.name}</option>
                 ))}
               </select>
             </div>
