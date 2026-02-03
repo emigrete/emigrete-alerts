@@ -197,6 +197,24 @@ export const decrementStorageUsage = async (userId, bytesCount) => {
 };
 
 /**
+ * Decrementa TTS usado (cuando se borra una alerta con TTS)
+ */
+export const decrementTTSUsage = async (userId, charsCount) => {
+  const metrics = await checkAndResetUsageIfNeeded(userId);
+  metrics.ttsCharsUsed = Math.max(0, metrics.ttsCharsUsed - charsCount);
+  await metrics.save();
+};
+
+/**
+ * Calcula la próxima fecha de reset (primer día del mes próximo)
+ */
+const getNextResetDate = () => {
+  const now = new Date();
+  const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  return nextMonth;
+};
+
+/**
  * Obtiene status completo del usuario
  */
 export const getUserSubscriptionStatus = async (userId) => {
@@ -204,6 +222,7 @@ export const getUserSubscriptionStatus = async (userId) => {
   const metrics = await checkAndResetUsageIfNeeded(userId);
   const tier = subscription.tier;
   const limits = LIMITS[tier];
+  const nextResetDate = getNextResetDate();
 
   return {
     subscription: {
@@ -239,5 +258,6 @@ export const getUserSubscriptionStatus = async (userId) => {
               ),
       },
     },
+    nextResetDate: nextResetDate.toISOString(),
   };
 };

@@ -35,7 +35,7 @@ export const SubscriptionStatus = ({ userId }) => {
   if (error) return null;
   if (!status) return null;
 
-  const { subscription, usage } = status;
+  const { subscription, usage, nextResetDate } = status;
   
   // Helper para formatear bytes a unidad legible
   const formatBytes = (bytes) => {
@@ -44,6 +44,12 @@ export const SubscriptionStatus = ({ userId }) => {
     const sizes = ['B', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return Math.round(bytes / Math.pow(k, i) * 10) / 10 + ' ' + sizes[i];
+  };
+
+  // Helper para formatear fecha
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' });
   };
 
   const tierColors = {
@@ -62,7 +68,12 @@ export const SubscriptionStatus = ({ userId }) => {
     <div className="bg-dark-card/70 border border-dark-border rounded-2xl p-4 mb-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-bold text-dark-text">Tu Plan</h3>
+        <div>
+          <h3 className="text-lg font-bold text-dark-text">Tu Plan</h3>
+          <p className="text-xs text-dark-muted mt-1">
+            Se reinicia el {formatDate(nextResetDate)}
+          </p>
+        </div>
         <span className={`px-3 py-1 rounded-full text-white text-xs font-bold bg-gradient-to-r ${tierColors[subscription.tier]}`}>
           {tierLabels[subscription.tier]}
         </span>

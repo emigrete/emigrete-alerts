@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import { RewardCreator } from './RewardCreator';
+import { API_URL } from '../constants/config';
 
 export const FileUploadSection = ({ 
   file, 
@@ -21,6 +23,31 @@ export const FileUploadSection = ({
   const [showRewardCreator, setShowRewardCreator] = useState(false);
   // Tipo de media para vista previa
   const [mediaType, setMediaType] = useState(null);
+  // Datos de suscripción con fecha de reset
+  const [subscriptionData, setSubscriptionData] = useState(null);
+
+  // Obtener datos de suscripción con fecha de reset
+  useEffect(() => {
+    const fetchSubscription = async () => {
+      try {
+        if (!userId) return;
+        const res = await axios.get(`${API_URL}/api/subscription/status`, {
+          params: { userId }
+        });
+        setSubscriptionData(res.data);
+      } catch (error) {
+        console.error('Error fetching subscription:', error);
+      }
+    };
+
+    fetchSubscription();
+  }, [userId]);
+
+  // Helper para formatear fecha
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' });
+  };
 
   // Detecta tipo de archivo
   const handleFileChange = (e) => {
@@ -180,6 +207,11 @@ export const FileUploadSection = ({
               <p className="text-sm text-dark-muted">
                 Tu plan te permite subir archivos hasta <strong>{subscription?.maxFileSize || '5MB'}</strong> cada uno.
               </p>
+              {subscriptionData?.nextResetDate && (
+                <p className="text-xs text-dark-muted mt-2">
+                  Se reinicia el <strong>{formatDate(subscriptionData.nextResetDate)}</strong>
+                </p>
+              )}
             </div>
           </div>
 

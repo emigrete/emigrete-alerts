@@ -46,6 +46,12 @@ export const TTSManager = ({ triggers, rewards, userId, username, onRefresh, isD
     fetchUsage();
   }, [userId]);
 
+  // Helper para formatear fecha
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' });
+  };
+
   // Crear alerta TTS desde recompensa existente
   // Calcular caracteres totales que se usarán
   const calculateCharCount = () => {
@@ -181,6 +187,11 @@ export const TTSManager = ({ triggers, rewards, userId, username, onRefresh, isD
           <p className="text-sm text-dark-muted">
             Tu plan te permite hasta <strong>{usage?.charsLimit || '2.000'} caracteres de TTS</strong> por mes.
           </p>
+          {usage?.nextResetDate && (
+            <p className="text-xs text-dark-muted mt-2">
+              Se reinicia el <strong>{formatDate(usage.nextResetDate)}</strong>
+            </p>
+          )}
         </div>
       </div>
 
