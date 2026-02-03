@@ -6,7 +6,7 @@ import { startTwitchListener } from '../services/twitchListener.js';
 const router = express.Router();
 
 /**
- * 1️⃣ INICIO LOGIN TWITCH
+ * INICIO LOGIN
  * GET /auth/twitch
  */
 router.get('/twitch', (req, res) => {
@@ -15,15 +15,14 @@ router.get('/twitch', (req, res) => {
     redirect_uri: process.env.TWITCH_REDIRECT_URI,
     response_type: 'code',
     scope: 'channel:read:redemptions channel:manage:redemptions',
+    force_verify: 'true',
   });
 
-  const twitchAuthUrl = `https://id.twitch.tv/oauth2/authorize?${params.toString()}`;
-
-  res.redirect(twitchAuthUrl);
+  res.redirect(`https://id.twitch.tv/oauth2/authorize?${params.toString()}`);
 });
 
 /**
- * 2️⃣ CALLBACK DE TWITCH
+ * CALLBACK
  * GET /auth/twitch/callback?code=XXX
  */
 router.get('/twitch/callback', async (req, res) => {
@@ -34,43 +33,31 @@ router.get('/twitch/callback', async (req, res) => {
   }
 
   try {
-    console.log('🔄 Intercambiando código por token con Twitch...');
+    // 1) code -> token
+    const tokenResponse = await axios.post('https://id.twitch.tv/oauth2/token', null, {
+      params: {
+        client_id: process.env.TWITCH_CLIENT_ID,
+        client_secret: process.env.TWITCH_CLIENT_SECRET,
+        code,
+        grant_type: 'authorization_code',
+        redirect_uri: process.env.TWITCH_REDIRECT_URI,
+      },
+    });
 
-    // 1. Canjear code por token
-    const tokenResponse = await axios.post(
-      'https://id.twitch.tv/oauth2/token',
-      null,
-      {
-        params: {
-          client_id: process.env.TWITCH_CLIENT_ID,
-          client_secret: process.env.TWITCH_CLIENT_SECRET,
-          code,
-          grant_type: 'authorization_code',
-          redirect_uri: process.env.TWITCH_REDIRECT_URI,
-        },
-      }
-    );
+    const { access_token, refresh_token, expires_in, scope } = tokenResponse.data;
 
-    const { access_token, refresh_token, expires_in, scope } =
-      tokenResponse.data;
-
-    console.log('👀 SCOPES RECIBIDOS:', scope);
-
-    // 2. Obtener usuario
-    const userResponse = await axios.get(
-      'https://api.twitch.tv/helix/users',
-      {
-        headers: {
-          'Client-ID': process.env.TWITCH_CLIENT_ID,
-          Authorization: `Bearer ${access_token}`,
-        },
-      }
-    );
+    // 2) user info
+    const userResponse = await axios.get('https://api.twitch.tv/helix/users', {
+      headers: {
+        'Client-ID': process.env.TWITCH_CLIENT_ID,
+        Authorization: `Bearer ${access_token}`,
+      },
+    });
 
     const userData = userResponse.data.data[0];
     const userId = userData.id;
 
-    // 3. Guardar en Mongo
+    // 3) save in mongo
     await UserToken.findOneAndUpdate(
       { userId },
       {
@@ -85,25 +72,26 @@ router.get('/twitch/callback', async (req, res) => {
       { upsert: true, new: true }
     );
 
-    console.log(`✅ Login Twitch OK: ${userData.display_name}`);
-
-    // 4. Arrancar listener
+    // 4) start listener
     try {
       await startTwitchListener(userId);
-      console.log('🎧 Listener iniciado');
+      console.log(`🎧 Listener iniciado para ${userId}`);
     } catch (e) {
       console.error('⚠️ Error listener:', e.message);
     }
 
-    // ⚠️ POR AHORA RESPONDEMOS TEXTO
-    // luego el front va a manejar esto
-    res.send(`Login OK. Usuario ${userData.display_name}`);
+    // ✅ REDIRECT FINAL AL FRONT
+    const front = process.env.FRONTEND_URL;
+    if (!front) {
+      return res.send(`Login OK. Usuario ${userData.display_name}`);
+    }
+
+    return res.redirect(
+      `${front}/auth/callback?userId=${encodeURIComponent(userId)}&username=${encodeURIComponent(userData.login)}`
+    );
 
   } catch (error) {
-    console.error(
-      '❌ Error OAuth Twitch:',
-      error.response?.data || error.message
-    );
+    console.error('❌ Error OAuth Twitch:', error.response?.data || error.message);
     res.status(500).json({ error: 'Falló autenticación con Twitch' });
   }
 });
