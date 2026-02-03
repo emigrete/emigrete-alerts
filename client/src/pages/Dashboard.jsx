@@ -13,6 +13,7 @@ import { FileUploadSection } from '../components/FileUploadSection';
 import { TriggersTable } from '../components/TriggersTable';
 import { DonationFooter } from '../components/DonationFooter';
 import { AlertsBadge } from '../components/AlertsBadge';
+import { SubscriptionStatus } from '../components/SubscriptionStatus';
 
 export default function Dashboard() {
   // Modo demo: solo desarrollo
@@ -223,6 +224,9 @@ export default function Dashboard() {
 
         {/* Navigation */}
         <Navigation />
+
+        {/* Subscription Status */}
+        {!isDemo && userId && <SubscriptionStatus userId={userId} />}
 
         {/* Alertas Overview */}
         <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-4">

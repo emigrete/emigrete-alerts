@@ -5,6 +5,12 @@ import { getStorage } from 'firebase-admin/storage';
 import { UserToken } from '../models/UserToken.js';
 import { Trigger } from '../models/Trigger.js';
 import { TTSUsage } from '../models/TTSUsage.js';
+import {
+  canCreateAlert,
+  incrementAlertCount,
+  canUseTTS,
+  incrementTTSUsage,
+} from '../services/subscriptionService.js';
 
 const router = express.Router();
 
@@ -129,6 +135,17 @@ router.post('/create-reward', async (req, res) => {
   }
 
   try {
+    // ✅ CHECK: ¿Puede crear alertas?
+    const alertCheck = await canCreateAlert(userId);
+    if (!alertCheck.allowed) {
+      return res.status(402).json({
+        error: alertCheck.message,
+        current: alertCheck.current,
+        limit: alertCheck.limit,
+        requiresUpgrade: true
+      });
+    }
+
     const user = await UserToken.findOne({ userId });
     if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
 
@@ -183,6 +200,9 @@ router.post('/create-reward', async (req, res) => {
 
       console.log(`✅ Trigger TTS creado: ${trigger._id} para recompensa ${newReward.id}`);
     }
+
+    // ✅ INCREMENTAR CONTADOR
+    await incrementAlertCount(userId);
 
     res.json({
       success: true,
@@ -322,7 +342,6 @@ router.get('/tts/usage/:userId', async (req, res) => {
  * GENERAR TTS CON ELEVENLABS
  * POST /api/tts
  * Body: { text, voiceId?, stability?, similarityBoost?, userId }
- * Límites: 300 caracteres por request, 2,000 caracteres/mes por usuario
  */
 router.post('/tts', async (req, res) => {
   const { text, voiceId = 'onwK4e9ZLuTAKqWW03F9', stability = 0.5, similarityBoost = 0.75, userId } = req.body;
@@ -335,7 +354,6 @@ router.post('/tts', async (req, res) => {
     return res.status(400).json({ error: 'Falta userId' });
   }
 
-  // ⚠️ LÍMITE DE CARACTERES POR REQUEST: máximo 300 chars
   const MAX_CHARS_PER_REQUEST = 300;
   if (text.length > MAX_CHARS_PER_REQUEST) {
     return res.status(400).json({ 
@@ -344,33 +362,16 @@ router.post('/tts', async (req, res) => {
   }
 
   try {
-    // Obtener o crear registro de uso del usuario
-    let usage = await TTSUsage.findOne({ userId });
-    
-    if (!usage) {
-      usage = await TTSUsage.create({ 
-        userId,
-        charsUsed: 0,
-        charsLimit: 2000
-      });
-    }
-
-    // Resetear si pasó el mes
-    const now = new Date();
-    if (usage.resetDate <= now) {
-      usage.charsUsed = 0;
-      usage.resetDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-    }
-
-    // ⚠️ VERIFICAR LÍMITE MENSUAL
-    const charsRemaining = usage.charsLimit - usage.charsUsed;
-    if (text.length > charsRemaining) {
-      return res.status(429).json({ 
-        error: `Limite de caracteres alcanzado. Te quedan ${charsRemaining}/${usage.charsLimit} caracteres para este mes.`,
-        charsRemaining,
-        charsUsed: usage.charsUsed,
-        charsLimit: usage.charsLimit,
-        resetDate: usage.resetDate
+    // ✅ CHECK: ¿Tiene límites de TTS?
+    const ttsCheck = await canUseTTS(userId, text.length);
+    if (!ttsCheck.allowed) {
+      return res.status(402).json({
+        error: ttsCheck.message,
+        current: ttsCheck.current,
+        requested: ttsCheck.requested,
+        limit: ttsCheck.limit,
+        remaining: ttsCheck.remaining,
+        requiresUpgrade: true
       });
     }
 
@@ -402,32 +403,27 @@ router.post('/tts', async (req, res) => {
       }
     );
 
-    // Actualizar uso
-    usage.charsUsed += text.length;
-    await usage.save();
+    // ✅ INCREMENTAR USO
+    await incrementTTSUsage(userId, text.length);
 
     // Devolver audio como base64
     const audioBase64 = Buffer.from(response.data, 'binary').toString('base64');
     
-    console.log(`✅ TTS generado (${text.length} chars) - Quedan: ${charsRemaining - text.length}`);
+    console.log(`✅ TTS generado (${text.length} chars)`);
     
     res.json({ 
       success: true, 
       audio: `data:audio/mpeg;base64,${audioBase64}`,
-      charsUsed: text.length,
-      charsRemaining: usage.charsLimit - usage.charsUsed,
-      charsLimit: usage.charsLimit
+      charsUsed: text.length
     });
 
   } catch (error) {
     console.error('❌ Error generando TTS:', error.response?.data || error.message);
 
-    // Si la API de ElevenLabs devolvió una respuesta, intentamos extraer un mensaje legible
     if (error.response) {
       const statusCode = error.response.status || 500;
       let data = error.response.data;
 
-      // Si viene como ArrayBuffer/Buffer, intentar decodificar a UTF-8 y parsear JSON
       try {
         if (data && data.byteLength) {
           const str = Buffer.from(data).toString('utf8');

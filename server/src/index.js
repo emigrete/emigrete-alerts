@@ -12,6 +12,7 @@ import { getStorage } from 'firebase-admin/storage';
 
 import apiRoutes from './routes/api.js';
 import authRoutes from './routes/auth.js';
+import subscriptionRoutes from './routes/subscription.js';
 import { Trigger } from './models/Trigger.js';
 import { startTwitchListener } from './services/twitchListener.js';
 import { UserToken } from './models/UserToken.js';
@@ -96,6 +97,7 @@ const upload = multer({
 // Rutas
 app.use('/auth', authRoutes);
 app.use('/api', apiRoutes);
+app.use('/api/subscription', subscriptionRoutes);
 
 // Detectar tipo de media según MIME type
 function getMediaType(mimeType) {
