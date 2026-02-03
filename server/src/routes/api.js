@@ -6,7 +6,7 @@ import { UserToken } from '../models/UserToken.js';
 import { Trigger } from '../models/Trigger.js';
 import { TTSUsage } from '../models/TTSUsage.js';
 import Subscription from '../models/Subscription.js';
-import { UsageMetrics } from '../models/UsageMetrics.js';
+import UsageMetrics from '../models/UsageMetrics.js';
 import {
   canCreateAlert,
   incrementAlertCount,
