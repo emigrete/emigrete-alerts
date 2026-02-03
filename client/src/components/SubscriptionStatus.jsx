@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API_URL } from '../constants/config';
 
@@ -6,6 +7,7 @@ export const SubscriptionStatus = ({ userId }) => {
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!userId) return;
@@ -133,8 +135,11 @@ export const SubscriptionStatus = ({ userId }) => {
 
       {/* Upgrade button si está cerca del límite */}
       {(usage.alerts.percentage > 80 || usage.tts.percentage > 80) && subscription.tier !== 'premium' && (
-        <button className="mt-3 w-full text-xs font-bold py-2 px-3 rounded-lg bg-gradient-to-r from-primary to-pink-500 text-white hover:shadow-lg transition">
-          Upgrade Plan
+        <button 
+          disabled
+          className="mt-3 w-full text-xs font-bold py-2 px-3 rounded-lg bg-gradient-to-r from-primary to-pink-500 text-white opacity-50 cursor-not-allowed"
+        >
+          Upgrade Plan (Próximamente)
         </button>
       )}
     </div>
