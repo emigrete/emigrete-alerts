@@ -106,32 +106,60 @@ function getMediaType(mimeType) {
 // Upload media (video, audio, gif)
 app.post('/upload', upload.single('video'), async (req, res) => {
   try {
-    if (!req.file) return res.status(400).json({ error: 'No se subió ningún archivo' });
-    if (!req.body.twitchRewardId) return res.status(400).json({ error: 'Falta el twitchRewardId' });
-    if (!req.body.userId) return res.status(400).json({ error: 'Falta el userId' });
+    console.log('📤 Upload request recibido:', {
+      hasFile: !!req.file,
+      twitchRewardId: req.body.twitchRewardId,
+      userId: req.body.userId,
+      fileSize: req.file?.size,
+      mimeType: req.file?.mimetype
+    });
+
+    if (!req.file) {
+      console.error('❌ No se subió archivo');
+      return res.status(400).json({ error: 'No se subió ningún archivo' });
+    }
+    if (!req.body.twitchRewardId) {
+      console.error('❌ Falta twitchRewardId');
+      return res.status(400).json({ error: 'Falta el twitchRewardId' });
+    }
+    if (!req.body.userId) {
+      console.error('❌ Falta userId');
+      return res.status(400).json({ error: 'Falta el userId' });
+    }
 
     const mediaType = getMediaType(req.file.mimetype);
     const fileName = `triggers/${mediaType}/${Date.now()}_${req.file.originalname}`;
     const file = bucket.file(fileName);
 
+    console.log('🔥 Subiendo a Firebase:', fileName);
+
     const stream = file.createWriteStream({
       metadata: { contentType: req.file.mimetype }
     });
 
-    stream.on('error', (e) => res.status(500).json({ error: e.message }));
+    stream.on('error', (e) => {
+      console.error('❌ Error en stream Firebase:', e);
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Error al subir archivo: ' + e.message });
+      }
+    });
 
     stream.on('finish', async () => {
       try {
+        console.log('✅ Archivo subido, haciendo público...');
         await file.makePublic();
         const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+        console.log('🌐 URL pública generada:', publicUrl);
 
         // Agregar nueva media al array de medias
+        console.log('🔍 Buscando trigger existente...');
         const trigger = await Trigger.findOne({
           twitchRewardId: req.body.twitchRewardId,
           userId: req.body.userId
         });
 
         if (trigger) {
+          console.log('📝 Actualizando trigger existente:', trigger._id);
           // Actualizar trigger existente: agregar nueva media
           trigger.medias.push({
             type: mediaType,
@@ -144,15 +172,20 @@ app.post('/upload', upload.single('video'), async (req, res) => {
             trigger.videoUrl = publicUrl;
           }
           await trigger.save();
-          res.json({ 
-            status: 'success', 
-            trigger,
-            media: {
-              type: mediaType,
-              url: publicUrl
-            }
-          });
+          console.log('✅ Trigger actualizado exitosamente');
+          
+          if (!res.headersSent) {
+            res.json({ 
+              status: 'success', 
+              trigger,
+              media: {
+                type: mediaType,
+                url: publicUrl
+              }
+            });
+          }
         } else {
+          console.log('➕ Creando nuevo trigger...');
           // Crear nuevo trigger
           const newTrigger = await Trigger.create({
             userId: req.body.userId,
@@ -166,26 +199,34 @@ app.post('/upload', upload.single('video'), async (req, res) => {
             videoUrl: mediaType === 'video' ? publicUrl : undefined,
             fileName: mediaType === 'video' ? fileName : undefined
           });
+          console.log('✅ Nuevo trigger creado:', newTrigger._id);
 
-          res.json({ 
-            status: 'success', 
-            trigger: newTrigger,
-            media: {
-              type: mediaType,
-              url: publicUrl
-            }
-          });
+          if (!res.headersSent) {
+            res.json({ 
+              status: 'success', 
+              trigger: newTrigger,
+              media: {
+                type: mediaType,
+                url: publicUrl
+              }
+            });
+          }
         }
       } catch (error) {
-        console.error('Error al guardar en BD:', error);
-        res.status(500).json({ error: 'Error al guardar en BD' });
+        console.error('❌ Error al guardar en BD:', error);
+        if (!res.headersSent) {
+          res.status(500).json({ error: 'Error al guardar en BD: ' + error.message });
+        }
       }
     });
 
     stream.end(req.file.buffer);
 
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('❌ Error general en /upload:', error);
+    if (!res.headersSent) {
+      res.status(500).json({ error: error.message });
+    }
   }
 });
 
