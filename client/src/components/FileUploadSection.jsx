@@ -2,6 +2,16 @@ import { useState } from 'react';
 import { FILE_CONFIG } from '../constants/config';
 import { RewardCreator } from './RewardCreator';
 
+const ELEVENLABS_VOICES = [
+  { id: 'pNInz6obpgDQGcFmaJgB', name: 'Adam (Masculino, profundo)' },
+  { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Sarah (Femenino, suave)' },
+  { id: 'ErXwobaYiN019PkySvjV', name: 'Antoni (Masculino, cálido)' },
+  { id: 'VR6AewLTigWG4xSOukaG', name: 'Arnold (Masculino, autoritario)' },
+  { id: 'MF3mGyEYCl7XYWbV9V6O', name: 'Elli (Femenino, juvenil)' },
+  { id: 'ThT5KcBeYPX3keUQqHPh', name: 'Dorothy (Femenino, británico)' },
+  { id: 'onwK4e9ZLuTAKqWW03F9', name: 'Daniel (Masculino, británico)' },
+];
+
 export const FileUploadSection = ({ 
   file, 
   previewUrl, 
@@ -15,7 +25,9 @@ export const FileUploadSection = ({
   userId,
   onRewardCreated,
   isDemo,
-  triggers
+  triggers,
+  ttsConfig,
+  onTtsConfigChange
 }) => {
   const [showRewardCreator, setShowRewardCreator] = useState(false);
   const [mediaType, setMediaType] = useState(null);
@@ -197,6 +209,83 @@ export const FileUploadSection = ({
           </div>
 
           {fileError && <p className="text-red-500 text-sm mb-4">{fileError}</p>}
+
+          {/* Sección TTS */}
+          <div className="mt-6 pt-6 border-t border-dark-border">
+            <div className="flex items-center gap-3 mb-4">
+              <input
+                type="checkbox"
+                id="tts-enabled"
+                checked={ttsConfig?.enabled || false}
+                onChange={(e) => onTtsConfigChange({ ...ttsConfig, enabled: e.target.checked })}
+                className="w-5 h-5"
+              />
+              <label htmlFor="tts-enabled" className="font-semibold text-dark-text flex items-center gap-2">
+                <span>🎤</span> Agregar Text-to-Speech
+              </label>
+            </div>
+
+            {ttsConfig?.enabled && (
+              <div className="bg-dark-secondary/50 border border-primary/30 rounded-xl p-4 space-y-4">
+                <div>
+                  <label className="block mb-2 font-semibold text-dark-muted text-xs uppercase tracking-wider">
+                    Voz
+                  </label>
+                  <select
+                    value={ttsConfig?.voiceId || 'pNInz6obpgDQGcFmaJgB'}
+                    onChange={(e) => onTtsConfigChange({ ...ttsConfig, voiceId: e.target.value })}
+                    className="w-full p-2 rounded-lg border border-dark-border bg-black text-white outline-none focus:border-primary transition text-sm"
+                  >
+                    {ELEVENLABS_VOICES.map(voice => (
+                      <option key={voice.id} value={voice.id}>{voice.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    id="read-username"
+                    checked={ttsConfig?.readUsername !== false}
+                    onChange={(e) => onTtsConfigChange({ ...ttsConfig, readUsername: e.target.checked })}
+                    className="w-4 h-4"
+                  />
+                  <label htmlFor="read-username" className="text-dark-text text-xs">
+                    Decir nombre del usuario
+                  </label>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    id="use-viewer-message"
+                    checked={ttsConfig?.useViewerMessage !== false}
+                    onChange={(e) => onTtsConfigChange({ ...ttsConfig, useViewerMessage: e.target.checked })}
+                    className="w-4 h-4"
+                  />
+                  <label htmlFor="use-viewer-message" className="text-dark-text text-xs">
+                    Leer mensaje del viewer
+                  </label>
+                </div>
+
+                {!ttsConfig?.useViewerMessage && (
+                  <div>
+                    <label className="block mb-2 font-semibold text-dark-muted text-xs uppercase tracking-wider">
+                      Texto personalizado
+                    </label>
+                    <textarea
+                      value={ttsConfig?.text || ''}
+                      onChange={(e) => onTtsConfigChange({ ...ttsConfig, text: e.target.value })}
+                      placeholder="Escribe lo que el TTS dirá..."
+                      maxLength={300}
+                      className="w-full p-2 rounded-lg border border-dark-border bg-black text-white outline-none focus:border-primary transition text-xs h-16 resize-none"
+                    />
+                    <small className="text-dark-muted">{(ttsConfig?.text || '').length}/300</small>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
 
           <div className="text-right mt-5">
             <button

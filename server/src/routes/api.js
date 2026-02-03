@@ -3,6 +3,7 @@ import axios from 'axios';
 import { getStorage } from 'firebase-admin/storage';
 import { UserToken } from '../models/UserToken.js';
 import { Trigger } from '../models/Trigger.js';
+import { TTSUsage } from '../models/TTSUsage.js';
 
 const router = express.Router();
 
@@ -149,34 +150,106 @@ router.delete('/triggers/:id', async (req, res) => {
 });
 
 /**
+ * OBTENER USO DE TTS DEL USUARIO
+ * GET /api/tts/usage/:userId
+ */
+router.get('/tts/usage/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    let usage = await TTSUsage.findOne({ userId });
+    
+    if (!usage) {
+      usage = await TTSUsage.create({ 
+        userId,
+        charsUsed: 0,
+        charsLimit: 2000
+      });
+    }
+
+    const now = new Date();
+    if (usage.resetDate <= now) {
+      usage.charsUsed = 0;
+      usage.resetDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+      await usage.save();
+    }
+
+    res.json({
+      charsUsed: usage.charsUsed,
+      charsLimit: usage.charsLimit,
+      charsRemaining: usage.charsLimit - usage.charsUsed,
+      resetDate: usage.resetDate,
+      percentageUsed: Math.round((usage.charsUsed / usage.charsLimit) * 100)
+    });
+  } catch (error) {
+    console.error('❌ Error obteniendo TTS usage:', error);
+    res.status(500).json({ error: 'Error al obtener uso de TTS' });
+  }
+});
+
+/**
  * GENERAR TTS CON ELEVENLABS
  * POST /api/tts
- * Body: { text, voiceId?, stability?, similarityBoost? }
- * Límites: 300 caracteres por request, rate limit de 10/minuto por IP
+ * Body: { text, voiceId?, stability?, similarityBoost?, userId }
+ * Límites: 300 caracteres por request, 2,000 caracteres/mes por usuario
  */
 router.post('/tts', async (req, res) => {
-  const { text, voiceId = 'pNInz6obpgDQGcFmaJgB', stability = 0.5, similarityBoost = 0.75 } = req.body;
+  const { text, voiceId = 'pNInz6obpgDQGcFmaJgB', stability = 0.5, similarityBoost = 0.75, userId } = req.body;
 
   if (!text) {
     return res.status(400).json({ error: 'Falta el texto para generar TTS' });
   }
 
-  // ⚠️ LÍMITE DE CARACTERES: máximo 300 chars para evitar costos excesivos
-  const MAX_CHARS = 300;
-  if (text.length > MAX_CHARS) {
+  if (!userId) {
+    return res.status(400).json({ error: 'Falta userId' });
+  }
+
+  // ⚠️ LÍMITE DE CARACTERES POR REQUEST: máximo 300 chars
+  const MAX_CHARS_PER_REQUEST = 300;
+  if (text.length > MAX_CHARS_PER_REQUEST) {
     return res.status(400).json({ 
-      error: `Texto demasiado largo. Máximo ${MAX_CHARS} caracteres (actual: ${text.length})` 
+      error: `Texto demasiado largo. Máximo ${MAX_CHARS_PER_REQUEST} caracteres (actual: ${text.length})` 
     });
   }
 
-  const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
-  if (!ELEVENLABS_API_KEY) {
-    console.error('❌ Falta ELEVENLABS_API_KEY en variables de entorno');
-    return res.status(500).json({ error: 'TTS no configurado' });
-  }
-
   try {
-    console.log('🎤 Generando TTS:', { text: text.substring(0, 50), voiceId, length: text.length });
+    // Obtener o crear registro de uso del usuario
+    let usage = await TTSUsage.findOne({ userId });
+    
+    if (!usage) {
+      usage = await TTSUsage.create({ 
+        userId,
+        charsUsed: 0,
+        charsLimit: 2000
+      });
+    }
+
+    // Resetear si pasó el mes
+    const now = new Date();
+    if (usage.resetDate <= now) {
+      usage.charsUsed = 0;
+      usage.resetDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    }
+
+    // ⚠️ VERIFICAR LÍMITE MENSUAL
+    const charsRemaining = usage.charsLimit - usage.charsUsed;
+    if (text.length > charsRemaining) {
+      return res.status(429).json({ 
+        error: `Limite de caracteres alcanzado. Te quedan ${charsRemaining}/${usage.charsLimit} caracteres para este mes.`,
+        charsRemaining,
+        charsUsed: usage.charsUsed,
+        charsLimit: usage.charsLimit,
+        resetDate: usage.resetDate
+      });
+    }
+
+    const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
+    if (!ELEVENLABS_API_KEY) {
+      console.error('❌ Falta ELEVENLABS_API_KEY en variables de entorno');
+      return res.status(500).json({ error: 'TTS no configurado' });
+    }
+
+    console.log('🎤 Generando TTS:', { text: text.substring(0, 50), voiceId, userId, length: text.length });
 
     const response = await axios.post(
       `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
@@ -198,15 +271,21 @@ router.post('/tts', async (req, res) => {
       }
     );
 
-    // Devolver audio como base64 para que el frontend lo reproduzca
+    // Actualizar uso
+    usage.charsUsed += text.length;
+    await usage.save();
+
+    // Devolver audio como base64
     const audioBase64 = Buffer.from(response.data, 'binary').toString('base64');
     
-    console.log(`✅ TTS generado (${text.length} chars)`);
+    console.log(`✅ TTS generado (${text.length} chars) - Quedan: ${charsRemaining - text.length}`);
     
     res.json({ 
       success: true, 
       audio: `data:audio/mpeg;base64,${audioBase64}`,
-      charsUsed: text.length
+      charsUsed: text.length,
+      charsRemaining: usage.charsLimit - usage.charsUsed,
+      charsLimit: usage.charsLimit
     });
 
   } catch (error) {

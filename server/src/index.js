@@ -187,6 +187,15 @@ app.post('/upload', upload.single('video'), async (req, res) => {
         } else {
           console.log('➕ Creando nuevo trigger...');
           // Crear nuevo trigger
+          let ttsConfig = undefined;
+          if (req.body.ttsConfig) {
+            try {
+              ttsConfig = JSON.parse(req.body.ttsConfig);
+            } catch (e) {
+              console.warn('⚠️ Error parseando ttsConfig:', e);
+            }
+          }
+
           const newTrigger = await Trigger.create({
             userId: req.body.userId,
             twitchRewardId: req.body.twitchRewardId,
@@ -197,7 +206,8 @@ app.post('/upload', upload.single('video'), async (req, res) => {
               volume: 1.0
             }],
             videoUrl: mediaType === 'video' ? publicUrl : undefined,
-            fileName: mediaType === 'video' ? fileName : undefined
+            fileName: mediaType === 'video' ? fileName : undefined,
+            ttsConfig: ttsConfig
           });
           console.log('✅ Nuevo trigger creado:', newTrigger._id);
 

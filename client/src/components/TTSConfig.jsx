@@ -13,7 +13,7 @@ const ELEVENLABS_VOICES = [
   { id: 'onwK4e9ZLuTAKqWW03F9', name: 'Daniel (Masculino, británico)' },
 ];
 
-export const TTSConfig = ({ triggerId, initialConfig, onClose, onUpdate }) => {
+export const TTSConfig = ({ triggerId, initialConfig, onClose, onUpdate, userId }) => {
   const [config, setConfig] = useState({
     enabled: false,
     voiceId: 'pNInz6obpgDQGcFmaJgB',
@@ -27,30 +27,66 @@ export const TTSConfig = ({ triggerId, initialConfig, onClose, onUpdate }) => {
 
   const [testing, setTesting] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [usage, setUsage] = useState(null);
+  const [loadingUsage, setLoadingUsage] = useState(true);
+
+  // Cargar uso del usuario
+  useEffect(() => {
+    const fetchUsage = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/api/tts/usage/${userId}`);
+        setUsage(response.data);
+      } catch (error) {
+        console.error('Error cargando uso:', error);
+      } finally {
+        setLoadingUsage(false);
+      }
+    };
+    
+    if (userId) {
+      fetchUsage();
+    }
+  }, [userId]);
 
   const handleTest = async () => {
+    if (!usage || config.text.length > usage.charsRemaining) {
+      toast.error(`No te quedan caracteres suficientes. Te quedan ${usage?.charsRemaining || 0}`)
+      return;
+    }
+
     setTesting(true);
     try {
-      // Texto de ejemplo
       const testText = config.readUsername 
-        ? `GokuSSJ3 dice: ${config.text || 'Gracias por el canje!'}`
-        : config.text || 'Gracias por el canje!';
+        ? `Usuario dice: ${config.text || 'Gracias por el canje'}`
+        : config.text || 'Gracias por el canje';
 
       const response = await axios.post(`${API_URL}/api/tts`, {
         text: testText,
         voiceId: config.voiceId,
         stability: config.stability,
-        similarityBoost: config.similarityBoost
+        similarityBoost: config.similarityBoost,
+        userId
       });
 
-      // Reproducir audio
-      const audio = new Audio(response.data.audio);
-      audio.volume = 1.0;
-      audio.play();
-      toast.success('Reproduciendo audio de prueba');
+      if (response.data.audio) {
+        const audio = new Audio(response.data.audio);
+        audio.volume = 1.0;
+        audio.play();
+        
+        // Actualizar uso
+        setUsage(prev => ({
+          ...prev,
+          charsUsed: response.data.charsUsed + prev.charsUsed,
+          charsRemaining: response.data.charsRemaining,
+          percentageUsed: Math.round((response.data.charsUsed + prev.charsUsed) / prev.charsLimit * 100)
+        }));
+        
+        toast.success(`Muestra reproducida (${testText.length} caracteres usados)`);
+      }
     } catch (error) {
       console.error('Error al generar TTS:', error);
-      toast.error('Error al generar audio: ' + (error.response?.data?.error || error.message));
+      const message = error.response?.data?.error || 'Error al generar audio';
+      toast.error(message);
     } finally {
       setTesting(false);
     }
@@ -75,14 +111,52 @@ export const TTSConfig = ({ triggerId, initialConfig, onClose, onUpdate }) => {
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
       <div className="bg-gradient-to-br from-dark-card via-dark-secondary to-dark-card border border-primary/50 rounded-3xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
         <div className="mb-8 text-center">
-          <div className="inline-block p-4 bg-gradient-to-br from-primary to-pink-500 rounded-2xl mb-4">
-            <span className="text-5xl">🎤</span>
-          </div>
           <h2 className="text-3xl font-black bg-gradient-to-r from-primary via-pink-500 to-primary bg-clip-text text-transparent">
-            Text-to-Speech
+            Configuración de Voz Sintética
           </h2>
-          <p className="text-dark-muted text-sm mt-2">Potencia tu alerta con voz natural de IA</p>
+          <p className="text-dark-muted text-sm mt-2">Personaliza la voz generada por IA para tus alertas</p>
         </div>
+
+        {/* Límite de usuario */}
+        {usage && !loadingUsage && (
+          <div className={`mb-6 p-4 rounded-xl border-2 ${
+            usage.percentageUsed > 80 
+              ? 'border-red-500 bg-red-500/10' 
+              : usage.percentageUsed > 50 
+              ? 'border-yellow-500 bg-yellow-500/10'
+              : 'border-green-500 bg-green-500/10'
+          }`}>
+            <div className="flex justify-between items-center mb-2">
+              <p className={`font-bold text-sm ${
+                usage.percentageUsed > 80 
+                  ? 'text-red-400' 
+                  : usage.percentageUsed > 50 
+                  ? 'text-yellow-400'
+                  : 'text-green-400'
+              }`}>
+                Límite Mensual de Caracteres
+              </p>
+              <span className="text-xs font-bold text-dark-muted">
+                {usage.percentageUsed}%
+              </span>
+            </div>
+            <div className="w-full bg-dark-secondary rounded-full h-2 overflow-hidden">
+              <div 
+                className={`h-full transition-all ${
+                  usage.percentageUsed > 80 
+                    ? 'bg-red-500' 
+                    : usage.percentageUsed > 50 
+                    ? 'bg-yellow-500'
+                    : 'bg-green-500'
+                }`}
+                style={{ width: `${Math.min(usage.percentageUsed, 100)}%` }}
+              />
+            </div>
+            <p className="text-xs text-dark-muted mt-2">
+              <strong>{usage.charsRemaining}</strong> caracteres disponibles de <strong>{usage.charsLimit}</strong> este mes
+            </p>
+          </div>
+        )}
 
         {/* Habilitar TTS */}
         <div className="mb-6 flex items-center gap-3">
@@ -94,7 +168,7 @@ export const TTSConfig = ({ triggerId, initialConfig, onClose, onUpdate }) => {
             className="w-5 h-5"
           />
           <label htmlFor="tts-enabled" className="text-dark-text font-semibold">
-            Habilitar Text-to-Speech
+            Habilitar voz sintética para esta alerta
           </label>
         </div>
 
@@ -103,7 +177,7 @@ export const TTSConfig = ({ triggerId, initialConfig, onClose, onUpdate }) => {
             {/* Voz */}
             <div className="mb-6">
               <label className="block mb-2 font-semibold text-dark-muted text-sm uppercase tracking-wider">
-                Voz
+                Seleccionar voz
               </label>
               <select
                 value={config.voiceId}
@@ -126,7 +200,7 @@ export const TTSConfig = ({ triggerId, initialConfig, onClose, onUpdate }) => {
                 className="w-5 h-5"
               />
               <label htmlFor="use-viewer-message" className="text-dark-text text-sm">
-                Leer mensaje del viewer al canjear
+                Leer mensaje del espectador que canjea
               </label>
             </div>
 
@@ -140,7 +214,7 @@ export const TTSConfig = ({ triggerId, initialConfig, onClose, onUpdate }) => {
                 className="w-5 h-5"
               />
               <label htmlFor="read-username" className="text-dark-text text-sm">
-                Decir nombre del usuario antes del mensaje
+                Incluir nombre del usuario en el mensaje
               </label>
             </div>
 
@@ -153,11 +227,11 @@ export const TTSConfig = ({ triggerId, initialConfig, onClose, onUpdate }) => {
                 <textarea
                   value={config.text}
                   onChange={(e) => setConfig({ ...config, text: e.target.value })}
-                  placeholder="Escribe el texto que quieras que diga el TTS..."
+                  placeholder="Escribe el texto que quieras que diga la voz..."
                   maxLength={300}
                   className="w-full p-3 rounded-lg border border-dark-border bg-black text-white outline-none focus:border-primary transition h-24 resize-none"
                 />
-                <small className="text-dark-muted">{config.text.length}/300 caracteres (máx. para reducir costos)</small>
+                <small className="text-dark-muted">{config.text.length}/300 caracteres</small>
               </div>
             )}
 
@@ -201,7 +275,7 @@ export const TTSConfig = ({ triggerId, initialConfig, onClose, onUpdate }) => {
               disabled={testing}
               className="w-full mb-4 bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 text-white font-black py-4 px-6 rounded-xl hover:shadow-2xl disabled:opacity-60 disabled:cursor-not-allowed transition-all text-lg"
             >
-              {testing ? '🎤 Generando audio...' : '🔊 Escuchar Muestra'}
+              {testing ? 'Generando audio...' : 'Escuchar muestra'}
             </button>
           </>
         )}
@@ -212,14 +286,14 @@ export const TTSConfig = ({ triggerId, initialConfig, onClose, onUpdate }) => {
             onClick={onClose}
             className="flex-1 bg-dark-secondary text-dark-muted font-bold py-3 px-6 rounded-xl hover:bg-dark-border transition text-lg"
           >
-            ← Atrás
+            Cancelar
           </button>
           <button
             onClick={handleSave}
             disabled={saving}
             className="flex-1 bg-gradient-to-r from-primary via-pink-500 to-primary text-white font-black py-3 px-6 rounded-xl hover:shadow-2xl disabled:opacity-60 disabled:cursor-not-allowed transition-all text-lg"
           >
-            {saving ? '💾 Guardando...' : '✨ Guardar TTS'}
+            {saving ? 'Guardando...' : 'Guardar configuración'}
           </button>
         </div>
       </div>

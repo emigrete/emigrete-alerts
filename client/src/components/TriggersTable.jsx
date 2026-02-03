@@ -8,10 +8,10 @@ export const TriggersTable = ({ triggers, rewards, userId, onDelete, onRefresh }
 
   const getMediaIcon = (type) => {
     switch(type) {
-      case 'video': return '📹';
-      case 'audio': return '🎵';
-      case 'gif': return '🎞️';
-      default: return '📄';
+      case 'video': return '[Video]';
+      case 'audio': return '[Audio]';
+      case 'gif': return '[GIF]';
+      default: return '[Medio]';
     }
   };
 
@@ -20,8 +20,8 @@ export const TriggersTable = ({ triggers, rewards, userId, onDelete, onRefresh }
   if (triggers.length === 0) {
     return (
       <div className="text-center py-16 border-2 border-dashed border-dark-secondary rounded-xl text-dark-muted">
-        <span className="text-4xl block mb-3">📭</span>
-        No tenes alertas activas todavia. ¡Configura la primera arriba!
+        <p className="text-lg font-semibold">No tenes alertas activas todavía</p>
+        <p className="text-sm mt-2">¡Configura la primera arriba!</p>
       </div>
     );
   }
@@ -140,6 +140,7 @@ export const TriggersTable = ({ triggers, rewards, userId, onDelete, onRefresh }
         <TTSConfig
           triggerId={ttsModalTriggerId}
           initialConfig={selectedTrigger.ttsConfig}
+          userId={userId}
           onClose={() => setTtsModalTriggerId(null)}
           onUpdate={() => {
             setTtsModalTriggerId(null);

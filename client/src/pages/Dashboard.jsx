@@ -13,6 +13,7 @@ import { TriggersTable } from '../components/TriggersTable';
 import { DonationFooter } from '../components/DonationFooter';
 import { AlertsBadge } from '../components/AlertsBadge';
 import { TTSGuide } from '../components/TTSGuide';
+import { FeedbackForm } from '../components/FeedbackForm';
 
 export default function Dashboard() {
   // Modo demo: solo en desarrollo
@@ -54,6 +55,15 @@ export default function Dashboard() {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [fileError, setFileError] = useState('');
+  const [ttsConfig, setTtsConfig] = useState({
+    enabled: false,
+    voiceId: 'pNInz6obpgDQGcFmaJgB',
+    text: '',
+    useViewerMessage: true,
+    readUsername: true,
+    stability: 0.5,
+    similarityBoost: 0.75
+  });
 
   const loginUrl = `${API_URL}/auth/twitch`;
 
@@ -109,7 +119,7 @@ export default function Dashboard() {
     if (!validateUpload(file, selectedReward)) return;
 
     setUploading(true);
-    const toastId = toast.loading('Subiendo video...');
+    const toastId = toast.loading('Subiendo alerta...');
 
     try {
       if (isDemo) {
@@ -130,7 +140,8 @@ export default function Dashboard() {
             url: demoUrl,
             fileName: `triggers/${demoMediaType}/demo_${Date.now()}.${file.name.split('.').pop()}`
           }],
-          videoUrl: demoMediaType === 'video' ? demoUrl : undefined
+          videoUrl: demoMediaType === 'video' ? demoUrl : undefined,
+          ttsConfig: ttsConfig
         };
 
         setTriggers([...triggers, demoTrigger]);
@@ -138,18 +149,21 @@ export default function Dashboard() {
         setFile(null);
         setPreviewUrl(null);
         setSelectedReward('');
+        setTtsConfig({ enabled: false, voiceId: 'pNInz6obpgDQGcFmaJgB', text: '', useViewerMessage: true, readUsername: true, stability: 0.5, similarityBoost: 0.75 });
       } else {
         // En producción, subir a servidor
         const formData = new FormData();
         formData.append('twitchRewardId', selectedReward);
         formData.append('video', file);
         formData.append('userId', userId);
+        formData.append('ttsConfig', JSON.stringify(ttsConfig));
 
         await axios.post(`${API_URL}/upload`, formData);
         toast.success('¡Alerta guardada!', { id: toastId });
         setFile(null);
         setPreviewUrl(null);
         setSelectedReward('');
+        setTtsConfig({ enabled: false, voiceId: 'pNInz6obpgDQGcFmaJgB', text: '', useViewerMessage: true, readUsername: true, stability: 0.5, similarityBoost: 0.75 });
         fetchTriggers();
       }
     } catch (error) {
@@ -244,6 +258,8 @@ export default function Dashboard() {
               userId={userId}
               isDemo={isDemo}
               triggers={triggers}
+              ttsConfig={ttsConfig}
+              onTtsConfigChange={setTtsConfig}
               onRewardCreated={(newReward) => {
                 setRewards([...rewards, newReward]);
                 setSelectedReward(newReward.id);
@@ -270,6 +286,9 @@ export default function Dashboard() {
               onRefresh={fetchTriggers}
             />
           </section>
+
+          {/* Feedback Form */}
+          <FeedbackForm />
 
           {/* Donation Footer */}
           <DonationFooter />
