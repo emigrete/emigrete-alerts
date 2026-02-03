@@ -103,10 +103,14 @@ export const TriggersTable = ({ triggers, rewards, userId, onDelete, onRefresh }
                     <div className="flex justify-end gap-2">
                       <button
                         onClick={() => setTtsModalTriggerId(t._id)}
-                        className="bg-transparent border border-primary/50 text-primary px-3 py-2 rounded-lg hover:bg-primary/10 transition"
+                        className={`font-black py-2 px-4 rounded-xl transition-all ${
+                          t.ttsConfig?.enabled 
+                            ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg hover:shadow-2xl scale-105'
+                            : 'bg-gradient-to-r from-primary to-pink-500 text-white hover:shadow-xl'
+                        }`}
                         title="Configurar TTS"
                       >
-                        🎤
+                        {t.ttsConfig?.enabled ? '🎤 TTS ACTIVO' : '🎤 Activar TTS'}
                       </button>
                       {t.videoUrl && (
                         <a href={t.videoUrl} target="_blank" rel="noreferrer">

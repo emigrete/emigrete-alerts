@@ -73,10 +73,16 @@ export const TTSConfig = ({ triggerId, initialConfig, onClose, onUpdate }) => {
 
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-      <div className="bg-dark-card border border-primary/30 rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <h2 className="text-2xl font-bold mb-6 bg-gradient-to-r from-primary to-pink-500 bg-clip-text text-transparent">
-          ⚡ Configuración TTS (ElevenLabs)
-        </h2>
+      <div className="bg-gradient-to-br from-dark-card via-dark-secondary to-dark-card border border-primary/50 rounded-3xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+        <div className="mb-8 text-center">
+          <div className="inline-block p-4 bg-gradient-to-br from-primary to-pink-500 rounded-2xl mb-4">
+            <span className="text-5xl">🎤</span>
+          </div>
+          <h2 className="text-3xl font-black bg-gradient-to-r from-primary via-pink-500 to-primary bg-clip-text text-transparent">
+            Text-to-Speech
+          </h2>
+          <p className="text-dark-muted text-sm mt-2">Potencia tu alerta con voz natural de IA</p>
+        </div>
 
         {/* Habilitar TTS */}
         <div className="mb-6 flex items-center gap-3">
@@ -193,27 +199,27 @@ export const TTSConfig = ({ triggerId, initialConfig, onClose, onUpdate }) => {
             <button
               onClick={handleTest}
               disabled={testing}
-              className="w-full mb-4 bg-gradient-to-r from-green-500 to-teal-500 text-white font-bold py-3 px-6 rounded-lg hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
+              className="w-full mb-4 bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 text-white font-black py-4 px-6 rounded-xl hover:shadow-2xl disabled:opacity-60 disabled:cursor-not-allowed transition-all text-lg"
             >
-              {testing ? '🎤 Generando...' : '🔊 Probar Voz'}
+              {testing ? '🎤 Generando audio...' : '🔊 Escuchar Muestra'}
             </button>
           </>
         )}
 
         {/* Botones de acción */}
-        <div className="flex gap-3 mt-6">
+        <div className="flex gap-3 mt-8 pt-6 border-t border-dark-border">
           <button
             onClick={onClose}
-            className="flex-1 bg-dark-secondary text-dark-muted font-semibold py-3 px-6 rounded-lg hover:bg-dark-border transition"
+            className="flex-1 bg-dark-secondary text-dark-muted font-bold py-3 px-6 rounded-xl hover:bg-dark-border transition text-lg"
           >
-            Cancelar
+            ← Atrás
           </button>
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex-1 bg-gradient-to-r from-primary to-pink-500 text-white font-bold py-3 px-6 rounded-lg hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
+            className="flex-1 bg-gradient-to-r from-primary via-pink-500 to-primary text-white font-black py-3 px-6 rounded-xl hover:shadow-2xl disabled:opacity-60 disabled:cursor-not-allowed transition-all text-lg"
           >
-            {saving ? 'Guardando...' : 'Guardar'}
+            {saving ? '💾 Guardando...' : '✨ Guardar TTS'}
           </button>
         </div>
       </div>
