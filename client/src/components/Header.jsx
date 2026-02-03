@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API_URL } from '../constants/config';
 
@@ -14,6 +15,7 @@ export const Header = ({
 }) => {
   const [subscription, setSubscription] = useState(null);
   const [loadingSubscription, setLoadingSubscription] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchSubscription = async () => {
@@ -83,6 +85,12 @@ export const Header = ({
 
       <div className="flex flex-wrap gap-3 items-center">
         {rightSlot}
+        <button
+          onClick={() => navigate('/pricing')}
+          className="bg-primary/10 border border-primary/30 text-primary px-6 py-2 rounded-lg hover:bg-primary/20 hover:border-primary transition-all font-semibold"
+        >
+          Ver Planes
+        </button>
         {showLogout && (
           <button 
             onClick={onLogout}
