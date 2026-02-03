@@ -480,4 +480,71 @@ router.put('/triggers/:id/tts', async (req, res) => {
   }
 });
 
-export default router;
+/**
+ * ADMIN: OBTENER TODOS LOS USUARIOS Y SUS USOS
+ * GET /api/admin/users
+ * Query: ?adminId={tu_user_id}
+ */
+router.get('/admin/users', async (req, res) => {
+  try {
+    const { adminId } = req.query;
+    
+    // Verificar que sea admin (solo tú puedes acceder)
+    const ADMIN_USER_IDS = process.env.ADMIN_USER_IDS?.split(',') || [];
+    if (!adminId || !ADMIN_USER_IDS.includes(adminId)) {
+      return res.status(403).json({ error: 'No autorizado' });
+    }
+
+    // Obtener todos los usuarios con tokens (usuarios activos)
+    const userTokens = await UserToken.find().select('userId displayName');
+    
+    const usersData = [];
+    
+    for (const userToken of userTokens) {
+      try {
+        const status = await getUserSubscriptionStatus(userToken.userId);
+        const triggerCount = await Trigger.countDocuments({ userId: userToken.userId });
+        
+        usersData.push({
+          userId: userToken.userId,
+          displayName: userToken.displayName,
+          tier: status.subscription.tier,
+          triggers: triggerCount,
+          alerts: {
+            current: status.usage.alerts.current,
+            limit: status.usage.alerts.limit,
+            percentage: status.usage.alerts.percentage,
+          },
+          tts: {
+            current: status.usage.tts.current,
+            limit: status.usage.tts.limit,
+            percentage: status.usage.tts.percentage,
+          },
+          storage: {
+            current: status.usage.storage.current,
+            limit: status.usage.storage.limit,
+            percentage: status.usage.storage.percentage,
+          },
+          nextResetDate: status.nextResetDate,
+        });
+      } catch (error) {
+        console.error(`⚠️ Error obteniendo status para ${userToken.userId}:`, error.message);
+      }
+    }
+
+    // Ordenar por tier y uso
+    usersData.sort((a, b) => {
+      const tierOrder = { premium: 0, pro: 1, free: 2 };
+      return tierOrder[a.tier] - tierOrder[b.tier];
+    });
+
+    res.json({
+      totalUsers: usersData.length,
+      users: usersData,
+    });
+  } catch (error) {
+    console.error('❌ Error obteniendo usuarios admin:', error);
+    res.status(500).json({ error: 'Error al obtener usuarios' });
+  }
+});
+

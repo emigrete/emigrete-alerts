@@ -85,6 +85,14 @@ export const Header = ({
 
       <div className="flex flex-wrap gap-3 items-center">
         {rightSlot}
+        {process.env.REACT_APP_ADMIN_IDS?.split(',').includes(userId) && (
+          <button
+            onClick={() => navigate('/admin/dashboard')}
+            className="bg-amber-500/10 border border-amber-500/30 text-amber-400 px-4 py-2 rounded-lg hover:bg-amber-500/20 hover:border-amber-500 transition-all font-semibold text-sm"
+          >
+            👨‍💼 Admin
+          </button>
+        )}
         <button
           onClick={() => navigate('/pricing')}
           className="bg-primary/10 border border-primary/30 text-primary px-6 py-2 rounded-lg hover:bg-primary/20 hover:border-primary transition-all font-semibold"
