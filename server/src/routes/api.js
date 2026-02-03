@@ -290,7 +290,32 @@ router.post('/tts', async (req, res) => {
 
   } catch (error) {
     console.error('❌ Error generando TTS:', error.response?.data || error.message);
-    res.status(500).json({ error: 'Error al generar TTS' });
+
+    // Si la API de ElevenLabs devolvió una respuesta, intentamos extraer un mensaje legible
+    if (error.response) {
+      const statusCode = error.response.status || 500;
+      let data = error.response.data;
+
+      // Si viene como ArrayBuffer/Buffer, intentar decodificar a UTF-8 y parsear JSON
+      try {
+        if (data && data.byteLength) {
+          const str = Buffer.from(data).toString('utf8');
+          try {
+            data = JSON.parse(str);
+          } catch {
+            data = str;
+          }
+        }
+      } catch (e) {
+        // ignore
+      }
+
+      const message = data?.error || data?.message || (typeof data === 'string' ? data : JSON.stringify(data));
+      console.error('ElevenLabs error payload (decoded):', message);
+      return res.status(statusCode).json({ error: message });
+    }
+
+    return res.status(500).json({ error: 'Error al generar TTS' });
   }
 });
 

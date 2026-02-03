@@ -19,6 +19,8 @@ import { UserToken } from './models/UserToken.js';
 dotenv.config();
 
 const app = express();
+// Necesario en entornos con proxy (Railway) para que express-rate-limit y headers funcionen bien
+app.set('trust proxy', 1);
 const httpServer = createServer(app);
 
 // ✅ CORS correcto para prod
