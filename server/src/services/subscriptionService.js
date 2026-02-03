@@ -197,11 +197,11 @@ export const decrementStorageUsage = async (userId, bytesCount) => {
 };
 
 /**
- * Decrementa TTS usado (cuando se borra una alerta con TTS)
+ * Decrementa contador de alertas (cuando se borra una alerta)
  */
-export const decrementTTSUsage = async (userId, charsCount) => {
+export const decrementAlertCount = async (userId) => {
   const metrics = await checkAndResetUsageIfNeeded(userId);
-  metrics.ttsCharsUsed = Math.max(0, metrics.ttsCharsUsed - charsCount);
+  metrics.alertsCount = Math.max(0, metrics.alertsCount - 1);
   await metrics.save();
 };
 

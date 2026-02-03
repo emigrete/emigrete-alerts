@@ -12,7 +12,7 @@ import {
   incrementTTSUsage,
   getUserSubscriptionStatus,
   decrementStorageUsage,
-  decrementTTSUsage,
+  decrementAlertCount,
 } from '../services/subscriptionService.js';
 
 const router = express.Router();
@@ -308,24 +308,9 @@ router.delete('/triggers/:id', async (req, res) => {
       await decrementStorageUsage(trigger.userId, totalSizeToDelete);
     }
 
-    // ✅ Decrementar TTS usado si la alerta tenía TTS
-    if (trigger.ttsConfig?.enabled) {
-      // Estimar caracteres que se usaban en esta alerta
-      let estimatedChars = 0;
-      if (trigger.ttsConfig.readUsername) {
-        estimatedChars += 15; // Nombre de usuario promedio
-      }
-      if (trigger.ttsConfig.useViewerMessage) {
-        estimatedChars += 50; // Mensaje de viewer promedio
-      } else if (trigger.ttsConfig.text) {
-        estimatedChars += trigger.ttsConfig.text.length;
-      }
-      
-      if (estimatedChars > 0) {
-        console.log(`🔊 Liberando TTS: ${estimatedChars} caracteres para usuario ${trigger.userId}`);
-        await decrementTTSUsage(trigger.userId, estimatedChars);
-      }
-    }
+    // ✅ Decrementar contador de alertas
+    console.log(`⚠️ Liberando alerta: usuario ${trigger.userId}`);
+    await decrementAlertCount(trigger.userId);
 
     // Borrar el trigger en Mongo
     await Trigger.findByIdAndDelete(req.params.id);
