@@ -18,6 +18,17 @@ const AlertConfigSchema = new mongoose.Schema({
   _id: false
 });
 
+const TTSConfigSchema = new mongoose.Schema({
+  enabled: { type: Boolean, default: false },
+  voiceId: { type: String, default: 'pNInz6obpgDQGcFmaJgB' }, // Adam voice (ElevenLabs)
+  text: { type: String }, // Texto personalizado o usar mensaje del viewer
+  useViewerMessage: { type: Boolean, default: true }, // Si true, lee el mensaje del viewer
+  readUsername: { type: Boolean, default: true }, // Si true, dice el nombre antes del mensaje
+  stability: { type: Number, default: 0.5 }, // 0-1
+  similarityBoost: { type: Number, default: 0.75 }, // 0-1
+  _id: false
+});
+
 const TriggerSchema = new mongoose.Schema({
   userId: { type: String, required: true },
   twitchRewardId: { type: String, required: true },
@@ -27,6 +38,9 @@ const TriggerSchema = new mongoose.Schema({
   
   // NUEVO: Config de alerta
   alertConfig: AlertConfigSchema,
+  
+  // NUEVO: Config de TTS
+  ttsConfig: TTSConfigSchema,
   
   // LEGACY: Mantener para compatibilidad
   videoUrl: { type: String },

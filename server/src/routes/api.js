@@ -148,4 +148,96 @@ router.delete('/triggers/:id', async (req, res) => {
   }
 });
 
+/**
+ * GENERAR TTS CON ELEVENLABS
+ * POST /api/tts
+ * Body: { text, voiceId?, stability?, similarityBoost? }
+ * Límites: 300 caracteres por request, rate limit de 10/minuto por IP
+ */
+router.post('/tts', async (req, res) => {
+  const { text, voiceId = 'pNInz6obpgDQGcFmaJgB', stability = 0.5, similarityBoost = 0.75 } = req.body;
+
+  if (!text) {
+    return res.status(400).json({ error: 'Falta el texto para generar TTS' });
+  }
+
+  // ⚠️ LÍMITE DE CARACTERES: máximo 300 chars para evitar costos excesivos
+  const MAX_CHARS = 300;
+  if (text.length > MAX_CHARS) {
+    return res.status(400).json({ 
+      error: `Texto demasiado largo. Máximo ${MAX_CHARS} caracteres (actual: ${text.length})` 
+    });
+  }
+
+  const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
+  if (!ELEVENLABS_API_KEY) {
+    console.error('❌ Falta ELEVENLABS_API_KEY en variables de entorno');
+    return res.status(500).json({ error: 'TTS no configurado' });
+  }
+
+  try {
+    console.log('🎤 Generando TTS:', { text: text.substring(0, 50), voiceId, length: text.length });
+
+    const response = await axios.post(
+      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
+      {
+        text,
+        model_id: 'eleven_multilingual_v2',
+        voice_settings: {
+          stability,
+          similarity_boost: similarityBoost
+        }
+      },
+      {
+        headers: {
+          'Accept': 'audio/mpeg',
+          'xi-api-key': ELEVENLABS_API_KEY,
+          'Content-Type': 'application/json'
+        },
+        responseType: 'arraybuffer'
+      }
+    );
+
+    // Devolver audio como base64 para que el frontend lo reproduzca
+    const audioBase64 = Buffer.from(response.data, 'binary').toString('base64');
+    
+    console.log(`✅ TTS generado (${text.length} chars)`);
+    
+    res.json({ 
+      success: true, 
+      audio: `data:audio/mpeg;base64,${audioBase64}`,
+      charsUsed: text.length
+    });
+
+  } catch (error) {
+    console.error('❌ Error generando TTS:', error.response?.data || error.message);
+    res.status(500).json({ error: 'Error al generar TTS' });
+  }
+});
+
+/**
+ * ACTUALIZAR CONFIG DE TTS EN TRIGGER
+ * PUT /api/triggers/:id/tts
+ */
+router.put('/triggers/:id/tts', async (req, res) => {
+  try {
+    const { ttsConfig } = req.body;
+    
+    const trigger = await Trigger.findByIdAndUpdate(
+      req.params.id,
+      { ttsConfig },
+      { new: true }
+    );
+
+    if (!trigger) {
+      return res.status(404).json({ error: 'Trigger no encontrado' });
+    }
+
+    res.json({ success: true, trigger });
+  } catch (error) {
+    console.error('❌ Error actualizando TTS config:', error);
+    res.status(500).json({ error: 'Error al actualizar configuración TTS' });
+  }
+});
+
 export default router;
