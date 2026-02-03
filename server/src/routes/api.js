@@ -194,7 +194,7 @@ router.get('/tts/usage/:userId', async (req, res) => {
  * Límites: 300 caracteres por request, 2,000 caracteres/mes por usuario
  */
 router.post('/tts', async (req, res) => {
-  const { text, voiceId = 'pNInz6obpgDQGcFmaJgB', stability = 0.5, similarityBoost = 0.75, userId } = req.body;
+  const { text, voiceId = 'FGY2WhTYpP6BYn95B7S6', stability = 0.5, similarityBoost = 0.75, userId } = req.body;
 
   if (!text) {
     return res.status(400).json({ error: 'Falta el texto para generar TTS' });

@@ -4,20 +4,17 @@ import { toast } from 'sonner';
 import { API_URL } from '../constants/config';
 
 const ELEVENLABS_VOICES = [
-  { id: 'pNInz6obpgDQGcFmaJgB', name: '🇺🇸 Adam (Masculino, profundo)' },
-  { id: 'EXAVITQu4vr4xnSDxMaL', name: '🇺🇸 Sarah (Femenino, suave)' },
-  { id: 'ErXwobaYiN019PkySvjV', name: '🇺🇸 Antoni (Masculino, cálido)' },
-  { id: 'VR6AewLTigWG4xSOukaG', name: '🇺🇸 Arnold (Masculino, autoritario)' },
-  { id: 'MF3mGyEYCl7XYWbV9V6O', name: '🇺🇸 Elli (Femenino, juvenil)' },
-  { id: 'ThT5KcBeYPX3keUQqHPh', name: '🇬🇧 Dorothy (Femenino, británico)' },
-  { id: 'onwK4e9ZLuTAKqWW03F9', name: '🇬🇧 Daniel (Masculino, británico)' },
+  { id: 'FGY2WhTYpP6BYn95B7S6', name: '🇪🇸 Laura (Femenino, España)' },
+  { id: 'N2lVS1wzXK9XALp7u9qY', name: '🇲🇽 Marcela (Femenino, México)' },
+  { id: 'onwK4e9ZLuTAKqWW03F9', name: '🇦🇷 Daniel (Masculino, Argentina)' },
+  { id: 'ThT5KcBeYPX3keUQqHPh', name: '🇨🇱 Elena (Femenino, Chile)' }
 ];
 
 export const TTSConfig = ({ triggerId, initialConfig, onClose, onUpdate, userId }) => {
   // Estado local del modal
   const [config, setConfig] = useState({
     enabled: false,
-    voiceId: 'pNInz6obpgDQGcFmaJgB',
+    voiceId: 'FGY2WhTYpP6BYn95B7S6',
     text: '',
     useViewerMessage: true,
     readUsername: true,
@@ -180,6 +177,9 @@ export const TTSConfig = ({ triggerId, initialConfig, onClose, onUpdate, userId 
               <label className="block mb-2 font-semibold text-dark-muted text-sm uppercase tracking-wider">
                 Seleccionar voz
               </label>
+              <p className="text-xs text-dark-muted mb-2">
+                Para español, pega el ID de voz de ElevenLabs (opcional).
+              </p>
               <select
                 value={config.voiceId}
                 onChange={(e) => setConfig({ ...config, voiceId: e.target.value })}
@@ -196,6 +196,13 @@ export const TTSConfig = ({ triggerId, initialConfig, onClose, onUpdate, userId 
                   <option key={voice.id} value={voice.id} style={{ backgroundColor: '#1a1a2e', color: '#fff' }}>{voice.name}</option>
                 ))}
               </select>
+              <input
+                type="text"
+                value={config.voiceId || ''}
+                onChange={(e) => setConfig({ ...config, voiceId: e.target.value.trim() })}
+                placeholder="ID de voz en español (pega el ID aquí)"
+                className="mt-2 w-full p-2 rounded-lg border border-dark-border bg-black text-white outline-none focus:border-primary transition text-xs"
+              />
             </div>
 
             {/* Usar mensaje del viewer */}

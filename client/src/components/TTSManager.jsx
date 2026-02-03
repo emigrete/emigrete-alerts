@@ -18,7 +18,7 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
   // Config base de TTS
   const [ttsConfig, setTtsConfig] = useState({
     enabled: true,
-    voiceId: 'pNInz6obpgDQGcFmaJgB',
+    voiceId: 'FGY2WhTYpP6BYn95B7S6',
     text: '',
     useViewerMessage: true,
     readUsername: true,
@@ -87,7 +87,7 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
       setSelectedReward('');
       setTtsConfig({
         enabled: true,
-        voiceId: 'pNInz6obpgDQGcFmaJgB',
+        voiceId: 'FGY2WhTYpP6BYn95B7S6',
         text: '',
         useViewerMessage: true,
         readUsername: true,
@@ -178,6 +178,9 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
             <label className="block mb-2 font-semibold text-dark-muted text-xs uppercase tracking-wider">
               Voz
             </label>
+            <p className="text-xs text-dark-muted mb-2">
+              Usa una voz en español con su ID de ElevenLabs (opcional).
+            </p>
             <select
               value={ttsConfig.voiceId}
               onChange={(e) => setTtsConfig({ ...ttsConfig, voiceId: e.target.value })}
@@ -194,6 +197,13 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
                 <option key={voice.id} value={voice.id} style={{ backgroundColor: '#1a1a2e', color: '#fff' }}>{voice.name}</option>
               ))}
             </select>
+            <input
+              type="text"
+              value={ttsConfig.voiceId || ''}
+              onChange={(e) => setTtsConfig({ ...ttsConfig, voiceId: e.target.value.trim() })}
+              placeholder="ID de voz en español (pega el ID aquí)"
+              className="mt-2 w-full p-2 rounded-lg border border-dark-border bg-black text-white outline-none focus:border-primary transition text-xs"
+            />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -310,11 +320,8 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
 };
 
 const ELEVENLABS_VOICES = [
-  { id: 'pNInz6obpgDQGcFmaJgB', name: '🇺🇸 Adam (Masculino, profundo)' },
-  { id: 'EXAVITQu4vr4xnSDxMaL', name: '🇺🇸 Sarah (Femenino, suave)' },
-  { id: 'ErXwobaYiN019PkySvjV', name: '🇺🇸 Antoni (Masculino, cálido)' },
-  { id: 'VR6AewLTigWG4xSOukaG', name: '🇺🇸 Arnold (Masculino, autoritario)' },
-  { id: 'MF3mGyEYCl7XYWbV9V6O', name: '🇺🇸 Elli (Femenino, juvenil)' },
-  { id: 'ThT5KcBeYPX3keUQqHPh', name: '🇬🇧 Dorothy (Femenino, británico)' },
-  { id: 'onwK4e9ZLuTAKqWW03F9', name: '🇬🇧 Daniel (Masculino, británico)' },
+  { id: 'FGY2WhTYpP6BYn95B7S6', name: '🇪🇸 Laura (Femenino, España)' },
+  { id: 'N2lVS1wzXK9XALp7u9qY', name: '🇲🇽 Marcela (Femenino, México)' },
+  { id: 'onwK4e9ZLuTAKqWW03F9', name: '🇦🇷 Daniel (Masculino, Argentina)' },
+  { id: 'ThT5KcBeYPX3keUQqHPh', name: '🇨🇱 Elena (Femenino, Chile)' }
 ];
