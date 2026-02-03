@@ -69,9 +69,7 @@ export default function Dashboard() {
   const [uploading, setUploading] = useState(false);
   const [fileError, setFileError] = useState('');
 
-  // ✅ Login URL ahora lo maneja el backend
   const loginUrl = `${API_URL}/auth/twitch`;
-
   const overlayBaseUrl = `${window.location.protocol}//${window.location.host}/overlay?user=${userId}`;
 
   useEffect(() => {
@@ -143,17 +141,28 @@ export default function Dashboard() {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!confirm('¿Estás seguro de eliminar esta alerta?')) return;
-
-    const toastId = toast.loading('Eliminando...');
-    try {
-      await axios.delete(`${API_URL}/api/triggers/${id}`);
-      fetchTriggers();
-      toast.success('Alerta eliminada', { id: toastId });
-    } catch {
-      toast.error('Error al eliminar', { id: toastId });
-    }
+  // ✅ Confirm prolijo con Sonner (sin confirm nativo)
+  const handleDelete = (id) => {
+    toast('¿Eliminar esta alerta?', {
+      description: 'Se va a borrar la alerta (y el video asociado).',
+      action: {
+        label: 'Eliminar',
+        onClick: async () => {
+          const toastId = toast.loading('Eliminando...');
+          try {
+            await axios.delete(`${API_URL}/api/triggers/${id}`);
+            await fetchTriggers();
+            toast.success('Alerta eliminada ✅', { id: toastId });
+          } catch {
+            toast.error('Error al eliminar', { id: toastId });
+          }
+        }
+      },
+      cancel: {
+        label: 'Cancelar',
+        onClick: () => {}
+      }
+    });
   };
 
   const copyToClipboard = (text) => {
