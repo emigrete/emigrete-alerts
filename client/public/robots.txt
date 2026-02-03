@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://welyalerts.com/sitemap.xml
