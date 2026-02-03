@@ -4,8 +4,6 @@ import { toast } from 'sonner';
 import { API_URL } from '../constants/config';
 
 const ELEVENLABS_VOICES = [
-  { id: 'FGY2WhTYpP6BYn95B7S6', name: '🇪🇸 Laura (Femenino, España)' },
-  { id: 'N2lVS1wzXK9XALp7u9qY', name: '🇲🇽 Marcela (Femenino, México)' },
   { id: 'onwK4e9ZLuTAKqWW03F9', name: '🇦🇷 Daniel (Masculino, Argentina)' },
   { id: 'ThT5KcBeYPX3keUQqHPh', name: '🇨🇱 Elena (Femenino, Chile)' }
 ];
@@ -246,11 +244,14 @@ export const TTSConfig = ({ triggerId, initialConfig, onClose, onUpdate, userId 
                   <option key={voice.id} value={voice.id} style={{ backgroundColor: '#1a1a2e', color: '#fff' }}>{voice.name}</option>
                 ))}
               </select>
+              <p className="text-xs text-dark-muted mt-2 p-2 bg-blue-500/10 border border-blue-500/20 rounded">
+                🚀 <strong>Próximamente:</strong> Más voces en español disponibles
+              </p>
               <input
                 type="text"
                 value={config.voiceId || ''}
                 onChange={(e) => setConfig({ ...config, voiceId: e.target.value.trim() })}
-                placeholder="ID de voz en español (pega el ID aquí)"
+                placeholder="O pega un ID personalizado de ElevenLabs"
                 className="mt-2 w-full p-2 rounded-lg border border-dark-border bg-black text-white outline-none focus:border-primary transition text-xs"
               />
             </div>

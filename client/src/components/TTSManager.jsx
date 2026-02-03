@@ -203,6 +203,9 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
                 <option key={voice.id} value={voice.id} style={{ backgroundColor: '#1a1a2e', color: '#fff' }}>{voice.name}</option>
               ))}
             </select>
+            <p className="text-xs text-dark-muted mt-2 p-2 bg-blue-500/10 border border-blue-500/20 rounded">
+              🚀 <strong>Próximamente:</strong> Más voces en español disponibles
+            </p>
           </div>
 
           {/* Opciones */}
@@ -340,8 +343,6 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
 };
 
 const ELEVENLABS_VOICES = [
-  { id: 'FGY2WhTYpP6BYn95B7S6', name: '🇪🇸 Laura (Femenino, España)' },
-  { id: 'N2lVS1wzXK9XALp7u9qY', name: '🇲🇽 Marcela (Femenino, México)' },
   { id: 'onwK4e9ZLuTAKqWW03F9', name: '🇦🇷 Daniel (Masculino, Argentina)' },
   { id: 'ThT5KcBeYPX3keUQqHPh', name: '🇨🇱 Elena (Femenino, Chile)' }
 ];
