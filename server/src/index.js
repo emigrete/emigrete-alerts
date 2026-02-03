@@ -103,7 +103,7 @@ function getMediaType(mimeType) {
   return 'video'; // default
 }
 
-// Upload media (video, audio, gif)
+// Upload media (video, audio, gif) y también TTS-only (sin archivo)
 app.post('/upload', upload.single('video'), async (req, res) => {
   try {
     console.log('📤 Upload request recibido:', {
@@ -114,6 +114,7 @@ app.post('/upload', upload.single('video'), async (req, res) => {
       mimeType: req.file?.mimetype
     });
 
+    // Parseo de TTS (si viene, joya)
     let ttsConfig = undefined;
     if (req.body.ttsConfig) {
       try {
@@ -146,6 +147,7 @@ app.post('/upload', upload.single('video'), async (req, res) => {
       });
 
       if (trigger) {
+        // Si ya existía, solo actualizamos el TTS
         trigger.ttsConfig = ttsConfig;
         await trigger.save();
         return res.json({
@@ -155,6 +157,7 @@ app.post('/upload', upload.single('video'), async (req, res) => {
         });
       }
 
+      // Si no existía, lo creamos sin media pero con TTS
       const newTrigger = await Trigger.create({
         userId: req.body.userId,
         twitchRewardId: req.body.twitchRewardId,
@@ -169,6 +172,7 @@ app.post('/upload', upload.single('video'), async (req, res) => {
       });
     }
 
+    // Si hay archivo, seguimos el flujo normal de subida
     const mediaType = getMediaType(req.file.mimetype);
     const fileName = `triggers/${mediaType}/${Date.now()}_${req.file.originalname}`;
     const file = bucket.file(fileName);

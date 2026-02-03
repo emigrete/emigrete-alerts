@@ -4,16 +4,17 @@ import { toast } from 'sonner';
 import { API_URL } from '../constants/config';
 
 const ELEVENLABS_VOICES = [
-  { id: 'pNInz6obpgDQGcFmaJgB', name: 'Adam (Masculino, profundo)' },
-  { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Sarah (Femenino, suave)' },
-  { id: 'ErXwobaYiN019PkySvjV', name: 'Antoni (Masculino, cálido)' },
-  { id: 'VR6AewLTigWG4xSOukaG', name: 'Arnold (Masculino, autoritario)' },
-  { id: 'MF3mGyEYCl7XYWbV9V6O', name: 'Elli (Femenino, juvenil)' },
-  { id: 'ThT5KcBeYPX3keUQqHPh', name: 'Dorothy (Femenino, británico)' },
-  { id: 'onwK4e9ZLuTAKqWW03F9', name: 'Daniel (Masculino, británico)' },
+  { id: 'pNInz6obpgDQGcFmaJgB', name: '🇺🇸 Adam (Masculino, profundo)' },
+  { id: 'EXAVITQu4vr4xnSDxMaL', name: '🇺🇸 Sarah (Femenino, suave)' },
+  { id: 'ErXwobaYiN019PkySvjV', name: '🇺🇸 Antoni (Masculino, cálido)' },
+  { id: 'VR6AewLTigWG4xSOukaG', name: '🇺🇸 Arnold (Masculino, autoritario)' },
+  { id: 'MF3mGyEYCl7XYWbV9V6O', name: '🇺🇸 Elli (Femenino, juvenil)' },
+  { id: 'ThT5KcBeYPX3keUQqHPh', name: '🇬🇧 Dorothy (Femenino, británico)' },
+  { id: 'onwK4e9ZLuTAKqWW03F9', name: '🇬🇧 Daniel (Masculino, británico)' },
 ];
 
 export const TTSConfig = ({ triggerId, initialConfig, onClose, onUpdate, userId }) => {
+  // Estado local del modal
   const [config, setConfig] = useState({
     enabled: false,
     voiceId: 'pNInz6obpgDQGcFmaJgB',
@@ -30,7 +31,7 @@ export const TTSConfig = ({ triggerId, initialConfig, onClose, onUpdate, userId 
   const [usage, setUsage] = useState(null);
   const [loadingUsage, setLoadingUsage] = useState(true);
 
-  // Cargar uso del usuario
+  // Traer uso del usuario
   useEffect(() => {
     const fetchUsage = async () => {
       try {

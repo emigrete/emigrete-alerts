@@ -1,15 +1,16 @@
 import { STEP_GUIDES } from '../constants/config';
 
+// Pasos cortitos para no marear al usuario
 export const StepGuide = () => (
-  <div className="mb-10">
+  <div className="mb-12">
     <h2 className="text-2xl font-bold mb-6 text-dark-text">
       Cómo empezar
     </h2>
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
       {STEP_GUIDES.map((step) => (
         <div 
           key={step.id}
-          className="bg-gradient-to-br from-dark-secondary to-dark-card p-5 rounded-xl border border-dark-border/50 hover:border-primary/50 transition-all hover:shadow-lg relative group"
+          className="bg-dark-card p-5 rounded-2xl border border-dark-border hover:border-primary transition relative group"
         >
           <div 
             className="absolute -top-4 -left-4 w-10 h-10 bg-gradient-to-br from-primary to-pink-500 text-white rounded-full flex items-center justify-center font-bold border-4 border-dark-bg shadow-lg group-hover:scale-110 transition-transform"

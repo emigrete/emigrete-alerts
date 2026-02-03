@@ -7,8 +7,11 @@ const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 export default function Overlay() {
+  // Cola de alertas (van entrando y salen en orden)
   const [queue, setQueue] = useState([]);
+  // Media actual que se está reproduciendo
   const [currentMedia, setCurrentMedia] = useState(null);
+  // Flag para no pisarnos cuando entra más de una alerta
   const [isPlaying, setIsPlaying] = useState(false);
 
   const videoRef = useRef(null);
@@ -21,6 +24,7 @@ export default function Overlay() {
   useEffect(() => {
     if (!userId) return;
 
+    // Nos conectamos al socket y escuchamos eventos
     const socketConnection = io(SOCKET_URL);
 
     socketConnection.on('connect', () => {
@@ -47,6 +51,7 @@ export default function Overlay() {
     }
   }, [queue, isPlaying]);
 
+  // Reproduce TTS primero (si aplica) y después la media
   const playMedia = async (mediaData) => {
     setCurrentMedia(mediaData);
 
@@ -76,6 +81,7 @@ export default function Overlay() {
     }
   };
 
+  // Genera TTS con la config y lo reproduce antes de la media
   const playTTS = async (mediaData) => {
     try {
       const { ttsConfig, viewerMessage, viewerUsername } = mediaData;
@@ -119,6 +125,7 @@ export default function Overlay() {
     }
   };
 
+  // Termina reproducción y libera el slot
   const handleEnded = () => {
     setCurrentMedia(null);
     setIsPlaying(false);

@@ -59,7 +59,7 @@ export async function startTwitchListener(userId) {
     await listener.onChannelRedemptionAdd(userId, async (event) => {
       console.log(`🎁 Canje: ${event.rewardTitle} (ID: ${event.rewardId})`);
 
-      // ✅ FIX: filtrar por userId también
+      // ✅ FIX: filtrar por userId también (si no, mezclás alertas entre canales)
       const trigger = await Trigger.findOne({
         twitchRewardId: event.rewardId,
         userId
@@ -70,6 +70,7 @@ export async function startTwitchListener(userId) {
         return;
       }
 
+      // Agarramos la última media subida (si hay)
       const lastMedia = trigger.medias?.length
         ? trigger.medias[trigger.medias.length - 1]
         : null;
@@ -79,6 +80,7 @@ export async function startTwitchListener(userId) {
 
       console.log(`🎬 Disparando alerta (${type}): ${trigger.fileName || 'TTS'}`);
 
+      // Mandamos todo al overlay, incluyendo TTS y datos del viewer
       io.to(`overlay-${userId}`).emit('media-trigger', {
         url,
         type,

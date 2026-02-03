@@ -16,9 +16,12 @@ export const FileUploadSection = ({
   isDemo,
   triggers
 }) => {
+  // Modal para crear recompensa sin salir de acá
   const [showRewardCreator, setShowRewardCreator] = useState(false);
+  // Tipo de media para mostrar la vista previa como corresponde
   const [mediaType, setMediaType] = useState(null);
 
+  // Detectamos el tipo de archivo y delegamos el cambio
   const handleFileChange = (e) => {
     const selected = e.target.files[0];
     if (selected) {
@@ -32,6 +35,7 @@ export const FileUploadSection = ({
     onFileChange(e);
   };
 
+  // Vista previa según el tipo (así se entiende qué subiste)
   const getPreviewContent = () => {
     if (!previewUrl) {
       return <div className="text-gray-600 italic">Todavía no subiste nada</div>;
@@ -55,10 +59,12 @@ export const FileUploadSection = ({
     }
   };
 
+  // Tipos permitidos (esto define el input de archivos)
   const getAcceptTypes = () => {
     return 'video/mp4,video/webm,audio/mpeg,audio/wav,audio/ogg,image/gif';
   };
 
+  // Título dinámico para el label
   const getMediaTypeLabel = () => {
     if (!mediaType) return 'Archivo Multimedia';
     return {
@@ -68,11 +74,11 @@ export const FileUploadSection = ({
     }[mediaType];
   };
 
-  // Si no hay recompensas, mostrar pantalla de inicio
+  // Si no hay recompensas, mostramos pantalla de inicio
   if (rewards.length === 0) {
     return (
       <>
-        <div className="text-center py-12">
+        <div className="text-center py-14">
           <div className="mb-8">
             <span className="text-7xl block mb-4">🎬</span>
             <h2 className="text-2xl font-bold text-dark-text mb-2">¡Armá tu primera alerta!</h2>
@@ -106,7 +112,7 @@ export const FileUploadSection = ({
           </div>
         </div>
 
-        {/* Reward Creator Modal */}
+        {/* Modal para crear recompensa */}
         {showRewardCreator && (
           <RewardCreator
             userId={userId}
@@ -122,16 +128,16 @@ export const FileUploadSection = ({
     );
   }
 
-  // Si hay recompensas, mostrar el formulario normal
+  // Si hay recompensas, mostramos el formulario normal
   return (
     <>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
         {/* Left: Upload Form */}
         <div>
           <label className="block mb-2 font-semibold text-dark-muted text-sm uppercase tracking-wider">
             1. Elegí el canje
           </label>
-          <div className="flex gap-2 mb-5">
+          <div className="flex gap-2 mb-6">
             <select 
               className="flex-1 p-3 rounded-lg border-2 border-dark-border bg-gradient-to-br from-dark-card to-dark-secondary text-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all appearance-none cursor-pointer hover:border-primary/50 font-semibold"
               style={{
@@ -160,7 +166,7 @@ export const FileUploadSection = ({
 
           {/* Info si ya hay alertas creadas */}
           {triggers && triggers.length > 0 && (
-            <div className="mb-6 p-4 bg-primary/10 border border-primary/30 rounded-lg">
+            <div className="mb-7 p-4 bg-primary/10 border border-primary/25 rounded-xl">
               <p className="text-sm text-primary font-semibold mb-2">💡 Tip:</p>
               <p className="text-sm text-dark-muted">
                 Ya tenés <strong>{triggers.length} alerta{triggers.length > 1 ? 's' : ''} armada{triggers.length > 1 ? 's' : ''}</strong>. Podés sumar más media a una recompensa o crear otra nueva.
@@ -172,7 +178,7 @@ export const FileUploadSection = ({
             2. {getMediaTypeLabel()}
           </label>
           
-          <div className="relative overflow-hidden inline-block w-full mb-2">
+          <div className="relative overflow-hidden inline-block w-full mb-3">
             <input
               type="file"
               id="video-upload"
@@ -185,7 +191,7 @@ export const FileUploadSection = ({
               className={`flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-xl cursor-pointer transition-all ${
                 fileError 
                   ? 'border-red-500 bg-red-500/5 text-red-500' 
-                  : 'border-dark-secondary bg-white/2 text-dark-muted hover:border-primary'
+                  : 'border-dark-secondary bg-white/3 text-dark-muted hover:border-primary'
               }`}
             >
               <span className="text-4xl mb-3">
@@ -204,11 +210,11 @@ export const FileUploadSection = ({
 
           {fileError && <p className="text-red-500 text-sm mb-4">{fileError}</p>}
 
-          <div className="text-right mt-5">
+          <div className="text-right mt-6">
             <button
               onClick={onUpload}
               disabled={uploading || !!fileError || !selectedReward || !file}
-              className="w-full bg-primary text-white font-bold py-3 px-6 rounded-lg hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+              className="w-full bg-primary text-white font-bold py-3.5 px-6 rounded-lg hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
             >
               {uploading ? 'Subiendo...' : 'Guardar Alerta'}
             </button>
@@ -220,13 +226,13 @@ export const FileUploadSection = ({
           <label className="block mb-2 font-semibold text-dark-muted text-sm uppercase tracking-wider">
             Vista Previa
           </label>
-          <div className="rounded-xl overflow-hidden border border-dark-border bg-black h-64 flex items-center justify-center">
+          <div className="rounded-2xl overflow-hidden border border-dark-border bg-black h-72 flex items-center justify-center">
             {getPreviewContent()}
           </div>
         </div>
       </div>
 
-      {/* Reward Creator Modal */}
+      {/* Modal para crear recompensa */}
       {showRewardCreator && (
         <RewardCreator
           userId={userId}

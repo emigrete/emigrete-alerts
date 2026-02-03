@@ -195,7 +195,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-dark-bg via-dark-bg to-dark-secondary text-dark-text p-5 lg:p-10">
+    <div className="min-h-screen bg-gradient-to-br from-dark-bg via-dark-bg to-dark-secondary text-dark-text p-5 lg:p-12">
       {isDemo && (
         <div className="fixed top-0 left-0 right-0 bg-gradient-to-r from-yellow-600 to-yellow-500 text-white py-3 px-4 text-center font-bold z-50 shadow-lg">
           MODO DEMO - Probalo sin loguearte
@@ -207,36 +207,39 @@ export default function Dashboard() {
         {/* Header */}
         <Header username={username} userId={userId} onLogout={handleLogout} />
 
-        {/* Advertencia de desarrollo */}
-        <div className="mb-8 p-4 bg-yellow-500/10 border-l-4 border-yellow-500 rounded-xl">
+        {/* Advertencia de desarrollo (para no olvidarnos que esto está en beta) */}
+        <div className="mb-10 p-5 bg-yellow-500/10 border-l-4 border-yellow-500 rounded-2xl">
           <div className="flex items-start gap-3">
             <span className="text-2xl">⚠️</span>
             <div>
               <h3 className="text-yellow-500 font-bold mb-1">App en beta, ojo</h3>
               <p className="text-sm text-dark-muted">
-                Puede pinchar o faltar alguna cosita. Si algo te hace ruido, avisame y lo arreglamos.
+                Puede faltar alguna cosita. Si algo te hace ruido, avisame y lo arreglamos.
               </p>
             </div>
           </div>
         </div>
 
-        {/* Step Guide */}
+        {/* Step Guide (pasos simples y al pie) */}
         <StepGuide />
 
-        {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Main Content (más aire para que no quede todo apretado) */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 xl:gap-12 mt-2">
           {/* Columna Principal (2/3) */}
-          <div className="lg:col-span-2 space-y-8">
+          <div className="lg:col-span-2 space-y-10">
             {/* Multimedia Alerts */}
-            <section className="bg-gradient-to-br from-dark-card to-dark-secondary p-6 lg:p-10 rounded-3xl border border-primary/20 shadow-xl hover:shadow-2xl transition-shadow">
+            <section className="bg-gradient-to-br from-dark-card to-dark-secondary p-7 lg:p-12 rounded-[28px] border border-primary/15 shadow-xl hover:shadow-2xl transition-shadow">
               <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
                 <h3 className="m-0 text-2xl font-black">
                   Alertas Multimedia
                 </h3>
-                <span className="text-xs text-dark-muted bg-white/5 px-3 py-1 rounded-full border border-white/10">
+                <span className="text-xs text-dark-muted bg-white/5 px-3 py-1.5 rounded-full border border-white/10">
                   Video, audio o GIF
                 </span>
               </div>
+              <p className="text-sm text-dark-muted mb-8">
+                Subí el archivo, elegí el canje y guardá. Simple y al toque.
+              </p>
               <FileUploadSection
                 file={file}
                 previewUrl={previewUrl}
@@ -258,7 +261,7 @@ export default function Dashboard() {
             </section>
 
             {/* Triggers Card */}
-            <section className="bg-gradient-to-br from-dark-card to-dark-secondary p-6 lg:p-10 rounded-3xl border border-primary/20 shadow-xl hover:shadow-2xl transition-shadow">
+            <section className="bg-gradient-to-br from-dark-card to-dark-secondary p-7 lg:p-12 rounded-[28px] border border-primary/15 shadow-xl hover:shadow-2xl transition-shadow">
               <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
                 <h3 className="m-0 text-2xl font-black">
                   Alertas Activas
@@ -276,7 +279,7 @@ export default function Dashboard() {
           </div>
 
           {/* Columna Lateral (1/3) */}
-          <div className="space-y-8">
+          <div className="space-y-10">
             {/* TTS Manager */}
             <TTSManager
               triggers={triggers}

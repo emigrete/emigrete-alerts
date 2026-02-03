@@ -6,9 +6,13 @@ import { TTSGuide } from './TTSGuide';
 import { TTSConfig } from './TTSConfig';
 
 export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCreated }) => {
+  // Trigger seleccionado (modal)
   const [selectedTriggerId, setSelectedTriggerId] = useState(null);
+  // Canje elegido
   const [selectedReward, setSelectedReward] = useState('');
+  // Estado de guardado
   const [creating, setCreating] = useState(false);
+  // Config base de TTS
   const [ttsConfig, setTtsConfig] = useState({
     enabled: true,
     voiceId: 'pNInz6obpgDQGcFmaJgB',
@@ -19,9 +23,11 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
     similarityBoost: 0.75
   });
 
+  // Solo TTS activos
   const triggersWithTTS = triggers.filter(t => t.ttsConfig?.enabled);
   const selectedTrigger = triggers.find(t => t._id === selectedTriggerId);
 
+  // Alta TTS sin media
   const handleCreateTTS = async () => {
     if (!selectedReward) {
       toast.warning('Elegí un canje primero, che.');
@@ -76,9 +82,9 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
   };
 
   return (
-    <section className="bg-gradient-to-br from-primary/10 via-pink-500/5 to-dark-secondary border border-primary/30 rounded-3xl p-8">
+    <section className="bg-gradient-to-br from-primary/10 via-pink-500/5 to-dark-secondary border border-primary/25 rounded-[28px] p-9">
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-9">
         <h2 className="text-3xl font-black text-white mb-2">
           Módulo TTS (aparte)
         </h2>
@@ -91,7 +97,7 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
       <TTSGuide />
 
       {/* Crear TTS */}
-      <div className="mt-8 bg-dark-card/70 border border-dark-border rounded-2xl p-6">
+      <div className="mt-8 bg-dark-card/70 border border-dark-border rounded-2xl p-7">
         <h3 className="text-xl font-bold text-white mb-4">Crear alerta TTS sola</h3>
         <div className="space-y-5">
           <div>
@@ -139,7 +145,7 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
             </select>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <label className="flex items-center gap-3 text-xs text-dark-text">
               <input
                 type="checkbox"
@@ -179,7 +185,7 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
           <button
             onClick={handleCreateTTS}
             disabled={creating || !selectedReward}
-            className="w-full bg-primary text-white font-bold py-3 px-6 rounded-lg hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+            className="w-full bg-primary text-white font-bold py-3.5 px-6 rounded-lg hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
           >
             {creating ? 'Guardando...' : 'Guardar TTS'}
           </button>
@@ -188,15 +194,15 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
 
       {/* Lista de alertas con TTS */}
       {triggersWithTTS.length > 0 ? (
-        <div className="mt-8">
+        <div className="mt-9">
           <h3 className="text-xl font-bold text-white mb-4">Alertas con TTS activo</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {triggersWithTTS.map(trigger => {
               const reward = rewards.find(r => r.id === trigger.twitchRewardId);
               return (
                 <div
                   key={trigger._id}
-                  className="bg-dark-card border border-dark-border rounded-xl p-4 hover:border-primary/50 transition-all cursor-pointer group"
+                  className="bg-dark-card border border-dark-border rounded-2xl p-5 hover:border-primary/50 transition-all cursor-pointer group"
                   onClick={() => setSelectedTriggerId(trigger._id)}
                 >
                   <div className="flex items-start justify-between mb-3">
@@ -253,11 +259,11 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
 };
 
 const ELEVENLABS_VOICES = [
-  { id: 'pNInz6obpgDQGcFmaJgB', name: 'Adam (Masculino, profundo)' },
-  { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Sarah (Femenino, suave)' },
-  { id: 'ErXwobaYiN019PkySvjV', name: 'Antoni (Masculino, cálido)' },
-  { id: 'VR6AewLTigWG4xSOukaG', name: 'Arnold (Masculino, autoritario)' },
-  { id: 'MF3mGyEYCl7XYWbV9V6O', name: 'Elli (Femenino, juvenil)' },
-  { id: 'ThT5KcBeYPX3keUQqHPh', name: 'Dorothy (Femenino, británico)' },
-  { id: 'onwK4e9ZLuTAKqWW03F9', name: 'Daniel (Masculino, británico)' },
+  { id: 'pNInz6obpgDQGcFmaJgB', name: '🇺🇸 Adam (Masculino, profundo)' },
+  { id: 'EXAVITQu4vr4xnSDxMaL', name: '🇺🇸 Sarah (Femenino, suave)' },
+  { id: 'ErXwobaYiN019PkySvjV', name: '🇺🇸 Antoni (Masculino, cálido)' },
+  { id: 'VR6AewLTigWG4xSOukaG', name: '🇺🇸 Arnold (Masculino, autoritario)' },
+  { id: 'MF3mGyEYCl7XYWbV9V6O', name: '🇺🇸 Elli (Femenino, juvenil)' },
+  { id: 'ThT5KcBeYPX3keUQqHPh', name: '🇬🇧 Dorothy (Femenino, británico)' },
+  { id: 'onwK4e9ZLuTAKqWW03F9', name: '🇬🇧 Daniel (Masculino, británico)' },
 ];

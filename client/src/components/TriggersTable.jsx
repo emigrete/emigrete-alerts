@@ -1,8 +1,10 @@
 import { copyToClipboard } from '../utils/helpers';
 
 export const TriggersTable = ({ triggers, rewards, userId, onDelete, onRefresh }) => {
+  // Link base del overlay (después le pegamos el reward específico)
   const overlayBaseUrl = `${window.location.protocol}//${window.location.host}/overlay?user=${userId}`;
 
+  // Íconos para que se entienda rápido qué tipo de media hay
   const getMediaIcon = (type) => {
     switch(type) {
       case 'video': return '[Video]';
@@ -14,9 +16,9 @@ export const TriggersTable = ({ triggers, rewards, userId, onDelete, onRefresh }
 
   if (triggers.length === 0) {
     return (
-      <div className="text-center py-16 border-2 border-dashed border-dark-secondary rounded-xl text-dark-muted">
-        <p className="text-lg font-semibold">No tenes alertas activas todavía</p>
-        <p className="text-sm mt-2">¡Configura la primera arriba!</p>
+      <div className="text-center py-16 border-2 border-dashed border-dark-secondary rounded-2xl text-dark-muted">
+        <p className="text-lg font-semibold">Todavía no tenés alertas activas</p>
+        <p className="text-sm mt-2">Armá la primera arriba y sale con fritas</p>
       </div>
     );
   }
@@ -35,6 +37,7 @@ export const TriggersTable = ({ triggers, rewards, userId, onDelete, onRefresh }
           </thead>
           <tbody className="[&_tr]:border-b [&_tr]:border-dark-border">
             {triggers.map(t => {
+              // Link específico para cada canje
               const specificLink = `${overlayBaseUrl}&reward=${t.twitchRewardId}`;
               const rewardTitle = rewards.find(r => r.id === t.twitchRewardId)?.title || 'Desconocido';
 
@@ -70,7 +73,7 @@ export const TriggersTable = ({ triggers, rewards, userId, onDelete, onRefresh }
                     </div>
                   </td>
                   <td className="px-4 py-4">
-                    <div className="bg-black p-3 rounded-lg border border-dark-border flex items-center justify-between gap-3 font-mono text-sm text-green-400">
+                    <div className="bg-black p-3 rounded-xl border border-dark-border flex items-center justify-between gap-3 font-mono text-sm text-green-400">
                       <span className="overflow-hidden text-ellipsis whitespace-nowrap max-w-xs">
                         {specificLink}
                       </span>
