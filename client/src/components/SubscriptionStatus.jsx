@@ -31,11 +31,21 @@ export const SubscriptionStatus = ({ userId }) => {
     fetchStatus();
   }, [userId]);
 
-  if (loading) return <div className="text-dark-muted text-sm">Cargando plan...</div>;
+  if (loading) return <div className="text-dark-muted text-base mb-4">⏳ Cargando plan...</div>;
   if (error) return null;
   if (!status) return null;
 
   const { subscription, usage } = status;
+  
+  // Helper para formatear bytes a unidad legible
+  const formatBytes = (bytes) => {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 10) / 10 + ' ' + sizes[i];
+  };
+
   const tierColors = {
     free: 'from-gray-500 to-gray-600',
     pro: 'from-blue-500 to-blue-600',
@@ -113,7 +123,7 @@ export const SubscriptionStatus = ({ userId }) => {
           <div className="flex justify-between mb-1">
             <span className="text-dark-muted">Storage</span>
             <span className="font-bold text-dark-text text-xs">
-              {Math.round(usage.storage.current / 1024 / 1024)}MB / {usage.storage.limit === Infinity ? '∞' : Math.round(usage.storage.limit / 1024 / 1024) + 'MB'}
+              {formatBytes(usage.storage.current)} / {usage.storage.limit === Infinity ? '∞' : formatBytes(usage.storage.limit)}
             </span>
           </div>
           {usage.storage.limit !== Infinity && (
@@ -136,10 +146,10 @@ export const SubscriptionStatus = ({ userId }) => {
       {/* Upgrade button si está cerca del límite */}
       {(usage.alerts.percentage > 80 || usage.tts.percentage > 80) && subscription.tier !== 'premium' && (
         <button 
-          disabled
-          className="mt-3 w-full text-xs font-bold py-2 px-3 rounded-lg bg-gradient-to-r from-primary to-pink-500 text-white opacity-50 cursor-not-allowed"
+          onClick={() => navigate('/pricing')}
+          className="mt-3 w-full text-xs font-bold py-2 px-3 rounded-lg bg-gradient-to-r from-primary to-pink-500 text-white hover:shadow-lg transition"
         >
-          Upgrade Plan (Próximamente)
+          Upgrade Plan
         </button>
       )}
     </div>

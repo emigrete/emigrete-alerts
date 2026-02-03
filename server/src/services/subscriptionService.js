@@ -1,5 +1,7 @@
 import Subscription from '../models/Subscription.js';
 import UsageMetrics from '../models/UsageMetrics.js';
+import { TTSUsage } from '../models/TTSUsage.js';
+import { migrateTTSUsage } from './migrationService.js';
 
 const LIMITS = {
   free: {
@@ -46,8 +48,14 @@ export const getOrCreateUsageMetrics = async (userId) => {
   let metrics = await UsageMetrics.findOne({ userId });
 
   if (!metrics) {
-    metrics = new UsageMetrics({ userId });
-    await metrics.save();
+    // Intentar migrar datos viejos de TTS
+    await migrateTTSUsage(userId);
+    
+    metrics = await UsageMetrics.findOne({ userId });
+    if (!metrics) {
+      metrics = new UsageMetrics({ userId });
+      await metrics.save();
+    }
   }
 
   return metrics;
@@ -155,6 +163,15 @@ export const incrementTTSUsage = async (userId, charCount) => {
 export const incrementStorageUsage = async (userId, bytesCount) => {
   const metrics = await checkAndResetUsageIfNeeded(userId);
   metrics.storageUsedBytes += bytesCount;
+  await metrics.save();
+};
+
+/**
+ * Decrementa storage usado (cuando se borra un archivo)
+ */
+export const decrementStorageUsage = async (userId, bytesCount) => {
+  const metrics = await checkAndResetUsageIfNeeded(userId);
+  metrics.storageUsedBytes = Math.max(0, metrics.storageUsedBytes - bytesCount);
   await metrics.save();
 };
 

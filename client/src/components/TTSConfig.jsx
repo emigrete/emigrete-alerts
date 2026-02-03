@@ -118,6 +118,13 @@ export const TTSConfig = ({ triggerId, initialConfig, onClose, onUpdate, userId 
       }
     } catch (error) {
       console.error('Error al generar TTS:', error);
+      
+      // Manejar error 402 (límite de TTS excedido)
+      if (error.response?.status === 402) {
+        toast.error('Límite de TTS alcanzado. Upgrade tu plan para más caracteres.');
+        return;
+      }
+      
       const message = error.response?.data?.error || error.message || 'Error al generar audio';
 
       // Si ElevenLabs bloqueó por actividad inusual, usar fallback del navegador

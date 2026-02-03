@@ -7,52 +7,43 @@ export default function PricingPage() {
       name: 'FREE',
       price: '0',
       description: 'Perfecto para empezar',
-      color: 'from-gray-500 to-gray-600',
-      features: [
-        { text: '20 alertas', included: true },
-        { text: '2000 caracteres TTS/mes', included: true },
-        { text: '3 voces IA', included: true },
-        { text: '100 MB de storage', included: true },
-        { text: 'Webhooks', included: false },
-        { text: 'API access', included: false },
-        { text: 'Analytics avanzado', included: false },
+      color: 'from-blue-500 to-blue-600',
+      limits: [
+        { label: 'Alertas/mes', value: '20' },
+        { label: 'Caracteres TTS/mes', value: '2.000' },
+        { label: 'Voces disponibles', value: '2' },
+        { label: 'Storage', value: '100 MB' },
       ],
-      cta: 'Comenzar',
+      cta: 'Tu plan actual',
       ctaColor: 'bg-gray-500 hover:bg-gray-600'
     },
     {
       name: 'PRO',
       price: '4.99',
       description: 'Para creadores activos',
-      color: 'from-blue-500 to-blue-600',
-      features: [
-        { text: '100 alertas', included: true },
-        { text: '20,000 caracteres TTS/mes', included: true },
-        { text: '10 voces IA', included: true },
-        { text: '1 GB de storage', included: true },
-        { text: 'Webhooks', included: true },
-        { text: 'API access', included: false },
-        { text: 'Analytics avanzado', included: false },
+      color: 'from-purple-500 to-purple-600',
+      limits: [
+        { label: 'Alertas/mes', value: '100' },
+        { label: 'Caracteres TTS/mes', value: '20.000' },
+        { label: 'Voces disponibles', value: 'Todas' },
+        { label: 'Storage', value: '1 GB' },
       ],
       cta: 'Upgrade a PRO',
-      ctaColor: 'bg-gradient-to-r from-blue-500 to-blue-600 hover:shadow-lg hover:shadow-blue-500/50'
+      ctaColor: 'bg-gradient-to-r from-purple-500 to-purple-600 hover:shadow-lg hover:shadow-purple-500/50'
     },
     {
       name: 'PREMIUM',
       price: '9.99',
       description: 'Sin límites, máximo control',
-      color: 'from-purple-500 to-pink-500',
-      features: [
-        { text: 'Alertas ilimitadas', included: true },
-        { text: 'TTS ilimitado', included: true },
-        { text: 'Todas las voces IA', included: true },
-        { text: '10 GB de storage', included: true },
-        { text: 'Webhooks', included: true },
-        { text: 'API access', included: true },
-        { text: 'Analytics avanzado', included: true },
+      color: 'from-pink-500 to-pink-600',
+      limits: [
+        { label: 'Alertas/mes', value: '∞ Ilimitadas' },
+        { label: 'Caracteres TTS/mes', value: '∞ Ilimitados' },
+        { label: 'Voces disponibles', value: 'Todas' },
+        { label: 'Storage', value: '10 GB' },
       ],
       cta: 'Upgrade a PREMIUM',
-      ctaColor: 'bg-gradient-to-r from-purple-500 to-pink-500 hover:shadow-lg hover:shadow-purple-500/50'
+      ctaColor: 'bg-gradient-to-r from-pink-500 to-pink-600 hover:shadow-lg hover:shadow-pink-500/50'
     }
   ];
 
@@ -116,26 +107,22 @@ export default function PricingPage() {
                   )}
                 </div>
 
-                {/* Features */}
-                <ul className="space-y-3 mb-8">
-                  {plan.features.map((feature, fidx) => (
-                    <li key={fidx} className="flex items-center gap-3">
-                      {feature.included ? (
-                        <span className="text-green-500 text-lg">✓</span>
-                      ) : (
-                        <span className="text-dark-muted/50 text-lg">✗</span>
-                      )}
-                      <span className={feature.included ? 'text-dark-text' : 'text-dark-muted/50'}>
-                        {feature.text}
-                      </span>
-                    </li>
+                {/* Límites/Cuotas */}
+                <div className="space-y-4 mb-8">
+                  {plan.limits.map((limit, lidx) => (
+                    <div key={lidx} className="flex items-center justify-between p-3 rounded-lg bg-dark-secondary/50 border border-dark-border">
+                      <span className="text-sm text-dark-muted">{limit.label}</span>
+                      <span className="font-bold text-white text-lg">{limit.value}</span>
+                    </div>
                   ))}
-                </ul>
+                </div>
 
                 {/* CTA Button */}
                 <button
-                  disabled
-                  className={`w-full text-white font-bold py-3 px-6 rounded-xl transition-all text-sm opacity-50 cursor-not-allowed ${plan.ctaColor}`}
+                  disabled={plan.name === 'FREE'}
+                  className={`w-full text-white font-bold py-3 px-6 rounded-xl transition-all text-sm ${
+                    plan.name === 'FREE' ? 'opacity-50 cursor-not-allowed bg-gray-500' : plan.ctaColor
+                  }`}
                 >
                   {plan.name === 'FREE' ? 'Tu plan actual' : 'Próximamente'}
                 </button>
@@ -150,30 +137,30 @@ export default function PricingPage() {
 
           <div className="grid md:grid-cols-2 gap-8">
             <div>
-              <h3 className="font-bold text-primary mb-2">¿Puedo cambiar de plan?</h3>
+              <h3 className="font-bold text-primary mb-2">¿Cómo funcionan los límites?</h3>
               <p className="text-dark-muted text-sm">
-                Sí, puedes upgraar o downgradar en cualquier momento. Los cambios se aplican inmediatamente.
+                Cada plan tiene cuotas mensuales que se renuevan el 1° de cada mes. Las alertas y caracteres TTS se restablecen automáticamente.
               </p>
             </div>
 
             <div>
-              <h3 className="font-bold text-primary mb-2">¿Se renueva automáticamente?</h3>
+              <h3 className="font-bold text-primary mb-2">¿Qué pasa si excedo el límite?</h3>
               <p className="text-dark-muted text-sm">
-                Sí, tu suscripción se renueva automáticamente cada mes. Puedes cancelar cuando quieras.
+                Si alcanzas el límite, no podrás crear más alertas o generar TTS hasta el próximo mes. Considera upgraar tu plan.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="font-bold text-primary mb-2">¿Puedo cambiar de plan en cualquier momento?</h3>
+              <p className="text-dark-muted text-sm">
+                Sí, puedes cambiar en cualquier momento. Los cambios se aplican inmediatamente y se ajusta tu próxima facturación.
               </p>
             </div>
 
             <div>
               <h3 className="font-bold text-primary mb-2">¿Hay período de prueba?</h3>
               <p className="text-dark-muted text-sm">
-                El plan FREE es permanente. Prueba PRO y PREMIUM sin compromiso.
-              </p>
-            </div>
-
-            <div>
-              <h3 className="font-bold text-primary mb-2">¿Qué métodos de pago aceptan?</h3>
-              <p className="text-dark-muted text-sm">
-                Tarjeta de crédito, débito y wallets digitales via Stripe.
+                El plan FREE es permanente y sin límite de tiempo. Úsalo cuanto quieras para probar.
               </p>
             </div>
           </div>

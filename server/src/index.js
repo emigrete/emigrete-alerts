@@ -16,6 +16,7 @@ import subscriptionRoutes from './routes/subscription.js';
 import { Trigger } from './models/Trigger.js';
 import { startTwitchListener } from './services/twitchListener.js';
 import { UserToken } from './models/UserToken.js';
+import { incrementStorageUsage } from './services/subscriptionService.js';
 
 dotenv.config();
 
@@ -206,6 +207,11 @@ app.post('/upload', upload.single('video'), async (req, res) => {
         await file.makePublic();
         const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
         console.log('🌐 URL pública generada:', publicUrl);
+
+        // ✅ Trackear almacenamiento usado
+        const fileSize = req.file.size;
+        console.log(`📊 Incrementando storage: ${fileSize} bytes para usuario ${req.body.userId}`);
+        await incrementStorageUsage(req.body.userId, fileSize);
 
         // Agregar nueva media al array de medias
         console.log('🔍 Buscando trigger existente...');

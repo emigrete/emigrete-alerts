@@ -10,6 +10,8 @@ import {
   incrementAlertCount,
   canUseTTS,
   incrementTTSUsage,
+  getUserSubscriptionStatus,
+  decrementStorageUsage,
 } from '../services/subscriptionService.js';
 
 const router = express.Router();
@@ -265,12 +267,17 @@ router.delete('/triggers/:id', async (req, res) => {
       }
     }
 
-    // Borrar todos los archivos en Firebase
+    // Calcular tamaño total de los archivos a borrar
+    let totalSizeToDelete = 0;
     const bucket = getStorage().bucket();
     
     // Borrar archivo legacy si existe
     if (trigger.fileName) {
       try {
+        const [metadata] = await bucket.file(trigger.fileName).getMetadata().catch(() => [null]);
+        if (metadata?.size) {
+          totalSizeToDelete += parseInt(metadata.size);
+        }
         await bucket.file(trigger.fileName).delete({ ignoreNotFound: true });
       } catch (e) {
         console.error('⚠️ No se pudo borrar archivo legacy:', e.message);
@@ -282,12 +289,22 @@ router.delete('/triggers/:id', async (req, res) => {
       for (const media of trigger.medias) {
         if (media.fileName) {
           try {
+            const [metadata] = await bucket.file(media.fileName).getMetadata().catch(() => [null]);
+            if (metadata?.size) {
+              totalSizeToDelete += parseInt(metadata.size);
+            }
             await bucket.file(media.fileName).delete({ ignoreNotFound: true });
           } catch (e) {
             console.error(`⚠️ No se pudo borrar media ${media.fileName}:`, e.message);
           }
         }
       }
+    }
+
+    // ✅ Decrementar storage usado
+    if (totalSizeToDelete > 0) {
+      console.log(`📊 Liberando storage: ${totalSizeToDelete} bytes para usuario ${trigger.userId}`);
+      await decrementStorageUsage(trigger.userId, totalSizeToDelete);
     }
 
     // Borrar el trigger en Mongo
@@ -301,36 +318,22 @@ router.delete('/triggers/:id', async (req, res) => {
 });
 
 /**
- * OBTENER USO DE TTS DEL USUARIO
+ * OBTENER USO DE TTS DEL USUARIO (usando sistema de suscripción)
  * GET /api/tts/usage/:userId
  */
 router.get('/tts/usage/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
     
-    let usage = await TTSUsage.findOne({ userId });
+    // Usar el nuevo sistema de suscripción
+    const status = await getUserSubscriptionStatus(userId);
     
-    if (!usage) {
-      usage = await TTSUsage.create({ 
-        userId,
-        charsUsed: 0,
-        charsLimit: 2000
-      });
-    }
-
-    const now = new Date();
-    if (usage.resetDate <= now) {
-      usage.charsUsed = 0;
-      usage.resetDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-      await usage.save();
-    }
-
     res.json({
-      charsUsed: usage.charsUsed,
-      charsLimit: usage.charsLimit,
-      charsRemaining: usage.charsLimit - usage.charsUsed,
-      resetDate: usage.resetDate,
-      percentageUsed: Math.round((usage.charsUsed / usage.charsLimit) * 100)
+      charsUsed: status.usage.tts.current,
+      charsLimit: status.usage.tts.limit,
+      charsRemaining: status.usage.tts.remaining,
+      percentageUsed: Math.round((status.usage.tts.current / status.usage.tts.limit) * 100),
+      tier: status.subscription.tier
     });
   } catch (error) {
     console.error('❌ Error obteniendo TTS usage:', error);

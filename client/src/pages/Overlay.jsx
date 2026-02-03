@@ -121,7 +121,13 @@ export default function Overlay() {
         console.log('TTS reproducido');
       }
     } catch (error) {
-      console.error('Error reproduciendo TTS:', error);
+      // Manejar error 402 (límite de TTS excedido)
+      if (error.response?.status === 402) {
+        console.warn('⚠️ Límite de TTS alcanzado, reproduciendo sin audio');
+        // Reproducir solo el video sin audio
+      } else {
+        console.error('Error reproduciendo TTS:', error);
+      }
     }
   };
 

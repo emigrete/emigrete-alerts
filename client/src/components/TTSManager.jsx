@@ -6,7 +6,7 @@ import { TTSGuide } from './TTSGuide';
 import { TTSConfig } from './TTSConfig';
 import { RewardCreatorTTS } from './RewardCreatorTTS';
 
-export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCreated }) => {
+export const TTSManager = ({ triggers, rewards, userId, username, onRefresh, isDemo, onCreated }) => {
   const [selectedTriggerId, setSelectedTriggerId] = useState(null);
   const [selectedReward, setSelectedReward] = useState('');
   const [showRewardCreator, setShowRewardCreator] = useState(false);
@@ -47,6 +47,24 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
   }, [userId]);
 
   // Crear alerta TTS desde recompensa existente
+  // Calcular caracteres totales que se usarán
+  const calculateCharCount = () => {
+    let total = 0;
+    if (ttsConfig.readUsername) total += (username || 'Usuario').length + 1; // +1 para espacio
+    if (ttsConfig.useViewerMessage) {
+      total += 50; // Estimado promedio de mensajes de espectadores
+    } else {
+      total += (ttsConfig.text || '').length;
+    }
+    return total;
+  };
+
+  const estimatedChars = calculateCharCount();
+  const canCreateTTS = selectedReward && 
+    (!ttsConfig.useViewerMessage ? ttsConfig.text?.trim() : true) &&
+    usage && 
+    usage.charsRemaining >= estimatedChars;
+
   const handleCreateTTS = async () => {
     if (!selectedReward) {
       toast.warning('Seleccioná un canje.');
@@ -55,6 +73,12 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
 
     if (!ttsConfig.useViewerMessage && !ttsConfig.text?.trim()) {
       toast.warning('Agregá un texto o activá el mensaje del espectador.');
+      return;
+    }
+
+    // Verificar límite antes de intentar
+    if (usage && usage.charsRemaining < estimatedChars) {
+      toast.error(`No hay suficientes caracteres. Necesitás ${estimatedChars}, disponibles: ${usage.charsRemaining}`);
       return;
     }
 
@@ -94,7 +118,13 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
         similarityBoost: 0.75
       });
     } catch (error) {
-      toast.error('Error al guardar: ' + error.message, { id: toastId });
+      // Manejar error 402 (límite excedido)
+      if (error.response?.status === 402) {
+        const errData = error.response.data;
+        toast.error(`Límite de TTS alcanzado. Upgrade tu plan para más caracteres.`, { id: toastId });
+      } else {
+        toast.error('Error al guardar: ' + error.message, { id: toastId });
+      }
     } finally {
       setCreating(false);
     }
@@ -247,12 +277,30 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
             </div>
           )}
 
+          {/* Mostrar información de caracteres estimados y disponibles */}
+          {usage && !loadingUsage && (
+            <div className={`p-3 rounded-lg border text-xs ${
+              usage.charsRemaining < estimatedChars
+                ? 'border-red-500/50 bg-red-500/10 text-red-400'
+                : usage.charsRemaining < estimatedChars * 3
+                ? 'border-yellow-500/50 bg-yellow-500/10 text-yellow-400'
+                : 'border-green-500/50 bg-green-500/10 text-green-400'
+            }`}>
+              <p className="font-semibold mb-1">Caracteres estimados: <strong>{estimatedChars}</strong></p>
+              <p>Disponibles: <strong>{usage.charsRemaining}</strong> de {usage.charsLimit}</p>
+              {usage.charsRemaining < estimatedChars && (
+                <p className="mt-2 text-red-400">⚠️ No hay caracteres suficientes. Upgrade tu plan.</p>
+              )}
+            </div>
+          )}
+
           <button
             onClick={handleCreateTTS}
-            disabled={creating || !selectedReward}
+            disabled={creating || !canCreateTTS || loadingUsage}
+            title={!canCreateTTS ? 'Seleccioná un canje y asegurate de tener caracteres disponibles' : ''}
             className="w-full bg-primary text-white font-bold py-3 px-4 rounded-lg hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed transition-all text-sm"
           >
-            {creating ? 'Guardando...' : 'Guardar TTS'}
+            {creating ? 'Guardando...' : loadingUsage ? 'Cargando límites...' : 'Guardar TTS'}
           </button>
         </div>
       </div>

@@ -126,6 +126,7 @@ export default function TTSPage() {
           triggers={triggers}
           rewards={rewards}
           userId={userId}
+          username={username}
           isDemo={isDemo}
           onRefresh={fetchTriggers}
           onCreated={(newTrigger) => {
