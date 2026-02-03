@@ -18,20 +18,33 @@ export const FeedbackForm = () => {
     }
 
     setSending(true);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
     try {
-      await axios.post(`${API_URL}/api/feedback`, {
-        feedback,
-        email,
-        type
-      });
+      await axios.post(
+        `${API_URL}/api/feedback`,
+        {
+          feedback,
+          email,
+          type
+        },
+        {
+          signal: controller.signal
+        }
+      );
 
       toast.success('Gracias por tu comentario.');
       setFeedback('');
       setEmail('');
       setType('suggestion');
     } catch (error) {
-      toast.error('No se pudo enviar el comentario. Intentá de nuevo.');
+      if (error?.name === 'CanceledError') {
+        toast.error('El envío tardó demasiado. Intentá de nuevo.');
+      } else {
+        toast.error('No se pudo enviar el comentario. Intentá de nuevo.');
+      }
     } finally {
+      clearTimeout(timeoutId);
       setSending(false);
     }
   };
