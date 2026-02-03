@@ -1,5 +1,6 @@
 import express from 'express';
 import axios from 'axios';
+import { getStorage } from 'firebase-admin/storage';
 import { UserToken } from '../models/UserToken.js';
 import { Trigger } from '../models/Trigger.js';
 
@@ -49,10 +50,28 @@ router.get('/triggers', async (req, res) => {
 
 router.delete('/triggers/:id', async (req, res) => {
   try {
+ 
+    const trigger = await Trigger.findById(req.params.id);
+    if (!trigger) return res.status(404).json({ error: 'Alerta no encontrada' });
+
+
+    if (trigger.fileName) {
+      try {
+        const bucket = getStorage().bucket();
+        await bucket.file(trigger.fileName).delete({ ignoreNotFound: true });
+      } catch (e) {
+
+        console.error('⚠️ No se pudo borrar el archivo en Firebase:', e.message);
+      }
+    }
+
+    // 3) Borrar el trigger en Mongo
     await Trigger.findByIdAndDelete(req.params.id);
-    res.json({ success: true });
-  } catch {
-    res.status(500).json({ error: 'Error al borrar alerta' });
+
+    return res.json({ success: true });
+  } catch (e) {
+    console.error('❌ Error al borrar alerta:', e.message);
+    return res.status(500).json({ error: 'Error al borrar alerta' });
   }
 });
 
