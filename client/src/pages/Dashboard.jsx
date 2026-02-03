@@ -12,6 +12,7 @@ import { FileUploadSection } from '../components/FileUploadSection';
 import { TriggersTable } from '../components/TriggersTable';
 import { DonationFooter } from '../components/DonationFooter';
 import { AlertsBadge } from '../components/AlertsBadge';
+import { TTSGuide } from '../components/TTSGuide';
 
 export default function Dashboard() {
   // Modo demo: solo en desarrollo
@@ -249,6 +250,9 @@ export default function Dashboard() {
               }}
             />
           </section>
+
+          {/* TTS Guide Section */}
+          <TTSGuide />
 
           {/* Triggers Card */}
           <section className="bg-gradient-to-br from-dark-card to-dark-secondary p-6 lg:p-10 rounded-2xl border border-primary/20 shadow-xl hover:shadow-2xl transition-shadow">
