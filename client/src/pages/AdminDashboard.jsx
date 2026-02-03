@@ -9,7 +9,14 @@ export const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [userId] = useState(localStorage.getItem('twitchUserId'));
+  const [username] = useState(localStorage.getItem('twitchUsername'));
   const [isAdmin, setIsAdmin] = useState(false);
+  const [stats, setStats] = useState({
+    totalAlerts: 0,
+    totalTTS: 0,
+    totalStorage: 0,
+    totalTriggers: 0
+  });
 
   useEffect(() => {
     if (!userId) {
@@ -27,7 +34,18 @@ export const AdminDashboard = () => {
       const response = await axios.get(`${API_URL}/api/admin/users`, {
         params: { adminId: userId }
       });
-      setUsers(response.data.users || []);
+      const usersData = response.data.users || [];
+      setUsers(usersData);
+      
+      // Calcular estadísticas totales
+      const totalStats = usersData.reduce((acc, user) => ({
+        totalAlerts: acc.totalAlerts + user.alerts.current,
+        totalTTS: acc.totalTTS + user.tts.current,
+        totalStorage: acc.totalStorage + user.storage.current,
+        totalTriggers: acc.totalTriggers + user.triggers
+      }), { totalAlerts: 0, totalTTS: 0, totalStorage: 0, totalTriggers: 0 });
+      
+      setStats(totalStats);
       setIsAdmin(true);
       setError(null);
     } catch (err) {
@@ -72,6 +90,25 @@ export const AdminDashboard = () => {
     return 'text-green-500';
   };
 
+  const handleChangeTier = async (targetUserId, newTier) => {
+    if (!window.confirm(`¿Cambiar plan de usuario a ${newTier.toUpperCase()}?`)) {
+      return;
+    }
+
+    try {
+      await axios.put(`${API_URL}/api/admin/users/${targetUserId}/tier`, {
+        tier: newTier,
+        adminId: userId
+      });
+
+      // Recargar usuarios
+      fetchUsers();
+    } catch (error) {
+      console.error('Error cambiando tier:', error);
+      alert(error.response?.data?.error || 'Error al cambiar tier');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-dark-bg p-6">
@@ -101,106 +138,212 @@ export const AdminDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-dark-bg p-6">
+    <div className="min-h-screen bg-gradient-to-br from-dark-bg via-dark-bg to-dark-secondary/30 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-bold text-white">Admin Dashboard</h1>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+          <div>
+            <h1 className="text-5xl font-black bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 bg-clip-text text-transparent mb-2">
+              Admin Dashboard
+            </h1>
+            <p className="text-dark-muted text-sm">
+              Panel de administración · <span className="text-primary font-semibold">{username || 'Admin'}</span>
+            </p>
+          </div>
           <button 
             onClick={() => navigate('/dashboard')}
-            className="px-4 py-2 bg-dark-secondary text-white rounded-lg hover:bg-dark-border transition"
+            className="px-6 py-2.5 bg-dark-card/70 border border-dark-border text-white rounded-lg hover:bg-dark-secondary hover:border-primary/50 transition-all font-semibold"
           >
-            Volver
+            ← Volver
           </button>
         </div>
 
-        {/* Estadísticas generales */}
+        {/* Estadísticas globales */}
+        <div className="mb-8">
+          <h2 className="text-xl font-bold text-white mb-4">Consumo Total del Sistema</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20 rounded-xl p-6 hover:border-blue-500/40 transition">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                  <span className="text-xl">⚡</span>
+                </div>
+                <p className="text-blue-400 text-sm font-semibold">Alertas Totales</p>
+              </div>
+              <p className="text-3xl font-black text-white">{stats.totalAlerts.toLocaleString()}</p>
+            </div>
+            
+            <div className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border border-purple-500/20 rounded-xl p-6 hover:border-purple-500/40 transition">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                  <span className="text-xl">🔊</span>
+                </div>
+                <p className="text-purple-400 text-sm font-semibold">Caracteres TTS</p>
+              </div>
+              <p className="text-3xl font-black text-white">{stats.totalTTS.toLocaleString()}</p>
+            </div>
+            
+            <div className="bg-gradient-to-br from-green-500/10 to-green-600/5 border border-green-500/20 rounded-xl p-6 hover:border-green-500/40 transition">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
+                  <span className="text-xl">💾</span>
+                </div>
+                <p className="text-green-400 text-sm font-semibold">Storage Usado</p>
+              </div>
+              <p className="text-3xl font-black text-white">{formatBytes(stats.totalStorage)}</p>
+            </div>
+            
+            <div className="bg-gradient-to-br from-orange-500/10 to-orange-600/5 border border-orange-500/20 rounded-xl p-6 hover:border-orange-500/40 transition">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-lg bg-orange-500/20 flex items-center justify-center">
+                  <span className="text-xl">🎯</span>
+                </div>
+                <p className="text-orange-400 text-sm font-semibold">Triggers Activos</p>
+              </div>
+              <p className="text-3xl font-black text-white">{stats.totalTriggers}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Estadísticas por tier */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <div className="bg-dark-card/70 border border-dark-border rounded-xl p-6">
-            <p className="text-dark-muted text-sm mb-2">Total Usuarios</p>
-            <p className="text-3xl font-bold text-white">{users.length}</p>
+          <div className="bg-dark-card/70 border border-dark-border rounded-xl p-6 hover:border-dark-border/80 transition">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-dark-muted text-sm font-semibold">Total Usuarios</p>
+              <span className="text-2xl">👥</span>
+            </div>
+            <p className="text-4xl font-black text-white">{users.length}</p>
           </div>
-          <div className="bg-dark-card/70 border border-dark-border rounded-xl p-6">
-            <p className="text-dark-muted text-sm mb-2">Usuarios Premium</p>
-            <p className="text-3xl font-bold text-purple-400">{users.filter(u => u.tier === 'premium').length}</p>
+          <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-xl p-6 hover:border-purple-500/50 transition">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-purple-400 text-sm font-semibold">Premium</p>
+              <span className="text-2xl">👑</span>
+            </div>
+            <p className="text-4xl font-black text-white">{users.filter(u => u.tier === 'premium').length}</p>
           </div>
-          <div className="bg-dark-card/70 border border-dark-border rounded-xl p-6">
-            <p className="text-dark-muted text-sm mb-2">Usuarios Pro</p>
-            <p className="text-3xl font-bold text-blue-400">{users.filter(u => u.tier === 'pro').length}</p>
+          <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/10 border border-blue-500/30 rounded-xl p-6 hover:border-blue-500/50 transition">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-blue-400 text-sm font-semibold">Pro</p>
+              <span className="text-2xl">⭐</span>
+            </div>
+            <p className="text-4xl font-black text-white">{users.filter(u => u.tier === 'pro').length}</p>
           </div>
         </div>
 
         {/* Tabla de usuarios */}
-        <div className="bg-dark-card/70 border border-dark-border rounded-xl overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-dark-secondary/50 border-b border-dark-border">
-                <tr>
-                  <th className="px-6 py-4 text-left font-semibold text-dark-muted">Usuario</th>
-                  <th className="px-6 py-4 text-left font-semibold text-dark-muted">Plan</th>
-                  <th className="px-6 py-4 text-left font-semibold text-dark-muted">Alertas</th>
-                  <th className="px-6 py-4 text-left font-semibold text-dark-muted">TTS</th>
-                  <th className="px-6 py-4 text-left font-semibold text-dark-muted">Storage</th>
-                  <th className="px-6 py-4 text-left font-semibold text-dark-muted">Triggers</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((user) => (
-                  <tr key={user.userId} className="border-b border-dark-border/30 hover:bg-dark-secondary/20 transition">
-                    <td className="px-6 py-4">
-                      <div>
-                        <p className="font-semibold text-white">{user.displayName}</p>
-                        <p className="text-xs text-dark-muted">{user.userId}</p>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold text-white bg-gradient-to-r ${getTierColor(user.tier)}`}>
-                        {getTierLabel(user.tier)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm">
-                        <p className="text-white font-semibold">
-                          {user.alerts.current}/{user.alerts.limit === Infinity ? '∞' : user.alerts.limit}
-                        </p>
-                        <p className={`text-xs font-semibold ${getUsageColor(user.alerts.percentage)}`}>
-                          {user.alerts.percentage}%
-                        </p>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm">
-                        <p className="text-white font-semibold">
-                          {user.tts.current.toLocaleString()} / {user.tts.limit === Infinity ? '∞' : user.tts.limit.toLocaleString()}
-                        </p>
-                        <p className={`text-xs font-semibold ${getUsageColor(user.tts.percentage)}`}>
-                          {user.tts.percentage}%
-                        </p>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm">
-                        <p className="text-white font-semibold">
-                          {formatBytes(user.storage.current)} / {user.storage.limit === Infinity ? '∞' : formatBytes(user.storage.limit)}
-                        </p>
-                        <p className={`text-xs font-semibold ${getUsageColor(user.storage.percentage)}`}>
-                          {user.storage.percentage}%
-                        </p>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-white font-semibold">
-                      {user.triggers}
-                    </td>
+        <div>
+          <h2 className="text-xl font-bold text-white mb-4">Usuarios Registrados</h2>
+          <div className="bg-dark-card/70 border border-dark-border rounded-xl overflow-hidden shadow-2xl">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gradient-to-r from-dark-secondary to-dark-secondary/50 border-b-2 border-primary/20">
+                  <tr>
+                    <th className="px-6 py-4 text-left font-bold text-white uppercase tracking-wider text-xs">Usuario</th>
+                    <th className="px-6 py-4 text-left font-bold text-white uppercase tracking-wider text-xs">Plan</th>
+                    <th className="px-6 py-4 text-left font-bold text-white uppercase tracking-wider text-xs">Alertas</th>
+                    <th className="px-6 py-4 text-left font-bold text-white uppercase tracking-wider text-xs">TTS</th>
+                    <th className="px-6 py-4 text-left font-bold text-white uppercase tracking-wider text-xs">Storage</th>
+                    <th className="px-6 py-4 text-left font-bold text-white uppercase tracking-wider text-xs">Triggers</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-dark-border/30">
+                  {users.map((user) => (
+                    <tr key={user.userId} className="hover:bg-primary/5 transition-colors">
+                      <td className="px-6 py-4">
+                        <div>
+                          <p className="font-bold text-white text-base">{user.displayName}</p>
+                          <p className="text-xs text-dark-muted font-mono">{user.userId}</p>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <select
+                          value={user.tier}
+                          onChange={(e) => handleChangeTier(user.userId, e.target.value)}
+                          className={`px-3 py-1.5 rounded-full text-xs font-bold text-white bg-gradient-to-r ${getTierColor(user.tier)} shadow-lg cursor-pointer hover:opacity-80 transition appearance-none border-2 border-white/20`}
+                        >
+                          <option value="free" className="bg-gray-800">Free</option>
+                          <option value="pro" className="bg-gray-800">Pro</option>
+                          <option value="premium" className="bg-gray-800">Premium</option>
+                        </select>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm">
+                          <p className="text-white font-bold">
+                            {user.alerts.current}/{user.alerts.limit === Infinity ? '∞' : user.alerts.limit}
+                          </p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <div className="flex-1 h-1.5 bg-dark-secondary rounded-full overflow-hidden">
+                              <div 
+                                className={`h-full rounded-full transition-all ${
+                                  user.alerts.percentage > 80 ? 'bg-red-500' :
+                                  user.alerts.percentage > 50 ? 'bg-yellow-500' : 'bg-green-500'
+                                }`}
+                                style={{ width: `${user.alerts.percentage}%` }}
+                              />
+                            </div>
+                            <span className={`text-xs font-bold ${getUsageColor(user.alerts.percentage)}`}>
+                              {user.alerts.percentage}%
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm">
+                          <p className="text-white font-bold">
+                            {user.tts.current.toLocaleString()} / {user.tts.limit === Infinity ? '∞' : user.tts.limit.toLocaleString()}
+                          </p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <div className="flex-1 h-1.5 bg-dark-secondary rounded-full overflow-hidden">
+                              <div 
+                                className={`h-full rounded-full transition-all ${
+                                  user.tts.percentage > 80 ? 'bg-red-500' :
+                                  user.tts.percentage > 50 ? 'bg-yellow-500' : 'bg-green-500'
+                                }`}
+                                style={{ width: `${user.tts.percentage}%` }}
+                              />
+                            </div>
+                            <span className={`text-xs font-bold ${getUsageColor(user.tts.percentage)}`}>
+                              {user.tts.percentage}%
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm">
+                          <p className="text-white font-bold">
+                            {formatBytes(user.storage.current)} / {user.storage.limit === Infinity ? '∞' : formatBytes(user.storage.limit)}
+                          </p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <div className="flex-1 h-1.5 bg-dark-secondary rounded-full overflow-hidden">
+                              <div 
+                                className={`h-full rounded-full transition-all ${
+                                  user.storage.percentage > 80 ? 'bg-red-500' :
+                                  user.storage.percentage > 50 ? 'bg-yellow-500' : 'bg-green-500'
+                                }`}
+                                style={{ width: `${user.storage.percentage}%` }}
+                              />
+                            </div>
+                            <span className={`text-xs font-bold ${getUsageColor(user.storage.percentage)}`}>
+                              {user.storage.percentage}%
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary/20 text-primary font-black text-base">
+                          {user.triggers}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
 
         {users.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-dark-muted">No hay usuarios registrados</p>
+            <p className="text-dark-muted text-lg">No hay usuarios registrados</p>
           </div>
         )}
       </div>

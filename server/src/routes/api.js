@@ -548,4 +548,56 @@ router.get('/admin/users', async (req, res) => {
   }
 });
 
+/**
+ * ADMIN: CAMBIAR TIER DE USUARIO
+ * PUT /api/admin/users/:userId/tier
+ * Body: { tier: 'free' | 'pro' | 'premium', adminId: string }
+ */
+router.put('/admin/users/:userId/tier', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { tier, adminId } = req.body;
+
+    // Verificar que sea admin
+    const ADMIN_USER_IDS = process.env.ADMIN_USER_IDS?.split(',') || [];
+    if (!adminId || !ADMIN_USER_IDS.includes(adminId)) {
+      return res.status(403).json({ error: 'No autorizado' });
+    }
+
+    // Validar tier
+    const validTiers = ['free', 'pro', 'premium'];
+    if (!validTiers.includes(tier)) {
+      return res.status(400).json({ error: 'Tier inválido' });
+    }
+
+    // Importar modelo de Subscription
+    const { Subscription } = await import('../models/Subscription.js');
+
+    // Actualizar o crear suscripción
+    const subscription = await Subscription.findOneAndUpdate(
+      { userId },
+      { 
+        tier,
+        status: 'active',
+        updatedAt: new Date()
+      },
+      { upsert: true, new: true }
+    );
+
+    console.log(`✅ Admin cambió tier de ${userId} a ${tier}`);
+
+    res.json({
+      success: true,
+      subscription: {
+        userId: subscription.userId,
+        tier: subscription.tier,
+        status: subscription.status
+      }
+    });
+  } catch (error) {
+    console.error('❌ Error cambiando tier:', error);
+    res.status(500).json({ error: 'Error al cambiar tier' });
+  }
+});
+
 export default router;
