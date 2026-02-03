@@ -92,7 +92,7 @@ export const RewardCreator = ({ userId, onRewardCreated, onCancel, isDemo, defau
 
         {isDemo && (
           <div className="mb-6 p-4 bg-yellow-500/15 border-l-4 border-yellow-500 rounded-xl text-yellow-600 text-sm font-semibold">
-            ⚠️ Modo DEMO: Los datos no se guardan en Twitch
+            Modo DEMO: Los datos no se guardan en Twitch
           </div>
         )}
 
@@ -102,7 +102,7 @@ export const RewardCreator = ({ userId, onRewardCreated, onCancel, isDemo, defau
             {/* Nombre */}
             <div>
               <label className="block text-xs font-bold text-primary uppercase tracking-wider mb-2">
-                📝 Nombre
+                Nombre
               </label>
               <input
                 type="text"
@@ -118,7 +118,7 @@ export const RewardCreator = ({ userId, onRewardCreated, onCancel, isDemo, defau
             {/* Costo */}
             <div>
               <label className="block text-xs font-bold text-primary uppercase tracking-wider mb-2">
-                💎 Costo
+                Costo
               </label>
               <input
                 type="number"
@@ -135,7 +135,7 @@ export const RewardCreator = ({ userId, onRewardCreated, onCancel, isDemo, defau
           {/* Descripción */}
           <div>
             <label className="block text-xs font-bold text-primary uppercase tracking-wider mb-2">
-              📄 Descripción
+              Descripción
             </label>
             <textarea
               value={prompt}
@@ -179,7 +179,7 @@ export const RewardCreator = ({ userId, onRewardCreated, onCancel, isDemo, defau
                 className="w-4 h-4 rounded accent-primary cursor-pointer"
               />
               <label htmlFor="enable-tts" className="text-xs font-bold text-dark-text cursor-pointer">
-                🎙️ Activar TTS
+                Activar TTS
               </label>
             </div>
 
@@ -187,7 +187,7 @@ export const RewardCreator = ({ userId, onRewardCreated, onCancel, isDemo, defau
               <div className="space-y-3 p-4 bg-gradient-to-br from-primary/5 to-pink-500/5 border border-primary/30 rounded-xl">
                 {ttsUseViewerMessage && (
                   <div className="p-3 bg-green-500/15 border-l-4 border-green-500 rounded text-xs">
-                    <p className="text-green-400 font-semibold">✅ Los fans escribirán el texto que TTS leerá</p>
+                    <p className="text-green-400 font-semibold">Los espectadores escribirán el texto que TTS leerá</p>
                   </div>
                 )}
 
@@ -227,7 +227,7 @@ export const RewardCreator = ({ userId, onRewardCreated, onCancel, isDemo, defau
           {/* Color */}
           <div>
             <label className="block text-xs font-bold text-primary uppercase tracking-wider mb-2">
-              🎨 Color
+              Color
             </label>
             <div className="flex gap-2 items-center">
               <input
@@ -260,7 +260,7 @@ export const RewardCreator = ({ userId, onRewardCreated, onCancel, isDemo, defau
               disabled={loading}
               className="flex-1 bg-gradient-to-r from-primary to-pink-500 text-white px-3 py-2 rounded-xl font-bold text-sm hover:shadow-lg hover:shadow-primary/50 hover:scale-105 transition disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed"
             >
-              {loading ? '⏳ Creando...' : '🚀 Crear'}
+              {loading ? 'Creando...' : 'Crear'}
             </button>
           </div>
         </form>

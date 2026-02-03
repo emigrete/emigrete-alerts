@@ -1,11 +1,80 @@
 import express from 'express';
 import axios from 'axios';
+import nodemailer from 'nodemailer';
 import { getStorage } from 'firebase-admin/storage';
 import { UserToken } from '../models/UserToken.js';
 import { Trigger } from '../models/Trigger.js';
 import { TTSUsage } from '../models/TTSUsage.js';
 
 const router = express.Router();
+
+let cachedTransporter = null;
+
+function getFeedbackTransporter() {
+  if (cachedTransporter) return cachedTransporter;
+
+  const host = process.env.SMTP_HOST;
+  const port = Number(process.env.SMTP_PORT || 587);
+  const secure = process.env.SMTP_SECURE === 'true' || port === 465;
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+
+  if (!host) return null;
+
+  cachedTransporter = nodemailer.createTransport({
+    host,
+    port,
+    secure,
+    auth: user && pass ? { user, pass } : undefined
+  });
+
+  return cachedTransporter;
+}
+
+router.post('/feedback', async (req, res) => {
+  const { feedback, email, type } = req.body;
+
+  if (!feedback || !feedback.trim()) {
+    return res.status(400).json({ error: 'El comentario es obligatorio.' });
+  }
+
+  const transporter = getFeedbackTransporter();
+  if (!transporter) {
+    return res.status(500).json({ error: 'SMTP no configurado.' });
+  }
+
+  const typeLabels = {
+    suggestion: 'Sugerencia',
+    bug: 'Reporte de falla',
+    feature: 'Solicitud de mejora',
+    other: 'Otro'
+  };
+
+  const label = typeLabels[type] || 'Otro';
+  const recipient = process.env.FEEDBACK_TO || 'teodorowelyczko@gmail.com';
+  const fromAddress = process.env.FEEDBACK_FROM || process.env.SMTP_FROM || process.env.SMTP_USER || 'no-reply@triggerapp.local';
+
+  try {
+    await transporter.sendMail({
+      from: `Trigger App <${fromAddress}>`,
+      to: recipient,
+      replyTo: email || undefined,
+      subject: `Feedback - ${label}`,
+      text: `Tipo: ${label}\nCorreo: ${email || 'No informado'}\n\nMensaje:\n${feedback.trim()}`,
+      html: `
+        <p><strong>Tipo:</strong> ${label}</p>
+        <p><strong>Correo:</strong> ${email || 'No informado'}</p>
+        <p><strong>Mensaje:</strong></p>
+        <pre style="white-space:pre-wrap;font-family:inherit;">${feedback.trim()}</pre>
+      `.trim()
+    });
+
+    return res.json({ success: true });
+  } catch (error) {
+    console.error('Error enviando feedback:', error.message);
+    return res.status(500).json({ error: 'No se pudo enviar el comentario.' });
+  }
+});
 
 router.get('/twitch/rewards', async (req, res) => {
   const { userId } = req.query;

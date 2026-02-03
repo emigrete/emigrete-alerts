@@ -47,7 +47,7 @@ export const TTSGuide = () => {
       {/* Info adicional */}
       <div className="mt-6 pt-6 border-t border-dark-border">
         <div className="space-y-2 text-xs text-dark-muted">
-          <p><strong className="text-primary">2 voces</strong> naturales disponibles (más en camino 🚀)</p>
+          <p><strong className="text-primary">2 voces</strong> naturales disponibles (más en camino)</p>
           <p><strong className="text-primary">Idioma</strong> español</p>
           <p><strong className="text-primary">Límite mensual</strong> de caracteres por usuario</p>
           <p><strong className="text-primary">Personalizable</strong> - nombre, mensaje, estabilidad</p>

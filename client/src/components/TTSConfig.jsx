@@ -245,7 +245,7 @@ export const TTSConfig = ({ triggerId, initialConfig, onClose, onUpdate, userId 
                 ))}
               </select>
               <p className="text-xs text-dark-muted mt-2 p-2 bg-blue-500/10 border border-blue-500/20 rounded">
-                🚀 <strong>Próximamente:</strong> Más voces en español disponibles
+                <strong>Próximamente:</strong> Más voces en español disponibles
               </p>
               <input
                 type="text"

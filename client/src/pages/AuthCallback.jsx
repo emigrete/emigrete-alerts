@@ -46,14 +46,14 @@ export default function AuthCallback() {
       <div className="relative z-10 text-center">
         <div className="mb-8 animate-pulse">
           <div className="inline-block p-6 bg-gradient-to-br from-primary to-pink-500 rounded-3xl mb-6">
-            <span className="text-6xl block">👾</span>
+            <span className="text-xl font-semibold text-white block">Twitch</span>
           </div>
         </div>
         <h2 className="text-4xl font-black bg-gradient-to-r from-primary via-pink-500 to-cyan-500 bg-clip-text text-transparent mb-3 animate-bounce">
           Conectando con Twitch...
         </h2>
         <p className="text-dark-muted text-lg font-semibold">
-          Preparando tu experiencia ✨
+          Preparando tu experiencia.
         </p>
 
         {/* Loading animation */}

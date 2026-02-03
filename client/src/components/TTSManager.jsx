@@ -185,7 +185,7 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
           {/* Voz */}
           <div>
             <label className="block mb-2 font-semibold text-dark-muted text-xs uppercase tracking-wider">
-              🎙️ Voz (obligatorio)
+              Voz (obligatorio)
             </label>
             <select
               value={ttsConfig.voiceId}
@@ -204,7 +204,7 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
               ))}
             </select>
             <p className="text-xs text-dark-muted mt-2 p-2 bg-blue-500/10 border border-blue-500/20 rounded">
-              🚀 <strong>Próximamente:</strong> Más voces en español disponibles
+              <strong>Próximamente:</strong> Más voces en español disponibles
             </p>
           </div>
 
@@ -252,7 +252,7 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
             disabled={creating || !selectedReward}
             className="w-full bg-primary text-white font-bold py-3 px-4 rounded-lg hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed transition-all text-sm"
           >
-            {creating ? '⏳ Guardando...' : '💾 Guardar TTS'}
+            {creating ? 'Guardando...' : 'Guardar TTS'}
           </button>
         </div>
       </div>

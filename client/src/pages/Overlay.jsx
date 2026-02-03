@@ -28,12 +28,12 @@ export default function Overlay() {
     const socketConnection = io(SOCKET_URL);
 
     socketConnection.on('connect', () => {
-      console.log(`🟢 Conectado a sala overlay-${userId} en ${SOCKET_URL}`);
+      console.log(`Conectado a sala overlay-${userId} en ${SOCKET_URL}`);
       socketConnection.emit('join-overlay', userId);
     });
 
     socketConnection.on('media-trigger', (data) => {
-      console.log('📩 Evento recibido:', data);
+      console.log('Evento recibido:', data);
 
       if (filterId && data.rewardId !== filterId) return;
       setQueue((prevQueue) => [...prevQueue, data]);
@@ -98,7 +98,7 @@ export default function Overlay() {
         textToSpeak = ttsConfig.text || 'Gracias por el canje.';
       }
 
-      console.log('🎤 Generando TTS:', textToSpeak);
+      console.log('Generando TTS:', textToSpeak);
 
       const response = await axios.post(`${API_URL}/api/tts`, {
         text: textToSpeak,
@@ -118,10 +118,10 @@ export default function Overlay() {
           audio.play();
         });
 
-        console.log('✅ TTS reproducido');
+        console.log('TTS reproducido');
       }
     } catch (error) {
-      console.error('❌ Error reproduciendo TTS:', error);
+      console.error('Error reproduciendo TTS:', error);
     }
   };
 
@@ -155,7 +155,7 @@ export default function Overlay() {
       )}
       {currentMedia.type === 'audio' && (
         <div style={{ textAlign: 'center', color: 'white', fontSize: '4rem' }}>
-          🎵
+          Audio
           <audio
             ref={audioRef}
             src={currentMedia.url}
@@ -173,7 +173,7 @@ export default function Overlay() {
       )}
       {currentMedia.type === 'tts' && (
         <div style={{ textAlign: 'center', color: 'white', fontSize: '4rem' }}>
-          🎤
+          TTS
         </div>
       )}
     </div>

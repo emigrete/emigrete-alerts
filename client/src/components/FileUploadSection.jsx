@@ -47,7 +47,7 @@ export const FileUploadSection = ({
       case 'audio':
         return (
           <div className="flex flex-col items-center gap-4 w-full">
-            <span className="text-6xl">🎵</span>
+            <span className="text-xl font-semibold text-dark-text">Audio</span>
             <audio src={previewUrl} controls className="w-full" />
             <p className="text-sm text-dark-muted">{file?.name}</p>
           </div>
@@ -80,7 +80,7 @@ export const FileUploadSection = ({
       <>
         <div className="text-center py-14">
           <div className="mb-8">
-            <span className="text-7xl block mb-4">🎬</span>
+            <span className="text-2xl font-semibold block mb-4 text-dark-text">Vista previa</span>
             <h2 className="text-2xl font-bold text-dark-text mb-2">Creá tu primera alerta</h2>
             <p className="text-dark-muted mb-8">Vinculá tus clips con los canjes de Twitch</p>
           </div>
@@ -97,15 +97,15 @@ export const FileUploadSection = ({
             <h3 className="text-lg font-semibold text-dark-text mb-4">Cómo funciona</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="p-4 bg-dark-secondary rounded-lg border border-dark-border">
-                <div className="text-3xl mb-2">1️⃣</div>
+                <div className="text-3xl mb-2">1</div>
                 <p className="text-sm text-dark-muted">Creá una recompensa con nombre y costo</p>
               </div>
               <div className="p-4 bg-dark-secondary rounded-lg border border-dark-border">
-                <div className="text-3xl mb-2">2️⃣</div>
+                <div className="text-3xl mb-2">2</div>
                 <p className="text-sm text-dark-muted">Subí tu video, audio o GIF</p>
               </div>
               <div className="p-4 bg-dark-secondary rounded-lg border border-dark-border">
-                <div className="text-3xl mb-2">3️⃣</div>
+                <div className="text-3xl mb-2">3</div>
                 <p className="text-sm text-dark-muted">Pegá el link en OBS</p>
               </div>
             </div>
@@ -167,7 +167,7 @@ export const FileUploadSection = ({
           {/* Info si ya hay alertas */}
           {triggers && triggers.length > 0 && (
             <div className="mb-7 p-4 bg-primary/10 border border-primary/25 rounded-xl">
-              <p className="text-sm text-primary font-semibold mb-2">💡 Nota:</p>
+              <p className="text-sm text-primary font-semibold mb-2">Nota:</p>
               <p className="text-sm text-dark-muted">
                 Tenés <strong>{triggers.length} alerta{triggers.length > 1 ? 's' : ''}</strong>. Podés sumar media o crear otra.
               </p>
@@ -195,7 +195,7 @@ export const FileUploadSection = ({
               }`}
             >
               <span className="text-4xl mb-3">
-                {file ? '✅' : '📂'}
+                {file ? 'Listo' : 'Subir'}
               </span>
               {file ? (
                 <span className="text-dark-text font-bold text-center">{file.name}</span>

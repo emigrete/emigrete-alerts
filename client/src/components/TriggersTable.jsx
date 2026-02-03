@@ -64,7 +64,6 @@ export const TriggersTable = ({ triggers, rewards, userId, onDelete, onRefresh }
                         ))
                       ) : t.videoUrl ? (
                         <div className="px-2 py-1 bg-dark-secondary rounded text-sm flex items-center gap-1">
-                          <span>📹</span>
                           <span className="text-xs text-dark-muted">video</span>
                         </div>
                       ) : (
@@ -82,7 +81,7 @@ export const TriggersTable = ({ triggers, rewards, userId, onDelete, onRefresh }
                         className="bg-none border-none text-dark-muted hover:text-primary cursor-pointer text-lg transition"
                         title="Copiar Link"
                       >
-                        📋
+                        Copiar
                       </button>
                     </div>
                   </td>
