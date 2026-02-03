@@ -5,6 +5,8 @@ import { getStorage } from 'firebase-admin/storage';
 import { UserToken } from '../models/UserToken.js';
 import { Trigger } from '../models/Trigger.js';
 import { TTSUsage } from '../models/TTSUsage.js';
+import { Subscription } from '../models/Subscription.js';
+import { UsageMetrics } from '../models/UsageMetrics.js';
 import {
   canCreateAlert,
   incrementAlertCount,
@@ -571,9 +573,6 @@ router.put('/admin/users/:userId/tier', async (req, res) => {
       return res.status(400).json({ error: 'Tier inválido' });
     }
 
-    // Importar modelo de Subscription
-    const { Subscription } = await import('../models/Subscription.js');
-
     // Actualizar o crear suscripción
     const subscription = await Subscription.findOneAndUpdate(
       { userId },
@@ -598,6 +597,62 @@ router.put('/admin/users/:userId/tier', async (req, res) => {
   } catch (error) {
     console.error('❌ Error cambiando tier:', error);
     res.status(500).json({ error: 'Error al cambiar tier' });
+  }
+});
+
+/**
+ * ADMIN: RESETEAR LÍMITES DE USUARIO
+ * POST /api/admin/users/:userId/reset
+ * Body: { adminId: string, type: 'alerts' | 'tts' | 'storage' | 'all' }
+ */
+router.post('/admin/users/:userId/reset', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { adminId, type } = req.body;
+
+    // Verificar que sea admin
+    const ADMIN_USER_IDS = process.env.ADMIN_USER_IDS?.split(',') || [];
+    if (!adminId || !ADMIN_USER_IDS.includes(adminId)) {
+      return res.status(403).json({ error: 'No autorizado' });
+    }
+
+    // Obtener o crear métricas
+    let metrics = await UsageMetrics.findOne({ userId });
+    if (!metrics) {
+      metrics = new UsageMetrics({ userId });
+    }
+
+    // Resetear según tipo
+    switch(type) {
+      case 'alerts':
+        metrics.alertsCount = 0;
+        break;
+      case 'tts':
+        metrics.ttsCharsUsed = 0;
+        break;
+      case 'storage':
+        metrics.storageUsedBytes = 0;
+        break;
+      case 'all':
+        metrics.alertsCount = 0;
+        metrics.ttsCharsUsed = 0;
+        metrics.storageUsedBytes = 0;
+        break;
+      default:
+        return res.status(400).json({ error: 'Tipo inválido' });
+    }
+
+    await metrics.save();
+
+    console.log(`✅ Admin reseteó ${type} de usuario ${userId}`);
+
+    res.json({
+      success: true,
+      message: `${type} reseteado correctamente`
+    });
+  } catch (error) {
+    console.error('❌ Error reseteando límites:', error);
+    res.status(500).json({ error: 'Error al resetear límites' });
   }
 });
 

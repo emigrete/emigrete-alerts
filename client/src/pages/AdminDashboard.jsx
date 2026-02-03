@@ -102,10 +102,38 @@ export const AdminDashboard = () => {
       });
 
       // Recargar usuarios
-      fetchUsers();
+      await fetchUsers();
+      alert('Plan cambiado exitosamente');
     } catch (error) {
       console.error('Error cambiando tier:', error);
       alert(error.response?.data?.error || 'Error al cambiar tier');
+    }
+  };
+
+  const handleResetLimit = async (targetUserId, type, displayName) => {
+    const typeLabels = {
+      'alerts': 'contador de alertas',
+      'tts': 'caracteres TTS usados',
+      'storage': 'storage usado',
+      'all': 'TODOS los límites'
+    };
+
+    if (!window.confirm(`¿Resetear ${typeLabels[type]} de ${displayName}?`)) {
+      return;
+    }
+
+    try {
+      await axios.post(`${API_URL}/api/admin/users/${targetUserId}/reset`, {
+        adminId: userId,
+        type
+      });
+
+      // Recargar usuarios
+      await fetchUsers();
+      alert('Límites reseteados exitosamente');
+    } catch (error) {
+      console.error('Error reseteando límites:', error);
+      alert(error.response?.data?.error || 'Error al resetear límites');
     }
   };
 
@@ -213,8 +241,7 @@ export const AdminDashboard = () => {
                     <th className="px-6 py-4 text-left font-bold text-white uppercase tracking-wider text-xs">Alertas</th>
                     <th className="px-6 py-4 text-left font-bold text-white uppercase tracking-wider text-xs">TTS</th>
                     <th className="px-6 py-4 text-left font-bold text-white uppercase tracking-wider text-xs">Storage</th>
-                    <th className="px-6 py-4 text-left font-bold text-white uppercase tracking-wider text-xs">Triggers</th>
-                  </tr>
+                    <th className="px-6 py-4 text-left font-bold text-white uppercase tracking-wider text-xs">Triggers</th>                  <th className="px-6 py-4 text-left font-bold text-white uppercase tracking-wider text-xs">Acciones</th>                  </tr>
                 </thead>
                 <tbody className="divide-y divide-dark-border/30">
                   {users.map((user) => (
@@ -302,6 +329,17 @@ export const AdminDashboard = () => {
                         <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary/20 text-primary font-black text-base">
                           {user.triggers}
                         </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleResetLimit(user.userId, 'all', user.displayName)}
+                            className="px-3 py-1.5 bg-red-500/20 border border-red-500/50 text-red-400 rounded-lg hover:bg-red-500/30 transition text-xs font-semibold"
+                            title="Resetear todos los límites"
+                          >
+                            Reset All
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
