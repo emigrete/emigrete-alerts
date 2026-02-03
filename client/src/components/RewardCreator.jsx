@@ -161,7 +161,17 @@ export const RewardCreator = ({ userId, onRewardCreated, onCancel, isDemo, defau
             </div>
 
             {enableTTS && (
-              <div className="mt-4 space-y-3 p-3 bg-dark-secondary rounded-lg border border-dark-border">
+              <div className="mt-4 space-y-3 p-4 bg-primary/5 border border-primary/30 rounded-lg">
+                {/* Advertencia sobre requerir mensaje */}
+                {!ttsUseViewerMessage && (
+                  <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                    <p className="text-xs text-yellow-600 font-semibold mb-1">💡 Recomendación:</p>
+                    <p className="text-xs text-yellow-600">
+                      Si activás "Leer mensaje del espectador", asegurate de que arriba también esté activado "Requerir mensaje del espectador" para que el usuario ingrese el texto que leerá el TTS.
+                    </p>
+                  </div>
+                )}
+
                 <div className="flex items-center gap-3">
                   <input
                     type="checkbox"
@@ -185,7 +195,7 @@ export const RewardCreator = ({ userId, onRewardCreated, onCancel, isDemo, defau
                 )}
                 
                 <p className="text-xs text-dark-muted mt-2">
-                  💡 El TTS se puede editar luego desde la sección de "Módulo TTS"
+                  🎙️ Luego en "Módulo TTS" podés elegir la voz y ajustar la configuración del TTS.
                 </p>
               </div>
             )}

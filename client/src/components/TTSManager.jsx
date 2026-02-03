@@ -159,6 +159,19 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
       {/* Crear TTS */}
       <div className="mt-8 bg-dark-card/70 border border-dark-border rounded-2xl p-7">
         <h3 className="text-xl font-bold text-white mb-4">Agregar TTS a una recompensa</h3>
+        
+        {/* Info importante */}
+        <div className="mb-6 p-4 bg-purple-500/10 border border-purple-500/30 rounded-lg">
+          <p className="text-sm text-purple-300 mb-2">
+            <strong>⚡ Para que el TTS funcione:</strong>
+          </p>
+          <ul className="text-xs text-purple-300 space-y-1 ml-4 list-disc">
+            <li>Si quieres leer el mensaje del espectador → <strong>Activa "Requerir mensaje del espectador"</strong> al crear la recompensa</li>
+            <li>Selecciona una <strong>voz</strong> abajo (es obligatorio)</li>
+            <li>Los fans necesitan estar en una plataforma que soporte TTS (Discord, etc.)</li>
+          </ul>
+        </div>
+
         <div className="space-y-5">
           <div>
             <label className="block mb-2 font-semibold text-dark-muted text-xs uppercase tracking-wider">
@@ -194,10 +207,10 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
 
           <div>
             <label className="block mb-2 font-semibold text-dark-muted text-xs uppercase tracking-wider">
-              Voz
+              Voz 🎙️
             </label>
-            <p className="text-xs text-dark-muted mb-2">
-              Usa una voz en español con su ID de ElevenLabs (opcional).
+            <p className="text-xs text-dark-muted mb-3 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+              <strong>Importante:</strong> Selecciona una voz para darle sonido al TTS. Podés elegir entre las voces disponibles o pegar el ID de una voz personalizada de ElevenLabs.
             </p>
             <select
               value={ttsConfig.voiceId}
