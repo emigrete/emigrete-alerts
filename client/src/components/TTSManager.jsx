@@ -17,7 +17,7 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
   // Config base de TTS
   const [ttsConfig, setTtsConfig] = useState({
     enabled: true,
-    voiceId: 'FGY2WhTYpP6BYn95B7S6',
+    voiceId: 'onwK4e9ZLuTAKqWW03F9',
     text: '',
     useViewerMessage: true,
     readUsername: true,
@@ -86,7 +86,7 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
       setSelectedReward('');
       setTtsConfig({
         enabled: true,
-        voiceId: 'FGY2WhTYpP6BYn95B7S6',
+        voiceId: 'onwK4e9ZLuTAKqWW03F9',
         text: '',
         useViewerMessage: true,
         readUsername: true,
@@ -264,6 +264,7 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
           <div className="space-y-4">
             {triggersWithTTS.map(trigger => {
               const reward = rewards.find(r => r.id === trigger.twitchRewardId);
+              const rewardName = reward?.title || trigger.alertConfig?.displayName || 'Sin nombre';
               const specificLink = `${window.location.protocol}//${window.location.host}/overlay?user=${userId}&reward=${trigger.twitchRewardId}`;
               
               return (
@@ -274,7 +275,7 @@ export const TTSManager = ({ triggers, rewards, userId, onRefresh, isDemo, onCre
                   <div className="flex flex-col lg:flex-row items-start justify-between gap-4 mb-4">
                     <div className="flex-1">
                       <h4 className="font-bold text-primary text-base mb-1">
-                        {reward?.title || 'Recompensa'}
+                        {rewardName}
                       </h4>
                       <p className="text-xs text-dark-muted mb-2">
                         Voz: {ELEVENLABS_VOICES.find(v => v.id === trigger.ttsConfig.voiceId)?.name || 'Desconocida'}

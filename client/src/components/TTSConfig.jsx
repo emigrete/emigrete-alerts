@@ -12,7 +12,7 @@ export const TTSConfig = ({ triggerId, initialConfig, onClose, onUpdate, userId 
   // Estado local del modal
   const [config, setConfig] = useState({
     enabled: false,
-    voiceId: 'FGY2WhTYpP6BYn95B7S6',
+    voiceId: 'onwK4e9ZLuTAKqWW03F9',
     text: '',
     useViewerMessage: true,
     readUsername: true,

@@ -161,7 +161,7 @@ router.post('/create-reward', async (req, res) => {
     if (enableTTS) {
       const ttsConfig = {
         enabled: true,
-        voiceId: 'FGY2WhTYpP6BYn95B7S6',
+        voiceId: 'onwK4e9ZLuTAKqWW03F9',
         text: ttsUseViewerMessage ? '' : (ttsText || ''),
         useViewerMessage: ttsUseViewerMessage ?? true,
         readUsername: true,
@@ -299,7 +299,7 @@ router.get('/tts/usage/:userId', async (req, res) => {
  * Límites: 300 caracteres por request, 2,000 caracteres/mes por usuario
  */
 router.post('/tts', async (req, res) => {
-  const { text, voiceId = 'FGY2WhTYpP6BYn95B7S6', stability = 0.5, similarityBoost = 0.75, userId } = req.body;
+  const { text, voiceId = 'onwK4e9ZLuTAKqWW03F9', stability = 0.5, similarityBoost = 0.75, userId } = req.body;
 
   if (!text) {
     return res.status(400).json({ error: 'Falta el texto para generar TTS' });
