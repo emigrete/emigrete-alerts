@@ -496,7 +496,7 @@ router.get('/admin/users', async (req, res) => {
     }
 
     // Obtener todos los usuarios con tokens (usuarios activos)
-    const userTokens = await UserToken.find().select('userId displayName');
+    const userTokens = await UserToken.find().select('userId displayName username');
     
     const usersData = [];
     
@@ -508,6 +508,7 @@ router.get('/admin/users', async (req, res) => {
         usersData.push({
           userId: userToken.userId,
           displayName: userToken.displayName,
+          username: userToken.username,
           tier: status.subscription.tier,
           triggers: triggerCount,
           alerts: {

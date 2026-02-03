@@ -163,42 +163,22 @@ export const AdminDashboard = () => {
           <h2 className="text-xl font-bold text-white mb-4">Consumo Total del Sistema</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20 rounded-xl p-6 hover:border-blue-500/40 transition">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                  <span className="text-xl">⚡</span>
-                </div>
-                <p className="text-blue-400 text-sm font-semibold">Alertas Totales</p>
-              </div>
+              <p className="text-blue-400 text-sm font-semibold mb-3">Alertas Totales</p>
               <p className="text-3xl font-black text-white">{stats.totalAlerts.toLocaleString()}</p>
             </div>
             
             <div className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border border-purple-500/20 rounded-xl p-6 hover:border-purple-500/40 transition">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
-                  <span className="text-xl">🔊</span>
-                </div>
-                <p className="text-purple-400 text-sm font-semibold">Caracteres TTS</p>
-              </div>
+              <p className="text-purple-400 text-sm font-semibold mb-3">Caracteres TTS</p>
               <p className="text-3xl font-black text-white">{stats.totalTTS.toLocaleString()}</p>
             </div>
             
             <div className="bg-gradient-to-br from-green-500/10 to-green-600/5 border border-green-500/20 rounded-xl p-6 hover:border-green-500/40 transition">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
-                  <span className="text-xl">💾</span>
-                </div>
-                <p className="text-green-400 text-sm font-semibold">Storage Usado</p>
-              </div>
+              <p className="text-green-400 text-sm font-semibold mb-3">Storage Usado</p>
               <p className="text-3xl font-black text-white">{formatBytes(stats.totalStorage)}</p>
             </div>
             
             <div className="bg-gradient-to-br from-orange-500/10 to-orange-600/5 border border-orange-500/20 rounded-xl p-6 hover:border-orange-500/40 transition">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 rounded-lg bg-orange-500/20 flex items-center justify-center">
-                  <span className="text-xl">🎯</span>
-                </div>
-                <p className="text-orange-400 text-sm font-semibold">Triggers Activos</p>
-              </div>
+              <p className="text-orange-400 text-sm font-semibold mb-3">Triggers Activos</p>
               <p className="text-3xl font-black text-white">{stats.totalTriggers}</p>
             </div>
           </div>
@@ -207,24 +187,15 @@ export const AdminDashboard = () => {
         {/* Estadísticas por tier */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <div className="bg-dark-card/70 border border-dark-border rounded-xl p-6 hover:border-dark-border/80 transition">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-dark-muted text-sm font-semibold">Total Usuarios</p>
-              <span className="text-2xl">👥</span>
-            </div>
+            <p className="text-dark-muted text-sm font-semibold mb-3">Total Usuarios</p>
             <p className="text-4xl font-black text-white">{users.length}</p>
           </div>
           <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-xl p-6 hover:border-purple-500/50 transition">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-purple-400 text-sm font-semibold">Premium</p>
-              <span className="text-2xl">👑</span>
-            </div>
+            <p className="text-purple-400 text-sm font-semibold mb-3">Premium</p>
             <p className="text-4xl font-black text-white">{users.filter(u => u.tier === 'premium').length}</p>
           </div>
           <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/10 border border-blue-500/30 rounded-xl p-6 hover:border-blue-500/50 transition">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-blue-400 text-sm font-semibold">Pro</p>
-              <span className="text-2xl">⭐</span>
-            </div>
+            <p className="text-blue-400 text-sm font-semibold mb-3">Pro</p>
             <p className="text-4xl font-black text-white">{users.filter(u => u.tier === 'pro').length}</p>
           </div>
         </div>
@@ -250,8 +221,7 @@ export const AdminDashboard = () => {
                     <tr key={user.userId} className="hover:bg-primary/5 transition-colors">
                       <td className="px-6 py-4">
                         <div>
-                          <p className="font-bold text-white text-base">{user.displayName}</p>
-                          <p className="text-xs text-dark-muted font-mono">{user.userId}</p>
+                          <p className="font-bold text-white text-base">{user.displayName}</p>                        <p className="text-sm text-primary font-semibold">@{user.username}</p>                          <p className="text-xs text-dark-muted font-mono">{user.userId}</p>
                         </div>
                       </td>
                       <td className="px-6 py-4">
