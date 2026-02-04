@@ -5,12 +5,18 @@ import { API_URL } from '../constants/config';
 
 export function CheckoutModal({ isOpen, planTier, onClose, userId }) {
   const [creatorCode, setCreatorCode] = useState('');
+  const [payerEmail, setPayerEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState('mercadopago');
 
   const handleConfirmCheckout = async () => {
     if (!userId) {
       toast.error('Iniciá sesión primero');
+      return;
+    }
+
+    if (selectedProvider === 'mercadopago' && !payerEmail.trim()) {
+      toast.error('Ingresá tu email para continuar');
       return;
     }
 
@@ -25,7 +31,8 @@ export function CheckoutModal({ isOpen, planTier, onClose, userId }) {
         userId,
         planTier,
         creatorCode: creatorCode.trim(),
-        provider: selectedProvider
+        provider: selectedProvider,
+        payerEmail: payerEmail.trim()
       });
 
       console.log('Checkout response:', res.data);
@@ -88,6 +95,15 @@ export function CheckoutModal({ isOpen, planTier, onClose, userId }) {
             <span className="text-xs font-bold text-white">PayPal</span>
           </button>
         </div>
+
+        {/* Payer Email Input */}
+        <input
+          value={payerEmail}
+          onChange={(e) => setPayerEmail(e.target.value)}
+          placeholder="Email de pago (requerido)"
+          type="email"
+          className="w-full p-3 rounded-lg border-2 border-dark-border bg-dark-secondary text-white outline-none focus:border-cyan-500 mb-4"
+        />
 
         {/* Creator Code Input */}
         <input

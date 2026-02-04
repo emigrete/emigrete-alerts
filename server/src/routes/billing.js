@@ -147,7 +147,7 @@ const updateSubscriptionAndReferral = async ({
 
 router.post('/checkout', async (req, res) => {
   try {
-    const { userId, planTier, creatorCode, provider } = req.body || {};
+    const { userId, planTier, creatorCode, provider, payerEmail } = req.body || {};
 
     if (!userId || !planTier || !provider) {
       return res.status(400).json({ error: 'userId, planTier y provider requeridos' });
@@ -161,6 +161,10 @@ router.post('/checkout', async (req, res) => {
       if (!MP_ACCESS_TOKEN) {
         console.error('MP_ACCESS_TOKEN no está configurado en variables de entorno');
         return res.status(500).json({ error: 'Mercado Pago no está configurado. Por favor configura MP_ACCESS_TOKEN en el servidor.' });
+      }
+
+      if (!payerEmail || !String(payerEmail).includes('@')) {
+        return res.status(400).json({ error: 'Email de pago requerido para Mercado Pago' });
       }
 
       // Seleccionar plan: con descuento si tiene código válido, sin descuento si no
@@ -208,7 +212,9 @@ router.post('/checkout', async (req, res) => {
           body: JSON.stringify({
             preapproval_plan_id: planId,
             reason,
-            external_reference: externalRef
+            external_reference: externalRef,
+            payer_email: String(payerEmail).trim(),
+            back_url: `${FRONTEND_URL}/pricing?mp=1`
           })
         });
 
