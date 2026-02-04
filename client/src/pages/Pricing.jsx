@@ -157,7 +157,7 @@ export default function PricingPage() {
                 </div>
                 <div>
                   <p className="font-semibold text-gray-300 mb-1">100 MB Storage</p>
-                  <p className="text-xs">~3-5 archivos de audio cortos o efectos</p>
+                  <p className="text-xs">Máx. 5 MB por archivo: hasta ~20 archivos de 5 MB (o más archivos si son más pequeños)</p>
                 </div>
                 <div>
                   <p className="font-semibold text-gray-300 mb-1">500 MB Bandwidth/mes</p>
@@ -180,7 +180,7 @@ export default function PricingPage() {
                 </div>
                 <div>
                   <p className="font-semibold text-blue-300 mb-1">1 GB Storage</p>
-                  <p className="text-xs">~30-50 archivos de audio o videos cortos</p>
+                  <p className="text-xs">Máx. 30 MB por archivo: hasta ~34 archivos de 30 MB (o más archivos si son más pequeños)</p>
                 </div>
                 <div>
                   <p className="font-semibold text-blue-300 mb-1">5 GB Bandwidth/mes</p>
@@ -203,7 +203,7 @@ export default function PricingPage() {
                 </div>
                 <div>
                   <p className="font-semibold text-purple-300 mb-1">10 GB Storage</p>
-                  <p className="text-xs">~300-500 archivos, base de datos completa de recursos</p>
+                  <p className="text-xs">Máx. 500 MB por archivo: hasta ~20 archivos de 500 MB (o más archivos si son más pequeños)</p>
                 </div>
                 <div>
                   <p className="font-semibold text-purple-300 mb-1">50 GB Bandwidth/mes</p>
@@ -214,7 +214,7 @@ export default function PricingPage() {
           </div>
 
           <div className="mt-6 p-4 bg-dark-card rounded-lg border border-dark-border text-xs text-dark-muted">
-            <p><strong>Nota:</strong> Los números son estimaciones basadas en uso promedio. Tu consumo real dependerá de la frecuencia de streams, tamaño de archivos y cantidad de usuarios. El <strong>Bandwidth</strong> se resetea cada mes. El <strong>Storage</strong> es acumulativo.</p>
+            <p><strong>Nota:</strong> Los números son estimaciones basadas en uso promedio. Tu consumo real dependerá de la frecuencia de streams, tamaño de archivos y cantidad de usuarios. El <strong>Bandwidth</strong> se resetea cada mes. El <strong>Storage</strong> es acumulativo y además cada plan limita el <strong>tamaño máximo por archivo</strong>.</p>
           </div>
         </div>
 
