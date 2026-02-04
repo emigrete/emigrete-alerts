@@ -7,42 +7,21 @@ import { TTSConfig } from './TTSConfig';
 import { RewardCreatorTTS } from './RewardCreatorTTS';
 
 const ELEVENLABS_VOICES = [
-  // FREE: 2 voces base
-  { id: 'dlGxemPxFMTY7iXagmOj', name: 'Fernando Martínez (Latinoamericano)', tier: 'free' },
-  { id: 'ajOR9IDAaubDK5qtLUqQ', name: 'Daniela (Latinoamericana)', tier: 'free' },
+  // FREE: 2 voces
+  { id: 'dlGxemPxFMTY7iXagmOj', name: 'Fernando Martínez', tier: 'free' },
+  { id: 'ajOR9IDAaubDK5qtLUqQ', name: 'Daniela', tier: 'free' },
   
-  // PRO: Voces adicionales (11 más)
-  // Argentino
+  // PRO: 3 voces más (total 5 para PRO)
   { id: '9oPKasc15pfAbMr7N6Gs', name: 'Valeria (Argentina)', tier: 'pro' },
   { id: 'L7pBVwjueW3IPcQt4Ej9', name: 'Manuel (Argentina)', tier: 'pro' },
-  // Chileno
   { id: '0cheeVA5B3Cv6DGq65cT', name: 'Alejandro (Chile)', tier: 'pro' },
-  { id: 'ClNifCEVq1smkl4M3aTk', name: 'Cristian Cornejo (Chile)', tier: 'pro' },
-  // Colombiano
-  { id: 'x5IDPSl4ZUbhosMmVFTk', name: 'Lumina (Colombia)', tier: 'pro' },
-  { id: 'ucWwAruuGtBeHfnAaKcJ', name: 'Juan Restrepo (Colombia)', tier: 'pro' },
-  // Mexicano
-  { id: 'sDh3eviBhiuHKi0MjTNq', name: 'Francis (México)', tier: 'pro' },
-  { id: 'iDEmt5MnqUotdwCIVplo', name: 'Enrique Mondragón (México)', tier: 'pro' },
-  // Venezolano
-  { id: 'YYSDvkDDnQXWMDjhmB8P', name: 'Fabriccio Gutierrez (Venezuela)', tier: 'pro' },
   
-  // PREMIUM: Voces premium (12 más)
-  // Latinoamericano adicional
-  { id: 'l1zE9xgNpUTaQCZzpNJa', name: 'Alberto Rodríguez (Latinoamericano)', tier: 'premium' },
-  // Chileno adicional
-  { id: 'cLzIVykddLltvgkzos6C', name: 'Vale (Chile)', tier: 'premium' },
-  // Mexicano adicional
-  { id: 'iBGVhgcEZS6A5gTOjqSJ', name: 'Gabiyoya (México)', tier: 'premium' },
-  // Venezolano adicional
-  { id: 'O5hbneAmtjLMgfg5UFIm', name: 'Andrea (Venezuela)', tier: 'premium' },
-  // English
-  { id: 'wBXNqKUATyqu0RtYt25i', name: 'Adam (English)', tier: 'premium' },
-  { id: 'dXtC3XhB9GtPusIpNtQx', name: 'Hale (English)', tier: 'premium' },
-  { id: 'gJx1vCzNCD1EQHT212Ls', name: 'Ava (English)', tier: 'premium' },
-  // Chinese
-  { id: 'hkfHEbBvdQFNX4uWHqRF', name: 'Stacy (Chinese)', tier: 'premium' },
-  { id: 'MI36FIkp9wRP7cpWKPTl', name: 'Evan Zhao (Chinese)', tier: 'premium' }
+  // PREMIUM: 5 voces más (total 10 para PREMIUM)
+  { id: 'sDh3eviBhiuHKi0MjTNq', name: 'Francis (México)', tier: 'premium' },
+  { id: 'x5IDPSl4ZUbhosMmVFTk', name: 'Lumina (Colombia)', tier: 'premium' },
+  { id: 'l1zE9xgNpUTaQCZzpNJa', name: 'Alberto Rodríguez', tier: 'premium' },
+  { id: 'ClNifCEVq1smkl4M3aTk', name: 'Cristian Cornejo (Chile)', tier: 'premium' },
+  { id: 'wBXNqKUATyqu0RtYt25i', name: 'Adam (English)', tier: 'premium' }
 ];
 
 export const TTSManager = ({ triggers, rewards, userId, username, onRefresh, isDemo, onCreated }) => {
