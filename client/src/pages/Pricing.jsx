@@ -28,7 +28,7 @@ export default function PricingPage() {
       limits: [
         { label: 'Alertas/mes', value: '100' },
         { label: 'Caracteres TTS/mes', value: '20.000' },
-        { label: 'Voces disponibles', value: 'Todas' },
+        { label: 'Voces disponibles', value: '13' },
         { label: 'Storage total', value: '1 GB' },
         { label: 'Tamaño máx de archivo', value: '30 MB' },
         { label: 'Bandwidth/mes', value: '5 GB' },
@@ -44,7 +44,7 @@ export default function PricingPage() {
       limits: [
         { label: 'Alertas/mes', value: '∞ Ilimitadas' },
         { label: 'Caracteres TTS/mes', value: '∞ Ilimitados' },
-        { label: 'Voces disponibles', value: 'Todas' },
+        { label: 'Voces disponibles', value: '23' },
         { label: 'Storage total', value: '10 GB' },
         { label: 'Bandwidth/mes', value: '50 GB' },
         { label: 'Tamaño máx de archivo', value: '500 MB' },

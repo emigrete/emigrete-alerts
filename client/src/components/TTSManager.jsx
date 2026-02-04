@@ -6,6 +6,37 @@ import { TTSGuide } from './TTSGuide';
 import { TTSConfig } from './TTSConfig';
 import { RewardCreatorTTS } from './RewardCreatorTTS';
 
+const ELEVENLABS_VOICES = [
+  // FREE: 2 voces
+  { id: 'onwK4e9ZLuTAKqWW03F9', name: 'Daniel (Masculino, Argentina)', flag: '🇦🇷', tier: 'free' },
+  { id: 'ThT5KcBeYPX3keUQqHPh', name: 'Elena (Femenino, Chile)', flag: '🇨🇱', tier: 'free' },
+  
+  // PRO: Voces adicionales (11 más)
+  { id: 'dlGxemPxFMTY7iXagmOj', name: 'Sofia (Femenino, México)', flag: '🇲🇽', tier: 'pro' },
+  { id: 'sDh3eviBhiuHKi0MjTNq', name: 'Carlos (Masculino, España)', flag: '🇪🇸', tier: 'pro' },
+  { id: 'AxFLn9byyiDbMn5fmyqu', name: 'Valentina (Femenino, Argentina)', flag: '🇦🇷', tier: 'pro' },
+  { id: 'gD1IexrzCvsXPHUuT0s3', name: 'Diego (Masculino, Colombia)', flag: '🇨🇴', tier: 'pro' },
+  { id: 'ajOR9IDAaubDK5qtLUqQ', name: 'Lucia (Femenino, Perú)', flag: '🇵🇪', tier: 'pro' },
+  { id: 'iDEmt5MnqUotdwCIVplo', name: 'Andrés (Masculino, Venezuela)', flag: '🇻🇪', tier: 'pro' },
+  { id: 'ay4iqk10DLwc8KGSrf2t', name: 'Martina (Femenino, Uruguay)', flag: '🇺🇾', tier: 'pro' },
+  { id: '0cheeVA5B3Cv6DGq65cT', name: 'Roberto (Masculino, Panamá)', flag: '🇵🇦', tier: 'pro' },
+  { id: 'ClNifCEVq1smkl4M3aTk', name: 'Gabriela (Femenino, Guatemala)', flag: '🇬🇹', tier: 'pro' },
+  { id: 'x5IDPSl4ZUbhosMmVFTk', name: 'Miguel (Masculino, República Dominicana)', flag: '🇩🇴', tier: 'pro' },
+  
+  // PREMIUM: Voces premium (11 más)
+  { id: 'o2vbTbO3g4GrKUg7rehy', name: 'Narrador (Épico)', flag: '🎭', tier: 'premium' },
+  { id: '9oPKasc15pfAbMr7N6Gs', name: 'Locutora (Radio)', flag: '🎭', tier: 'premium' },
+  { id: 'gBTPbHzRd0ZmV75Z5Zk4', name: 'Streamer (Entusiasmado)', flag: '🎭', tier: 'premium' },
+  { id: 'wBXNqKUATyqu0RtYt25i', name: 'ASMR (Susurro)', flag: '🎭', tier: 'premium' },
+  { id: 'wJqPPQ618aTW29mptyoc', name: 'Villano (Oscuro)', flag: '🎭', tier: 'premium' },
+  { id: 'gJEfHTTiifXEDmO687lC', name: 'Comediante (Sarcástico)', flag: '🎭', tier: 'premium' },
+  { id: 'wcs09USXSN5Bl7FXohVZ', name: 'Informativo (Serio)', flag: '🎭', tier: 'premium' },
+  { id: 'sRYzP8TwEiiqAWebdYPJ', name: 'Romántica (Suave)', flag: '🎭', tier: 'premium' },
+  { id: 'rpNe0HOx7heUulPiOEaG', name: 'Suspense (Misterio)', flag: '🎭', tier: 'premium' },
+  { id: 'YNOujSUmHtgN6anjqXPf', name: 'Cómico (Divertido)', flag: '🎭', tier: 'premium' },
+  { id: 'GDzHdQOi6jjf8zaXhCYD', name: 'Deep (Profundo)', flag: '🎭', tier: 'premium' }
+];
+
 export const TTSManager = ({ triggers, rewards, userId, username, onRefresh, isDemo, onCreated }) => {
   const [selectedTriggerId, setSelectedTriggerId] = useState(null);
   const [selectedReward, setSelectedReward] = useState('');
@@ -48,6 +79,21 @@ export const TTSManager = ({ triggers, rewards, userId, username, onRefresh, isD
 
   // Helper para formatear fecha
   const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' });
+  };
+
+  // Helper para obtener voces disponibles según tier
+  const getAvailableVoices = () => {
+    const userTier = usage?.tier || 'free';
+    const tierHierarchy = { free: 0, pro: 1, premium: 2 };
+    const userTierLevel = tierHierarchy[userTier] || 0;
+    
+    return ELEVENLABS_VOICES.filter(voice => {
+      const voiceTierLevel = tierHierarchy[voice.tier] || 0;
+      return voiceTierLevel <= userTierLevel;
+    });
+  };
     const date = new Date(dateString);
     return date.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' });
   };
@@ -150,7 +196,7 @@ export const TTSManager = ({ triggers, rewards, userId, username, onRefresh, isD
       </div>
 
       {/* Guía */}
-      <TTSGuide />
+      <TTSGuide userTier={usage?.tier || 'free'} />
 
       {/* Aviso simple sobre límite */}
       <div className="mt-8 p-4 bg-purple-500/10 border border-purple-500/25 rounded-2xl">
@@ -212,12 +258,12 @@ export const TTSManager = ({ triggers, rewards, userId, username, onRefresh, isD
                 paddingRight: '2.5rem'
               }}
             >
-              {ELEVENLABS_VOICES.map(voice => (
+              {getAvailableVoices().map(voice => (
                 <option key={voice.id} value={voice.id} style={{ backgroundColor: '#1a1a2e', color: '#fff' }}>{voice.name}</option>
               ))}
             </select>
             <p className="text-xs text-dark-muted mt-2 p-2 bg-blue-500/10 border border-blue-500/20 rounded">
-              <strong>Próximamente:</strong> Más voces en español disponibles
+              <strong>Plan {usage?.tier?.toUpperCase() || 'FREE'}:</strong> {getAvailableVoices().length} voces disponibles
             </p>
           </div>
 
@@ -375,6 +421,7 @@ export const TTSManager = ({ triggers, rewards, userId, username, onRefresh, isD
           triggerId={selectedTriggerId}
           initialConfig={selectedTrigger.ttsConfig}
           userId={userId}
+          userTier={usage?.tier || 'free'}
           onClose={() => setSelectedTriggerId(null)}
           onUpdate={() => {
             setSelectedTriggerId(null);
@@ -403,8 +450,3 @@ export const TTSManager = ({ triggers, rewards, userId, username, onRefresh, isD
     </section>
   );
 };
-
-const ELEVENLABS_VOICES = [
-  { id: 'onwK4e9ZLuTAKqWW03F9', name: '🇦🇷 Daniel (Masculino, Argentina)' },
-  { id: 'ThT5KcBeYPX3keUQqHPh', name: '🇨🇱 Elena (Femenino, Chile)' }
-];
