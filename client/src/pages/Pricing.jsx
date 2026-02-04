@@ -12,7 +12,6 @@ export default function PricingPage() {
   const [applying, setApplying] = useState(false);
   const [appliedDiscount, setAppliedDiscount] = useState(null);
   const [checkoutPlan, setCheckoutPlan] = useState(null);
-  const [paymentProvider, setPaymentProvider] = useState('mercadopago');
   const [isCreator, setIsCreator] = useState(false);
   const [showCodeModal, setShowCodeModal] = useState(null); // null | 'pro' | 'premium'
   const userId = localStorage.getItem('twitchUserId');
@@ -174,37 +173,6 @@ export default function PricingPage() {
           </p>
         </div>
 
-        {/* Selección de Proveedor de Pago */}
-        <div className="flex justify-center gap-4 mb-12">
-          <button
-            onClick={() => setPaymentProvider('mercadopago')}
-            className={`px-8 py-4 rounded-2xl font-bold transition-all flex items-center gap-3 border-2 ${
-              paymentProvider === 'mercadopago'
-                ? 'bg-cyan-500/20 border-cyan-500 text-white shadow-lg shadow-cyan-500/30'
-                : 'bg-dark-card/50 border-dark-border text-dark-muted hover:border-cyan-500 hover:text-cyan-400'
-            }`}
-          >
-            <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none" />
-              <text x="12" y="14" textAnchor="middle" fontSize="8" fontWeight="bold" fill="currentColor">MP</text>
-            </svg>
-            Mercado Pago
-          </button>
-          <button
-            onClick={() => setPaymentProvider('paypal')}
-            className={`px-8 py-4 rounded-2xl font-bold transition-all flex items-center gap-3 border-2 ${
-              paymentProvider === 'paypal'
-                ? 'bg-blue-600/20 border-blue-500 text-white shadow-lg shadow-blue-500/30'
-                : 'bg-dark-card/50 border-dark-border text-dark-muted hover:border-blue-500 hover:text-blue-400'
-            }`}
-          >
-            <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M9 2C4.582 2 2 4.582 2 9v6c0 4.418 2.582 7 7 7h6c4.418 0 7-2.582 7-7V9c0-4.418-2.582-7-7-7H9zm8 10c0 .552-.448 1-1 1H8c-.552 0-1-.448-1-1s.448-1 1-1h8c.552 0 1 .448 1 1z" stroke="currentColor" strokeWidth="1" fill="none" />
-            </svg>
-            PayPal
-          </button>
-        </div>
-
         {/* Planes */}
         <div className="grid md:grid-cols-3 gap-8 mb-12">
           {plans.map((plan, idx) => (
@@ -265,8 +233,6 @@ export default function PricingPage() {
                   className={`w-full text-white font-bold py-3 px-6 rounded-xl transition-all text-sm ${
                     plan.name === 'FREE' 
                       ? 'opacity-50 cursor-not-allowed bg-gray-500' 
-                      : paymentProvider === 'paypal'
-                      ? 'bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/30'
                       : 'bg-gradient-to-r from-cyan-500 to-cyan-600 hover:shadow-lg hover:shadow-cyan-500/50'
                   }`}
                   onClick={() => plan.name !== 'FREE' && handleClickCheckout(plan.name.toLowerCase())}
@@ -275,7 +241,7 @@ export default function PricingPage() {
                     ? 'Tu plan actual'
                     : checkoutPlan === plan.name.toLowerCase()
                     ? 'Redirigiendo...'
-                    : `Suscribirse con ${paymentProvider === 'paypal' ? 'PayPal' : 'Mercado Pago'}`}
+                    : 'Suscribirse'}
                 </button>
               </div>
             </div>
@@ -420,7 +386,6 @@ export default function PricingPage() {
           planTier={showCodeModal}
           onClose={() => setShowCodeModal(null)}
           userId={userId}
-          paymentProvider={paymentProvider}
         />
 
         <AppFooter />

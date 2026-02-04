@@ -161,22 +161,29 @@ router.post('/checkout', async (req, res) => {
       }
 
       try {
-        const response = await fetch('https://api.mercadopago.com/preapproval', {
+        const response = await fetch('https://api.mercadopago.com/checkout/preferences', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${MP_ACCESS_TOKEN}`,
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            preapproval_plan_id: planId,
-            reason: `TriggerApp ${planTier.toUpperCase()}`,
             external_reference: externalRef,
-            back_url: `${FRONTEND_URL}/pricing?success=1`
+            payer: {
+              id: userId
+            },
+            subscription_plan_id: planId,
+            back_urls: {
+              success: `${FRONTEND_URL}/pricing?success=1`,
+              pending: `${FRONTEND_URL}/pricing`,
+              failure: `${FRONTEND_URL}/pricing?canceled=1`
+            },
+            auto_return: 'approved'
           })
         });
 
         const data = await response.json();
-        if (!response.ok) {
+        if (!response.ok || !data.id) {
           console.error('❌ Mercado Pago error:', data);
           return res.status(500).json({ error: 'Error en Mercado Pago: ' + (data.message || data.error || 'Error desconocido') });
         }
