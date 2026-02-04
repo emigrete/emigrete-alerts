@@ -9,6 +9,7 @@ import { Header } from '../components/Header';
 import { Navigation } from '../components/Navigation';
 import { TTSManager } from '../components/TTSManager';
 import { AppFooter } from '../components/AppFooter';
+import UsageStatsSidebar from '../components/UsageStatsSidebar';
 
 export default function TTSPage() {
   // Modo demo: solo desarrollo
@@ -137,6 +138,7 @@ export default function TTSPage() {
         />
       </div>
 
+      <UsageStatsSidebar />
       <AppFooter />
     </div>
   );

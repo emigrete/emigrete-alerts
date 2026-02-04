@@ -152,54 +152,11 @@ export const TTSManager = ({ triggers, rewards, userId, username, onRefresh, isD
       {/* Guía */}
       <TTSGuide />
 
-      {/* Límite mensual y aclaración */}
-      <div className="mt-8 space-y-3">
-        {usage && !loadingUsage && (
-          <div className={`p-4 rounded-2xl border ${
-            isUnlimitedTTS
-              ? 'border-purple-500/60 bg-purple-500/10'
-              : usage.percentageUsed > 80
-              ? 'border-red-500/60 bg-red-500/10'
-              : usage.percentageUsed > 50
-              ? 'border-yellow-500/60 bg-yellow-500/10'
-              : 'border-green-500/60 bg-green-500/10'
-          }`}>
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm font-bold text-white">Límite mensual de TTS</p>
-              <span className="text-xs text-dark-muted font-semibold">
-                {isUnlimitedTTS ? 'Ilimitado' : `${usage.percentageUsed}%`}
-              </span>
-            </div>
-            {!isUnlimitedTTS && (
-              <div className="w-full bg-dark-secondary rounded-full h-2 overflow-hidden">
-                <div
-                  className={`h-full transition-all ${
-                    usage.percentageUsed > 80
-                      ? 'bg-red-500'
-                      : usage.percentageUsed > 50
-                      ? 'bg-yellow-500'
-                      : 'bg-green-500'
-                  }`}
-                  style={{ width: `${Math.min(usage.percentageUsed, 100)}%` }}
-                />
-              </div>
-            )}
-            <p className="text-xs text-dark-muted mt-2">
-              Disponible: <strong>{isUnlimitedTTS ? 'Ilimitado' : usage.charsRemaining}</strong> {!isUnlimitedTTS && `de ${usage.charsLimit}`} caracteres
-            </p>
-          </div>
-        )}
-        <div className="p-4 bg-purple-500/10 border border-purple-500/25 rounded-2xl">
-          <p className="text-sm text-purple-400 font-semibold mb-2">Tu plan:</p>
-          <p className="text-sm text-dark-muted">
-            Tu plan te permite hasta <strong>{isUnlimitedTTS ? 'Ilimitados' : (usage?.charsLimit || '2.000')} caracteres de TTS</strong> por mes.
-          </p>
-          {usage?.nextResetDate && (
-            <p className="text-xs text-dark-muted mt-2">
-              Se reinicia el <strong>{formatDate(usage.nextResetDate)}</strong>
-            </p>
-          )}
-        </div>
+      {/* Aviso simple sobre límite */}
+      <div className="mt-8 p-4 bg-purple-500/10 border border-purple-500/25 rounded-2xl">
+        <p className="text-sm text-dark-muted">
+          Para ver tus consumos detallados, abre el panel de <strong>📊 Consumos</strong> en la esquina inferior derecha.
+        </p>
       </div>
 
       {/* Crear TTS */}

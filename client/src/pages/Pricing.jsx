@@ -15,6 +15,7 @@ export default function PricingPage() {
         { label: 'Voces disponibles', value: '2' },
         { label: 'Storage total', value: '100 MB' },
         { label: 'Tamaño máx de archivo', value: '5 MB' },
+        { label: 'Bandwidth/mes', value: '500 MB' },
       ],
       cta: 'Tu plan actual',
       ctaColor: 'bg-gray-500 hover:bg-gray-600'
@@ -30,6 +31,7 @@ export default function PricingPage() {
         { label: 'Voces disponibles', value: 'Todas' },
         { label: 'Storage total', value: '1 GB' },
         { label: 'Tamaño máx de archivo', value: '30 MB' },
+        { label: 'Bandwidth/mes', value: '5 GB' },
       ],
       cta: 'Upgrade a PRO',
       ctaColor: 'bg-gradient-to-r from-blue-500 to-blue-600 hover:shadow-lg hover:shadow-blue-500/50'
@@ -44,6 +46,7 @@ export default function PricingPage() {
         { label: 'Caracteres TTS/mes', value: '∞ Ilimitados' },
         { label: 'Voces disponibles', value: 'Todas' },
         { label: 'Storage total', value: '10 GB' },
+        { label: 'Bandwidth/mes', value: '50 GB' },
         { label: 'Tamaño máx de archivo', value: '500 MB' },
       ],
       cta: 'Upgrade a PREMIUM',
@@ -143,14 +146,14 @@ export default function PricingPage() {
             <div>
               <h3 className="font-bold text-primary mb-2">¿Cómo funcionan los límites?</h3>
               <p className="text-dark-muted text-sm">
-                Cada plan tiene dos tipos de límites: <strong>tamaño máximo por archivo</strong> (individual) y <strong>almacenamiento total</strong> (acumulado). Alertas y TTS se renuevan mensualmente, storage no.
+                Cada plan tiene límites en: <strong>alertas</strong> (por mes), <strong>TTS</strong> (caracteres por mes), <strong>storage</strong> (total acumulado), <strong>archivo individual</strong> (tamaño máx) y <strong>bandwidth</strong> (ancho de banda por mes).
               </p>
             </div>
 
             <div>
-              <h3 className="font-bold text-primary mb-2">¿Qué diferencia hay entre Storage y Tamaño de archivo?</h3>
+              <h3 className="font-bold text-primary mb-2">¿Qué es el Bandwidth?</h3>
               <p className="text-dark-muted text-sm">
-                <strong>Tamaño máx de archivo</strong>: límite por cada video/audio que subas. <strong>Storage total</strong>: suma de todo lo que has subido. Ejemplo: PRO permite archivos de 30MB pero tienes 1GB total.
+                Es el ancho de banda que usas cuando la gente descarga/reproduce tus archivos. Se resetea cada mes. Ejemplo: PRO tiene 5GB/mes, si tus videos se reproducen muchas veces, consumirán ese ancho de banda.
               </p>
             </div>
 

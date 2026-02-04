@@ -37,15 +37,6 @@ export const SubscriptionStatus = ({ userId }) => {
 
   const { subscription, usage, nextResetDate } = status;
   
-  // Helper para formatear bytes a unidad legible
-  const formatBytes = (bytes) => {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round(bytes / Math.pow(k, i) * 10) / 10 + ' ' + sizes[i];
-  };
-
   // Helper para formatear fecha
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -66,101 +57,35 @@ export const SubscriptionStatus = ({ userId }) => {
 
   return (
     <div className="bg-dark-card/70 border border-dark-border rounded-2xl p-4 mb-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
+      {/* Header - Solo info básica */}
+      <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-bold text-dark-text">Tu Plan</h3>
           <p className="text-xs text-dark-muted mt-1">
             Se reinicia el {formatDate(nextResetDate)}
           </p>
         </div>
-        <span className={`px-4 py-1.5 rounded-full text-white text-xs font-black uppercase tracking-wide bg-gradient-to-r ${tierColors[subscription.tier]} shadow-lg ${subscription.tier === 'premium' ? 'animate-pulse' : ''}`}>
-          {tierLabels[subscription.tier]}
-        </span>
-      </div>
-
-      {/* Uso */}
-      <div className="grid grid-cols-3 gap-3 text-xs">
-        {/* Alertas */}
-        <div>
-          <div className="flex justify-between mb-1">
-            <span className="text-dark-muted">Alertas</span>
-            <span className="font-bold text-dark-text">
-              {usage.alerts.current}/{(usage.alerts.isUnlimited || usage.alerts.limit == null) ? 'Ilimitado' : usage.alerts.limit}
-            </span>
-          </div>
-          {!usage.alerts.isUnlimited && usage.alerts.limit != null && (
-            <div className="w-full bg-dark-secondary rounded-full h-1.5 overflow-hidden">
-              <div
-                className={`h-full rounded-full transition-all ${
-                  usage.alerts.percentage > 80
-                    ? 'bg-red-500'
-                    : usage.alerts.percentage > 50
-                    ? 'bg-yellow-500'
-                    : 'bg-green-500'
-                }`}
-                style={{ width: `${usage.alerts.percentage}%` }}
-              />
-            </div>
-          )}
-        </div>
-
-        {/* TTS */}
-        <div>
-          <div className="flex justify-between mb-1">
-            <span className="text-dark-muted">TTS</span>
-            <span className="font-bold text-dark-text text-xs">
-              {usage.tts.current}/{(usage.tts.isUnlimited || usage.tts.limit == null) ? 'Ilimitado' : usage.tts.limit}
-            </span>
-          </div>
-          {!usage.tts.isUnlimited && usage.tts.limit != null && (
-            <div className="w-full bg-dark-secondary rounded-full h-1.5 overflow-hidden">
-              <div
-                className={`h-full rounded-full transition-all ${
-                  usage.tts.percentage > 80
-                    ? 'bg-red-500'
-                    : usage.tts.percentage > 50
-                    ? 'bg-yellow-500'
-                    : 'bg-green-500'
-                }`}
-                style={{ width: `${usage.tts.percentage}%` }}
-              />
-            </div>
-          )}
-        </div>
-
-        {/* Storage */}
-        <div>
-          <div className="flex justify-between mb-1">
-            <span className="text-dark-muted">Storage</span>
-            <span className="font-bold text-dark-text text-xs">
-              {formatBytes(usage.storage.current)} / {(usage.storage.isUnlimited || usage.storage.limit == null) ? 'Ilimitado' : formatBytes(usage.storage.limit)}
-            </span>
-          </div>
-          {!usage.storage.isUnlimited && usage.storage.limit != null && (
-            <div className="w-full bg-dark-secondary rounded-full h-1.5 overflow-hidden">
-              <div
-                className={`h-full rounded-full transition-all ${
-                  usage.storage.percentage > 80
-                    ? 'bg-red-500'
-                    : usage.storage.percentage > 50
-                    ? 'bg-yellow-500'
-                    : 'bg-green-500'
-                }`}
-                style={{ width: `${usage.storage.percentage}%` }}
-              />
-            </div>
-          )}
+        <div className="flex gap-3 items-center">
+          <span className={`px-4 py-1.5 rounded-full text-white text-xs font-black uppercase tracking-wide bg-gradient-to-r ${tierColors[subscription.tier]} shadow-lg ${subscription.tier === 'premium' ? 'animate-pulse' : ''}`}>
+            {tierLabels[subscription.tier]}
+          </span>
+          <button
+            onClick={() => document.getElementById('usage-stats-button')?.click()}
+            className="px-3 py-1.5 rounded-lg bg-primary hover:bg-primary-dark text-white text-xs font-bold transition"
+            title="Ver detalles de consumo"
+          >
+            📊 Ver consumos
+          </button>
         </div>
       </div>
 
-      {/* Upgrade button si está cerca del límite */}
+      {/* Alert si está cerca del límite */}
       {(usage.alerts.percentage > 80 || usage.tts.percentage > 80) && subscription.tier !== 'premium' && (
         <button 
           onClick={() => navigate('/pricing')}
-          className="mt-3 w-full text-xs font-bold py-2 px-3 rounded-lg bg-gradient-to-r from-primary to-pink-500 text-white hover:shadow-lg transition"
+          className="mt-3 w-full text-xs font-bold py-2 px-3 rounded-lg bg-gradient-to-r from-yellow-500 to-orange-500 text-white hover:shadow-lg transition"
         >
-          Upgrade Plan
+          ⚠️ Estás cerca del límite - Upgrade Plan
         </button>
       )}
     </div>

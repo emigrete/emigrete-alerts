@@ -15,6 +15,7 @@ import {
   getUserSubscriptionStatus,
   decrementStorageUsage,
   decrementAlertCount,
+  decrementTTSUsage,
 } from '../services/subscriptionService.js';
 
 const router = express.Router();
@@ -306,12 +307,19 @@ router.delete('/triggers/:id', async (req, res) => {
 
     // ✅ Decrementar storage usado
     if (totalSizeToDelete > 0) {
-      console.log(`📊 Liberando storage: ${totalSizeToDelete} bytes para usuario ${trigger.userId}`);
+      console.log(`Liberando storage: ${totalSizeToDelete} bytes para usuario ${trigger.userId}`);
       await decrementStorageUsage(trigger.userId, totalSizeToDelete);
     }
 
+    // ✅ Decrementar TTS si el trigger tiene TTS activo
+    if (trigger.ttsConfig?.enabled && trigger.ttsConfig?.text) {
+      const estimatedChars = trigger.ttsConfig.text.length;
+      console.log(`Liberando TTS: ${estimatedChars} caracteres para usuario ${trigger.userId}`);
+      await decrementTTSUsage(trigger.userId, estimatedChars);
+    }
+
     // ✅ Decrementar contador de alertas
-    console.log(`⚠️ Liberando alerta: usuario ${trigger.userId}`);
+    console.log(`Liberando alerta: usuario ${trigger.userId}`);
     await decrementAlertCount(trigger.userId);
 
     // Borrar el trigger en Mongo

@@ -20,6 +20,10 @@ const usageMetricsSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    bandwidthUsedBytes: {
+      type: Number,
+      default: 0,
+    },
     monthStartDate: {
       type: Date,
       default: () => {

@@ -9,18 +9,21 @@ const LIMITS = {
     maxTtsChars: 2000,
     maxStorageBytes: 100 * 1024 * 1024, // 100MB total
     maxFileBytes: 5 * 1024 * 1024, // 5MB por archivo
+    maxBandwidthBytes: 500 * 1024 * 1024, // 500MB/mes bandwidth
   },
   pro: {
     maxAlerts: 100,
     maxTtsChars: 20000,
     maxStorageBytes: 1 * 1024 * 1024 * 1024, // 1GB total
     maxFileBytes: 30 * 1024 * 1024, // 30MB por archivo
+    maxBandwidthBytes: 5 * 1024 * 1024 * 1024, // 5GB/mes bandwidth
   },
   premium: {
     maxAlerts: Infinity,
     maxTtsChars: Infinity,
     maxStorageBytes: 10 * 1024 * 1024 * 1024, // 10GB total
     maxFileBytes: 500 * 1024 * 1024, // 500MB por archivo
+    maxBandwidthBytes: 50 * 1024 * 1024 * 1024, // 50GB/mes bandwidth
   },
 };
 
@@ -75,6 +78,7 @@ export const checkAndResetUsageIfNeeded = async (userId) => {
   if (metrics.monthStartDate.getTime() !== monthStart.getTime()) {
     metrics.alertsCount = 0;
     metrics.ttsCharsUsed = 0;
+    metrics.bandwidthUsedBytes = 0;
     metrics.monthStartDate = monthStart;
     await metrics.save();
   }
@@ -128,6 +132,33 @@ export const canUseTTS = async (userId, charCount) => {
 };
 
 /**
+ * Chequea si el usuario puede usar X bytes de bandwidth
+ */
+export const canUseBandwidth = async (userId, bytesCount) => {
+  const subscription = await getOrCreateSubscription(userId);
+  const metrics = await checkAndResetUsageIfNeeded(userId);
+  const limit = LIMITS[subscription.tier].maxBandwidthBytes;
+  
+  // Si el límite es infinito, siempre se permite
+  if (limit === Infinity) {
+    return { allowed: true };
+  }
+  
+  const projected = (metrics.bandwidthUsedBytes || 0) + bytesCount;
+
+  return projected <= limit
+    ? { allowed: true }
+    : {
+        allowed: false,
+        message: `Excederías el límite de bandwidth del mes`,
+        current: metrics.bandwidthUsedBytes || 0,
+        requested: bytesCount,
+        limit,
+        remaining: Math.max(0, limit - (metrics.bandwidthUsedBytes || 0)),
+      };
+};
+
+/**
  * Chequea si el usuario puede subir un archivo individual de X bytes
  */
 export const canUploadFile = async (userId, fileBytes) => {
@@ -176,11 +207,29 @@ export const incrementAlertCount = async (userId) => {
 };
 
 /**
- * Incrementa uso de TTS (llamar después de generar)
+ * Decrementa uso de TTS (cuando se borra un trigger con TTS)
  */
-export const incrementTTSUsage = async (userId, charCount) => {
+export const decrementTTSUsage = async (userId, charCount) => {
   const metrics = await checkAndResetUsageIfNeeded(userId);
-  metrics.ttsCharsUsed += charCount;
+  metrics.ttsCharsUsed = Math.max(0, metrics.ttsCharsUsed - charCount);
+  await metrics.save();
+};
+
+/**
+ * Incrementa bandwidth usado
+ */
+export const incrementBandwidthUsage = async (userId, bytesCount) => {
+  const metrics = await checkAndResetUsageIfNeeded(userId);
+  metrics.bandwidthUsedBytes = (metrics.bandwidthUsedBytes || 0) + bytesCount;
+  await metrics.save();
+};
+
+/**
+ * Decrementa bandwidth usado (cuando se borra un archivo)
+ */
+export const decrementBandwidthUsage = async (userId, bytesCount) => {
+  const metrics = await checkAndResetUsageIfNeeded(userId);
+  metrics.bandwidthUsedBytes = Math.max(0, (metrics.bandwidthUsedBytes || 0) - bytesCount);
   await metrics.save();
 };
 
@@ -278,14 +327,23 @@ export const getUserSubscriptionStatus = async (userId) => {
               ),
         isUnlimited: storageUnlimited,
       },
+      bandwidth: {
+        current: metrics.bandwidthUsedBytes || 0,
+        limit: limits.maxBandwidthBytes === Infinity ? null : limits.maxBandwidthBytes,
+        remaining: limits.maxBandwidthBytes === Infinity ? null : Math.max(0, limits.maxBandwidthBytes - (metrics.bandwidthUsedBytes || 0)),
+        percentage: limits.maxBandwidthBytes === Infinity ? 0 : Math.round(((metrics.bandwidthUsedBytes || 0) / limits.maxBandwidthBytes) * 100),
+        isUnlimited: limits.maxBandwidthBytes === Infinity,
+      },
     },
     limits: {
       maxAlerts: alertsUnlimited ? null : limits.maxAlerts,
       maxTtsChars: ttsUnlimited ? null : limits.maxTtsChars,
       maxStorageBytes: storageUnlimited ? null : limits.maxStorageBytes,
+      maxBandwidthBytes: limits.maxBandwidthBytes === Infinity ? null : limits.maxBandwidthBytes,
       alertsUnlimited,
       ttsUnlimited,
       storageUnlimited,
+      bandwidthUnlimited: limits.maxBandwidthBytes === Infinity,
       maxFileBytes: limits.maxFileBytes,
       maxFileSize: maxFileSizeFormatted,
     },

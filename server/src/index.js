@@ -16,7 +16,7 @@ import subscriptionRoutes from './routes/subscription.js';
 import { Trigger } from './models/Trigger.js';
 import { startTwitchListener } from './services/twitchListener.js';
 import { UserToken } from './models/UserToken.js';
-import { incrementStorageUsage, getUserSubscriptionStatus, canUploadFile, canUploadStorage } from './services/subscriptionService.js';
+import { incrementStorageUsage, getUserSubscriptionStatus, canUploadFile, canUploadStorage, incrementBandwidthUsage, canUseBandwidth } from './services/subscriptionService.js';
 
 dotenv.config();
 
@@ -124,6 +124,20 @@ const validateStorageLimit = async (req, res, next) => {
         required: Math.round(storageCheck.requested / 1024 / 1024),
         available: Math.round(storageCheck.remaining / 1024 / 1024),
         total: Math.round(storageCheck.limit / 1024 / 1024)
+      });
+    }
+
+    // Validar bandwidth disponible
+    const bandwidthCheck = await canUseBandwidth(userId, fileSize);
+    if (!bandwidthCheck.allowed) {
+      const availableGB = Math.round(bandwidthCheck.remaining / 1024 / 1024 / 1024);
+      const neededGB = Math.round(bandwidthCheck.requested / 1024 / 1024 / 1024);
+      return res.status(429).json({
+        error: `No tienes suficiente bandwidth. Necesitas ${neededGB}GB más`,
+        required: neededGB,
+        available: availableGB,
+        total: Math.round(bandwidthCheck.limit / 1024 / 1024 / 1024),
+        resetDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1)
       });
     }
     
@@ -251,6 +265,10 @@ app.post('/upload', upload.single('video'), validateStorageLimit, async (req, re
         const fileSize = req.file.size;
         console.log(`📊 Incrementando storage: ${fileSize} bytes para usuario ${req.body.userId}`);
         await incrementStorageUsage(req.body.userId, fileSize);
+        
+        // ✅ Trackear bandwidth usado (cuando se descarga el archivo)
+        console.log(`📊 Incrementando bandwidth: ${fileSize} bytes para usuario ${req.body.userId}`);
+        await incrementBandwidthUsage(req.body.userId, fileSize);
 
         // Agregar nueva media al array de medias
         console.log('🔍 Buscando trigger existente...');

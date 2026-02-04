@@ -14,6 +14,7 @@ import { TriggersTable } from '../components/TriggersTable';
 import { AlertsBadge } from '../components/AlertsBadge';
 import { SubscriptionStatus } from '../components/SubscriptionStatus';
 import { AppFooter } from '../components/AppFooter';
+import UsageStatsSidebar from '../components/UsageStatsSidebar';
 
 export default function Dashboard() {
   // Modo demo: solo desarrollo
@@ -319,6 +320,7 @@ export default function Dashboard() {
           </section>
         </div>
 
+        <UsageStatsSidebar />
         <AppFooter />
       </div>
     </div>
