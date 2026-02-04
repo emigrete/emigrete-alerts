@@ -150,85 +150,102 @@ router.post('/checkout', async (req, res) => {
 
     if (provider === 'mercadopago') {
       if (!MP_ACCESS_TOKEN) {
-        return res.status(500).json({ error: 'Mercado Pago no configurado' });
+        console.error('❌ MP_ACCESS_TOKEN no está configurado en variables de entorno');
+        return res.status(500).json({ error: 'Mercado Pago no está configurado. Por favor configura MP_ACCESS_TOKEN en el servidor.' });
       }
 
       const planId = MP_PLAN_IDS[planTier];
       if (!planId) {
-        return res.status(400).json({ error: 'planTier inválido' });
+        console.error(`❌ Plan ID no encontrado para tier: ${planTier}. MP_PLAN_IDS:`, MP_PLAN_IDS);
+        return res.status(400).json({ error: `Plan ${planTier} no está configurado en Mercado Pago` });
       }
 
-      const response = await fetch('https://api.mercadopago.com/preapproval', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${MP_ACCESS_TOKEN}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          preapproval_plan_id: planId,
-          reason: `TriggerApp ${planTier.toUpperCase()}`,
-          external_reference: externalRef,
-          back_url: `${FRONTEND_URL}/pricing?success=1`
-        })
-      });
+      try {
+        const response = await fetch('https://api.mercadopago.com/preapproval', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${MP_ACCESS_TOKEN}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            preapproval_plan_id: planId,
+            reason: `TriggerApp ${planTier.toUpperCase()}`,
+            external_reference: externalRef,
+            back_url: `${FRONTEND_URL}/pricing?success=1`
+          })
+        });
 
-      const data = await response.json();
-      if (!response.ok) {
-        console.error('Mercado Pago error:', data);
-        return res.status(500).json({ error: 'No se pudo crear el checkout' });
+        const data = await response.json();
+        if (!response.ok) {
+          console.error('❌ Mercado Pago error:', data);
+          return res.status(500).json({ error: 'Error en Mercado Pago: ' + (data.message || data.error || 'Error desconocido') });
+        }
+
+        console.log('✅ Mercado Pago checkout creado:', data.init_point);
+        return res.json({ url: data.init_point });
+      } catch (fetchError) {
+        console.error('❌ Error fetching Mercado Pago:', fetchError);
+        return res.status(500).json({ error: 'Error conectando con Mercado Pago: ' + fetchError.message });
       }
-
-      return res.json({ url: data.init_point });
     }
 
     if (provider === 'paypal') {
       if (!PAYPAL_CLIENT_ID || !PAYPAL_CLIENT_SECRET) {
-        return res.status(500).json({ error: 'PayPal no configurado' });
+        console.error('❌ PayPal credentials no están configurados');
+        return res.status(500).json({ error: 'PayPal no está configurado. Por favor configura PAYPAL_CLIENT_ID y PAYPAL_CLIENT_SECRET en el servidor.' });
       }
 
       const planId = PAYPAL_PLAN_IDS[planTier];
       if (!planId) {
-        return res.status(400).json({ error: 'planTier inválido' });
+        console.error(`❌ Plan ID no encontrado para tier: ${planTier}. PAYPAL_PLAN_IDS:`, PAYPAL_PLAN_IDS);
+        return res.status(400).json({ error: `Plan ${planTier} no está configurado en PayPal` });
       }
 
-      const token = await getPayPalAccessToken();
-      const response = await fetch(`${PAYPAL_BASE_URL}/v1/billing/subscriptions`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          plan_id: planId,
-          custom_id: externalRef,
-          application_context: {
-            brand_name: 'TriggerApp',
-            locale: 'es-AR',
-            user_action: 'SUBSCRIBE_NOW',
-            return_url: `${FRONTEND_URL}/pricing?success=1`,
-            cancel_url: `${FRONTEND_URL}/pricing?canceled=1`
-          }
-        })
-      });
+      try {
+        const token = await getPayPalAccessToken();
+        const response = await fetch(`${PAYPAL_BASE_URL}/v1/billing/subscriptions`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            plan_id: planId,
+            custom_id: externalRef,
+            application_context: {
+              brand_name: 'TriggerApp',
+              locale: 'es-AR',
+              user_action: 'SUBSCRIBE_NOW',
+              return_url: `${FRONTEND_URL}/pricing?success=1`,
+              cancel_url: `${FRONTEND_URL}/pricing?canceled=1`
+            }
+          })
+        });
 
-      const data = await response.json();
-      if (!response.ok) {
-        console.error('PayPal error:', data);
-        return res.status(500).json({ error: 'No se pudo crear el checkout' });
+        const data = await response.json();
+        if (!response.ok) {
+          console.error('❌ PayPal error:', data);
+          return res.status(500).json({ error: 'Error en PayPal: ' + (data.message || data.error || 'Error desconocido') });
+        }
+
+        const approval = data.links?.find((link) => link.rel === 'approve');
+        if (!approval?.href) {
+          console.error('❌ No approval link encontrado en PayPal response:', data);
+          return res.status(500).json({ error: 'No se pudo obtener URL de checkout de PayPal' });
+        }
+
+        console.log('✅ PayPal checkout creado:', approval.href);
+        return res.json({ url: approval.href });
+      } catch (fetchError) {
+        console.error('❌ Error fetching PayPal:', fetchError);
+        return res.status(500).json({ error: 'Error conectando con PayPal: ' + fetchError.message });
       }
-
-      const approval = data.links?.find((link) => link.rel === 'approve');
-      if (!approval?.href) {
-        return res.status(500).json({ error: 'No se pudo obtener URL de checkout' });
-      }
-
-      return res.json({ url: approval.href });
     }
 
     return res.status(400).json({ error: 'Proveedor inválido' });
   } catch (error) {
-    console.error('Error en /billing/checkout:', error);
-    return res.status(500).json({ error: 'No se pudo crear el checkout' });
+    console.error('❌ Error en /billing/checkout:', error);
+    return res.status(500).json({ error: 'No se pudo crear el checkout: ' + error.message });
   }
 });
 

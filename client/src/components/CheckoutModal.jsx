@@ -14,9 +14,11 @@ export function CheckoutModal({ isOpen, planTier, onClose, userId, paymentProvid
     }
 
     setLoading(true);
-    const toastId = toast.loading('Creando checkout...');
+    const toastId = toast.loading('Creando checkout con ' + (paymentProvider === 'paypal' ? 'PayPal' : 'Mercado Pago') + '...');
 
     try {
+      console.log('📦 Iniciando checkout:', { userId, planTier, paymentProvider });
+      
       const res = await axios.post(`${API_URL}/api/billing/checkout`, {
         userId,
         planTier,
@@ -24,15 +26,18 @@ export function CheckoutModal({ isOpen, planTier, onClose, userId, paymentProvid
         provider: paymentProvider
       });
 
+      console.log('✅ Checkout response:', res.data);
+
       if (res.data?.url) {
+        console.log('🔄 Redirigiendo a:', res.data.url);
         window.location.href = res.data.url;
       } else {
-        toast.error('No se pudo iniciar el checkout', { id: toastId });
+        toast.error('No se pudo iniciar el checkout - sin URL de redirección', { id: toastId });
       }
     } catch (error) {
-      const errorMsg = error.response?.data?.error || 'Error iniciando checkout';
+      const errorMsg = error.response?.data?.error || error.message || 'Error iniciando checkout';
+      console.error('❌ Checkout error:', { error: error.response?.data, status: error.response?.status, message: error.message });
       toast.error(errorMsg, { id: toastId });
-      console.error('Checkout error:', error);
     } finally {
       setLoading(false);
     }
@@ -41,12 +46,14 @@ export function CheckoutModal({ isOpen, planTier, onClose, userId, paymentProvid
   if (!isOpen) return null;
 
   const planName = planTier === 'pro' ? 'Plan PRO' : 'Plan PREMIUM';
+  const providerName = paymentProvider === 'paypal' ? 'PayPal' : 'Mercado Pago';
 
   return (
     <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
       <div className="bg-dark-card border border-dark-border rounded-2xl p-8 max-w-sm w-full">
         <h2 className="text-2xl font-black text-white mb-2">{planName}</h2>
-        <p className="text-dark-muted mb-6">¿Tenés código de creador?</p>
+        <p className="text-dark-muted mb-2">Pago con {providerName}</p>
+        <p className="text-dark-muted text-sm mb-6">¿Tenés código de creador?</p>
 
         <input
           value={creatorCode}
@@ -66,7 +73,11 @@ export function CheckoutModal({ isOpen, planTier, onClose, userId, paymentProvid
           <button
             onClick={handleConfirmCheckout}
             disabled={loading}
-            className="flex-1 py-3 rounded-lg bg-primary text-white font-bold hover:opacity-90 disabled:opacity-60"
+            className={`flex-1 py-3 rounded-lg text-white font-bold disabled:opacity-60 transition-all ${
+              paymentProvider === 'paypal'
+                ? 'bg-blue-600 hover:bg-blue-700'
+                : 'bg-cyan-500 hover:bg-cyan-600'
+            }`}
           >
             {loading ? 'Procesando...' : 'Continuar'}
           </button>

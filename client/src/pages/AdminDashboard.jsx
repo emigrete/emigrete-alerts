@@ -163,6 +163,30 @@ export const AdminDashboard = () => {
     }
   };
 
+  const handleToggleCreator = async (targetUserId, isCurrentlyCreator, username) => {
+    const action = isCurrentlyCreator ? 'remover' : 'asignar';
+    if (!window.confirm(`¿${action === 'asignar' ? 'Asignar' : 'Remover'} rol de creador a @${username}?`)) {
+      return;
+    }
+
+    try {
+      await axios.post(`${API_URL}/api/admin/users/${targetUserId}/creator-role`, {
+        adminId: userId,
+        isCreator: !isCurrentlyCreator
+      });
+
+      // Recargar usuarios
+      await fetchUsers();
+      
+      // Notificación de éxito
+      setSuccessMessage(`✅ Rol de creador ${action}o de @${username} exitosamente`);
+      setTimeout(() => setSuccessMessage(null), 5000);
+    } catch (error) {
+      console.error('Error toggling creator role:', error);
+      alert(error.response?.data?.error || 'Error al cambiar rol de creador');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-dark-bg p-6">
@@ -278,6 +302,7 @@ export const AdminDashboard = () => {
                   <tr>
                     <th className="px-6 py-4 text-left font-bold text-white uppercase tracking-wider text-xs">Usuario</th>
                     <th className="px-6 py-4 text-left font-bold text-white uppercase tracking-wider text-xs">Plan</th>
+                    <th className="px-6 py-4 text-left font-bold text-white uppercase tracking-wider text-xs">Rol</th>
                     <th className="px-6 py-4 text-left font-bold text-white uppercase tracking-wider text-xs">Alertas</th>
                     <th className="px-6 py-4 text-left font-bold text-white uppercase tracking-wider text-xs">TTS</th>
                     <th className="px-6 py-4 text-left font-bold text-white uppercase tracking-wider text-xs">Storage</th>
@@ -309,6 +334,18 @@ export const AdminDashboard = () => {
                             <option value="premium" className="bg-gray-800">Premium</option>
                           </select>
                         )}
+                      </td>
+                      <td className="px-6 py-4">
+                        <button
+                          onClick={() => handleToggleCreator(user.userId, user.isCreator, user.username)}
+                          className={`px-3 py-1.5 rounded-full text-xs font-bold text-white transition-all ${
+                            user.isCreator
+                              ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50'
+                              : 'bg-dark-secondary border border-dark-border hover:border-yellow-500/50'
+                          }`}
+                        >
+                          {user.isCreator ? '✨ Creador' : 'Sin rol'}
+                        </button>
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm">

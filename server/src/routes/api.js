@@ -535,6 +535,8 @@ router.get('/admin/users', async (req, res) => {
       return res.status(403).json({ error: 'No autorizado' });
     }
 
+    const CreatorProfile = await import('../models/CreatorProfile.js').then(m => m.default);
+
     // Obtener todos los usuarios con tokens (usuarios activos)
     const userTokens = await UserToken.find().select('userId username');
     
@@ -544,11 +546,13 @@ router.get('/admin/users', async (req, res) => {
       try {
         const status = await getUserSubscriptionStatus(userToken.userId);
         const triggerCount = await Trigger.countDocuments({ userId: userToken.userId });
+        const creatorProfile = await CreatorProfile.findOne({ userId: userToken.userId });
         
         usersData.push({
           userId: userToken.userId,
           username: userToken.username || 'Unknown',
           tier: status.subscription?.tier || 'free',
+          isCreator: creatorProfile?.isAssigned || false,
           triggers: triggerCount || 0,
           alerts: {
             current: status.usage?.alerts?.current || 0,
@@ -790,6 +794,81 @@ router.post('/admin/users/:userId/reset', async (req, res) => {
   } catch (error) {
     console.error('❌ Error reseteando límites:', error);
     res.status(500).json({ error: 'Error al resetear límites' });
+  }
+});
+
+/**
+ * ADMIN: TOGGLE ROL CREADOR
+ * POST /api/admin/users/:userId/creator-role
+ * Body: { isCreator: boolean, adminId: string }
+ */
+router.post('/admin/users/:userId/creator-role', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { isCreator, adminId } = req.body;
+
+    // Verificar que sea admin
+    const ADMIN_USER_IDS = process.env.ADMIN_USER_IDS?.split(',') || [];
+    if (!adminId || !ADMIN_USER_IDS.includes(adminId)) {
+      return res.status(403).json({ error: 'No autorizado' });
+    }
+
+    if (isCreator === undefined) {
+      return res.status(400).json({ error: 'isCreator requerido' });
+    }
+
+    const CreatorProfile = await import('../models/CreatorProfile.js').then(m => m.default);
+    
+    if (isCreator) {
+      // Crear o actualizar perfil de creador
+      const user = await UserToken.findOne({ userId });
+      if (!user) {
+        return res.status(404).json({ error: 'Usuario no encontrado' });
+      }
+
+      const profile = await CreatorProfile.findOneAndUpdate(
+        { userId },
+        { 
+          isAssigned: true,
+          isActive: true
+        },
+        { 
+          upsert: true, 
+          new: true 
+        }
+      );
+
+      console.log(`✅ Admin asignó rol creador a ${userId}`);
+      return res.json({
+        success: true,
+        message: 'Rol creador asignado',
+        profile: {
+          userId: profile.userId,
+          code: profile.code,
+          isAssigned: profile.isAssigned
+        }
+      });
+    } else {
+      // Remover rol creador
+      const result = await CreatorProfile.findOneAndUpdate(
+        { userId },
+        { isAssigned: false, isActive: false },
+        { new: true }
+      );
+
+      if (!result) {
+        return res.status(404).json({ error: 'Perfil de creador no encontrado' });
+      }
+
+      console.log(`✅ Admin removió rol creador de ${userId}`);
+      return res.json({
+        success: true,
+        message: 'Rol creador removido'
+      });
+    }
+  } catch (error) {
+    console.error('❌ Error toggling creator role:', error);
+    res.status(500).json({ error: 'Error al cambiar rol creador' });
   }
 });
 

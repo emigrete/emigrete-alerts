@@ -56,6 +56,7 @@ export default function Dashboard() {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [fileError, setFileError] = useState('');
+  const [isCreator, setIsCreator] = useState(false);
   const loginUrl = `${API_URL}/auth/twitch`;
 
   // Cargar datos al iniciar
@@ -63,8 +64,21 @@ export default function Dashboard() {
     if (userId) {
       fetchRewards();
       fetchTriggers();
+      checkCreatorStatus();
     }
   }, [userId]);
+
+  const checkCreatorStatus = async () => {
+    if (!userId) return;
+    try {
+      const res = await axios.get(`${API_URL}/api/creator/profile?userId=${userId}`);
+      if (res.data?.exists && res.data?.isAssigned) {
+        setIsCreator(true);
+      }
+    } catch (error) {
+      console.error('Error checking creator status:', error);
+    }
+  };
 
   const fetchRewards = async () => {
     try {
@@ -224,7 +238,7 @@ export default function Dashboard() {
         <Header username={username} userId={userId} onLogout={handleLogout} />
 
         {/* Navigation */}
-        <Navigation />
+        <Navigation isCreator={isCreator} />
 
         {/* Subscription Status */}
         {!isDemo && userId && <SubscriptionStatus userId={userId} />}

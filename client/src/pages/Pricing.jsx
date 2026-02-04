@@ -180,8 +180,8 @@ export default function PricingPage() {
             onClick={() => setPaymentProvider('mercadopago')}
             className={`px-8 py-4 rounded-2xl font-bold transition-all flex items-center gap-3 border-2 ${
               paymentProvider === 'mercadopago'
-                ? 'bg-cyan-500/20 border-cyan-500 text-white'
-                : 'bg-dark-card/50 border-dark-border text-dark-muted hover:border-cyan-500'
+                ? 'bg-cyan-500/20 border-cyan-500 text-white shadow-lg shadow-cyan-500/30'
+                : 'bg-dark-card/50 border-dark-border text-dark-muted hover:border-cyan-500 hover:text-cyan-400'
             }`}
           >
             <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
@@ -191,21 +191,17 @@ export default function PricingPage() {
             Mercado Pago
           </button>
           <button
-            onClick={() => {
-              setPaymentProvider('paypal');
-              toast.info('PayPal no disponible todavía');
-            }}
-            className={`px-8 py-4 rounded-2xl font-bold transition-all flex items-center gap-3 border-2 opacity-60 cursor-not-allowed ${
+            onClick={() => setPaymentProvider('paypal')}
+            className={`px-8 py-4 rounded-2xl font-bold transition-all flex items-center gap-3 border-2 ${
               paymentProvider === 'paypal'
-                ? 'bg-blue-900/20 border-blue-900 text-white'
-                : 'bg-dark-card/50 border-dark-border text-dark-muted'
+                ? 'bg-blue-600/20 border-blue-500 text-white shadow-lg shadow-blue-500/30'
+                : 'bg-dark-card/50 border-dark-border text-dark-muted hover:border-blue-500 hover:text-blue-400'
             }`}
-            disabled
           >
             <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M9 5h6v2H9V5m0 3h6v2H9V8m0 3h6v2H9v-2m0 3h6v2H9v-2" stroke="currentColor" strokeWidth="1" fill="none" />
+              <path d="M9 2C4.582 2 2 4.582 2 9v6c0 4.418 2.582 7 7 7h6c4.418 0 7-2.582 7-7V9c0-4.418-2.582-7-7-7H9zm8 10c0 .552-.448 1-1 1H8c-.552 0-1-.448-1-1s.448-1 1-1h8c.552 0 1 .448 1 1z" stroke="currentColor" strokeWidth="1" fill="none" />
             </svg>
-            PayPal (No disponible)
+            PayPal
           </button>
         </div>
 
@@ -267,7 +263,11 @@ export default function PricingPage() {
                 <button
                   disabled={plan.name === 'FREE'}
                   className={`w-full text-white font-bold py-3 px-6 rounded-xl transition-all text-sm ${
-                    plan.name === 'FREE' ? 'opacity-50 cursor-not-allowed bg-gray-500' : plan.ctaColor
+                    plan.name === 'FREE' 
+                      ? 'opacity-50 cursor-not-allowed bg-gray-500' 
+                      : paymentProvider === 'paypal'
+                      ? 'bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/30'
+                      : 'bg-gradient-to-r from-cyan-500 to-cyan-600 hover:shadow-lg hover:shadow-cyan-500/50'
                   }`}
                   onClick={() => plan.name !== 'FREE' && handleClickCheckout(plan.name.toLowerCase())}
                 >
