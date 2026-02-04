@@ -37,6 +37,12 @@ export const SubscriptionStatus = ({ userId }) => {
 
   const { subscription, usage, nextResetDate } = status;
   
+  // Calcular días hasta fin de período
+  const currentPeriodEnd = subscription.currentPeriodEnd ? new Date(subscription.currentPeriodEnd) : null;
+  const today = new Date();
+  const daysRemaining = currentPeriodEnd ? Math.ceil((currentPeriodEnd - today) / (1000 * 60 * 60 * 24)) : null;
+  const canDowngradePlan = !currentPeriodEnd || currentPeriodEnd <= today || subscription.tier === 'free';
+  
   // Helper para formatear fecha
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -62,7 +68,9 @@ export const SubscriptionStatus = ({ userId }) => {
         <div>
           <h3 className="text-lg font-bold text-dark-text">Tu Plan</h3>
           <p className="text-xs text-dark-muted mt-1">
-            Se reinicia el {formatDate(nextResetDate)}
+            {subscription.tier !== 'free' && currentPeriodEnd
+              ? `Próxima facturación: ${formatDate(currentPeriodEnd)}`
+              : 'Plan gratuito'}
           </p>
         </div>
         <div className="flex gap-3 items-center">
@@ -87,6 +95,18 @@ export const SubscriptionStatus = ({ userId }) => {
         >
           Estás cerca del límite - Upgrade Plan
         </button>
+      )}
+
+      {/* Info sobre cambios de plan protegidos */}
+      {subscription.tier !== 'free' && daysRemaining !== null && daysRemaining > 0 && (
+        <div className="mt-3 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+          <p className="text-xs text-blue-300 font-semibold">
+            Cambios de plan protegidos
+          </p>
+          <p className="text-xs text-dark-muted mt-1">
+            Puedes cambiar a un plan superior ahora. Para bajar de plan, espera {daysRemaining} días.
+          </p>
+        </div>
       )}
     </div>
   );

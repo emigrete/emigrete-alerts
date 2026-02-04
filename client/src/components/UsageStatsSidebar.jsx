@@ -97,25 +97,36 @@ export default function UsageStatsSidebar({ userId }) {
       <button
         id="usage-stats-button"
         onClick={toggleExpand}
-        className={`fixed bottom-6 right-6 z-40 rounded-full shadow-lg transition-all ${
+        className={`fixed bottom-6 right-6 z-40 rounded-full shadow-xl transition-all ${
           expanded
-            ? 'bg-primary hover:bg-primary-dark text-white'
-            : 'bg-dark-card border border-dark-border hover:border-primary text-primary'
-        } w-14 h-14 flex items-center justify-center font-bold text-xl`}
+            ? 'bg-gradient-to-r from-primary to-pink-500 hover:shadow-2xl text-white'
+            : 'bg-gradient-to-br from-dark-card to-dark-secondary border-2 border-primary/30 hover:border-primary text-primary hover:bg-dark-card'
+        } w-16 h-16 flex items-center justify-center font-bold text-sm flex-col gap-0.5`}
         title={expanded ? 'Cerrar' : 'Ver consumos'}
       >
-        {expanded ? '✕' : 'Consumos'}
+        <span className="text-lg">∞</span>
+        <span className="text-xs">Uso</span>
       </button>
 
       {/* Panel lateral expandible */}
       {expanded && (
-        <div className="fixed bottom-24 right-6 z-40 w-80 bg-dark-card border-2 border-dark-border rounded-2xl shadow-2xl p-6 max-h-96 overflow-y-auto">
-          <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-            <span>Mis Consumos</span>
-            <span className="text-xs bg-primary/20 text-primary px-2 py-1 rounded">
+        <div className="fixed bottom-24 right-6 z-40 w-96 bg-gradient-to-br from-dark-card via-dark-secondary to-dark-card border-2 border-primary/30 rounded-3xl shadow-2xl p-8 max-h-96 overflow-y-auto">
+          {/* Header con plan badge */}
+          <div className="flex items-center justify-between mb-8 pb-6 border-b border-primary/20">
+            <div>
+              <h3 className="text-xl font-black text-white">Dashboard</h3>
+              <p className="text-xs text-dark-muted mt-1">Límites y consumo</p>
+            </div>
+            <span className={`px-3 py-1 rounded-full text-white text-xs font-black uppercase tracking-wider ${
+              stats?.subscription?.tier === 'premium' 
+                ? 'bg-gradient-to-r from-purple-500 to-pink-500'
+                : stats?.subscription?.tier === 'pro'
+                ? 'bg-gradient-to-r from-blue-500 to-blue-600'
+                : 'bg-gradient-to-r from-gray-500 to-gray-600'
+            }`}>
               {stats?.subscription?.tier?.toUpperCase() || 'FREE'}
             </span>
-          </h3>
+          </div>
 
           {loading && (
             <div className="text-center py-4">
@@ -143,7 +154,7 @@ export default function UsageStatsSidebar({ userId }) {
 
               {/* TTS */}
               <div>
-                <h4 className="text-sm font-semibold text-primary mb-3">TTS</h4>
+                <h4 className="text-sm font-semibold text-primary mb-3">TTS (Voz IA)</h4>
                 <ProgressBar
                   current={stats.usage.tts.current}
                   limit={stats.usage.tts.limit}
@@ -152,14 +163,14 @@ export default function UsageStatsSidebar({ userId }) {
                 />
                 <p className="text-xs text-dark-muted mt-2">
                   {stats.usage.tts.isUnlimited
-                    ? 'Ilimitados'
-                    : `${stats.usage.tts.remaining} chars disponibles`}
+                    ? 'Ilimitados caracteres'
+                    : `${stats.usage.tts.current.toLocaleString()} / ${stats.usage.tts.limit?.toLocaleString() || 0} caracteres`}
                 </p>
               </div>
 
               {/* STORAGE */}
               <div>
-                <h4 className="text-sm font-semibold text-primary mb-3">Storage</h4>
+                <h4 className="text-sm font-semibold text-primary mb-3">Almacenamiento</h4>
                 <ProgressBar
                   current={stats.usage.storage.current}
                   limit={stats.usage.storage.limit}
@@ -168,24 +179,24 @@ export default function UsageStatsSidebar({ userId }) {
                 />
                 <p className="text-xs text-dark-muted mt-2">
                   {stats.usage.storage.isUnlimited
-                    ? 'Ilimitado'
-                    : `${formatBytes(stats.usage.storage.remaining)} disponibles`}
+                    ? 'Almacenamiento ilimitado'
+                    : `${formatBytes(stats.usage.storage.current)} / ${formatBytes(stats.usage.storage.limit)}`}
                 </p>
               </div>
 
               {/* BANDWIDTH */}
               <div>
-                <h4 className="text-sm font-semibold text-primary mb-3">Bandwidth</h4>
+                <h4 className="text-sm font-semibold text-primary mb-3">Ancho de Banda</h4>
                 <ProgressBar
                   current={stats.usage.bandwidth.current}
                   limit={stats.usage.bandwidth.limit}
                   isUnlimited={stats.usage.bandwidth.isUnlimited}
-                  label="Ancho de banda/mes"
+                  label="Tráfico/mes"
                 />
                 <p className="text-xs text-dark-muted mt-2">
                   {stats.usage.bandwidth.isUnlimited
-                    ? 'Ilimitado'
-                    : `${formatBytes(stats.usage.bandwidth.remaining)} disponibles`}
+                    ? 'Tráfico ilimitado'
+                    : `${formatBytes(stats.usage.bandwidth.current)} / ${formatBytes(stats.usage.bandwidth.limit)}`}
                 </p>
               </div>
 

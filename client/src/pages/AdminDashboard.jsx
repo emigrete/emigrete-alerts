@@ -17,6 +17,7 @@ export const AdminDashboard = () => {
     totalAlerts: 0,
     totalTTS: 0,
     totalStorage: 0,
+    totalBandwidth: 0,
     totalTriggers: 0
   });
 
@@ -44,8 +45,9 @@ export const AdminDashboard = () => {
         totalAlerts: acc.totalAlerts + (user.alerts?.current || 0),
         totalTTS: acc.totalTTS + (user.tts?.current || 0),
         totalStorage: acc.totalStorage + (user.storage?.current || 0),
+        totalBandwidth: acc.totalBandwidth + (user.bandwidth?.current || 0),
         totalTriggers: acc.totalTriggers + (user.triggers || 0)
-      }), { totalAlerts: 0, totalTTS: 0, totalStorage: 0, totalTriggers: 0 });
+      }), { totalAlerts: 0, totalTTS: 0, totalStorage: 0, totalBandwidth: 0, totalTriggers: 0 });
       
       setStats(totalStats);
       setIsAdmin(true);
@@ -222,9 +224,9 @@ export const AdminDashboard = () => {
         {/* Estadísticas globales */}
         <div className="mb-8">
           <h2 className="text-xl font-bold text-white mb-4">Consumo Total del Sistema</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20 rounded-xl p-6 hover:border-blue-500/40 transition">
-              <p className="text-blue-400 text-sm font-semibold mb-3">Alertas Totales</p>
+              <p className="text-blue-400 text-sm font-semibold mb-3">Alertas</p>
               <p className="text-3xl font-black text-white">{(stats.totalAlerts || 0).toLocaleString()}</p>
             </div>
             
@@ -234,12 +236,17 @@ export const AdminDashboard = () => {
             </div>
             
             <div className="bg-gradient-to-br from-green-500/10 to-green-600/5 border border-green-500/20 rounded-xl p-6 hover:border-green-500/40 transition">
-              <p className="text-green-400 text-sm font-semibold mb-3">Storage Usado</p>
+              <p className="text-green-400 text-sm font-semibold mb-3">Storage</p>
               <p className="text-3xl font-black text-white">{formatBytes(stats.totalStorage)}</p>
+            </div>
+
+            <div className="bg-gradient-to-br from-cyan-500/10 to-cyan-600/5 border border-cyan-500/20 rounded-xl p-6 hover:border-cyan-500/40 transition">
+              <p className="text-cyan-400 text-sm font-semibold mb-3">Bandwidth</p>
+              <p className="text-3xl font-black text-white">{formatBytes(stats.totalBandwidth)}</p>
             </div>
             
             <div className="bg-gradient-to-br from-orange-500/10 to-orange-600/5 border border-orange-500/20 rounded-xl p-6 hover:border-orange-500/40 transition">
-              <p className="text-orange-400 text-sm font-semibold mb-3">Triggers Activos</p>
+              <p className="text-orange-400 text-sm font-semibold mb-3">Triggers</p>
               <p className="text-3xl font-black text-white">{stats.totalTriggers}</p>
             </div>
           </div>
@@ -274,6 +281,7 @@ export const AdminDashboard = () => {
                     <th className="px-6 py-4 text-left font-bold text-white uppercase tracking-wider text-xs">Alertas</th>
                     <th className="px-6 py-4 text-left font-bold text-white uppercase tracking-wider text-xs">TTS</th>
                     <th className="px-6 py-4 text-left font-bold text-white uppercase tracking-wider text-xs">Storage</th>
+                    <th className="px-6 py-4 text-left font-bold text-white uppercase tracking-wider text-xs">Bandwidth</th>
                     <th className="px-6 py-4 text-left font-bold text-white uppercase tracking-wider text-xs">Triggers</th>                  <th className="px-6 py-4 text-left font-bold text-white uppercase tracking-wider text-xs">Acciones</th>                  </tr>
                 </thead>
                 <tbody className="divide-y divide-dark-border/30">
@@ -361,6 +369,27 @@ export const AdminDashboard = () => {
                             </div>
                             <span className={`text-xs font-bold ${getUsageColor(user.storage?.percentage || 0)}`}>
                               {user.storage?.percentage || 0}%
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm">
+                          <p className="text-white font-bold">
+                            {formatBytes(user.bandwidth?.current || 0)} / {(user.bandwidth?.isUnlimited || user.bandwidth?.limit == null) ? 'Ilimitado' : formatBytes(user.bandwidth?.limit || 0)}
+                          </p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <div className="flex-1 h-1.5 bg-dark-secondary rounded-full overflow-hidden">
+                              <div 
+                                className={`h-full rounded-full transition-all ${
+                                  (user.bandwidth?.percentage || 0) > 80 ? 'bg-red-500' :
+                                  (user.bandwidth?.percentage || 0) > 50 ? 'bg-yellow-500' : 'bg-green-500'
+                                }`}
+                                style={{ width: `${user.bandwidth?.percentage || 0}%` }}
+                              />
+                            </div>
+                            <span className={`text-xs font-bold ${getUsageColor(user.bandwidth?.percentage || 0)}`}>
+                              {user.bandwidth?.percentage || 0}%
                             </span>
                           </div>
                         </div>

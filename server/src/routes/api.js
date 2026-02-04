@@ -568,6 +568,12 @@ router.get('/admin/users', async (req, res) => {
             percentage: status.usage?.storage?.percentage || 0,
             isUnlimited: status.usage?.storage?.isUnlimited || false,
           },
+          bandwidth: {
+            current: status.usage?.bandwidth?.current || 0,
+            limit: status.usage?.bandwidth?.limit ?? null,
+            percentage: status.usage?.bandwidth?.percentage || 0,
+            isUnlimited: status.usage?.bandwidth?.isUnlimited || false,
+          },
           nextResetDate: status.nextResetDate,
         });
       } catch (error) {
@@ -637,6 +643,97 @@ router.put('/admin/users/:userId/tier', async (req, res) => {
   } catch (error) {
     console.error('❌ Error cambiando tier:', error);
     res.status(500).json({ error: 'Error al cambiar tier' });
+  }
+});
+
+/**
+ * USER: CAMBIAR PLAN (CON PROTECCIÓN DE PERÍODO DE FACTURACIÓN)
+ * POST /api/subscription/change-plan
+ * Body: { userId: string, newTier: 'free' | 'pro' | 'premium' }
+ * Protección: No permite cambiar de plan durante el período actual si es suscripción activa
+ */
+router.post('/subscription/change-plan', async (req, res) => {
+  try {
+    const { userId, newTier } = req.body;
+
+    if (!userId || !newTier) {
+      return res.status(400).json({ error: 'userId y newTier requeridos' });
+    }
+
+    // Validar tier
+    const validTiers = ['free', 'pro', 'premium'];
+    if (!validTiers.includes(newTier)) {
+      return res.status(400).json({ error: 'Tier inválido' });
+    }
+
+    // Obtener suscripción actual
+    const currentSubscription = await Subscription.findOne({ userId });
+    
+    // Si es el mismo tier, no hacer nada
+    if (currentSubscription?.tier === newTier) {
+      return res.status(400).json({ error: 'Ya tienes este plan' });
+    }
+
+    // PROTECCIÓN: Si hay suscripción activa con período vigente, validar
+    if (currentSubscription && currentSubscription.status === 'active') {
+      const now = new Date();
+      const periodEnd = currentSubscription.currentPeriodEnd;
+
+      // Si el período aún no ha terminado, depende del tipo de cambio
+      if (periodEnd && now < periodEnd) {
+        // Si SUBEAGRADA (free->pro, free->premium, pro->premium): permitir inmediatamente
+        // (Stripe lo prorratea)
+        const tierHierarchy = { free: 0, pro: 1, premium: 2 };
+        const isUpgrade = tierHierarchy[newTier] > tierHierarchy[currentSubscription.tier];
+
+        if (!isUpgrade) {
+          // Es DOWNGRADE (pro->free, premium->pro, premium->free): rechazar
+          const daysRemaining = Math.ceil(
+            (periodEnd - now) / (1000 * 60 * 60 * 24)
+          );
+          return res.status(403).json({
+            error: 'No puedes bajar de plan durante el período actual',
+            reason: `Tu período de facturación termina en ${daysRemaining} días. Podrás cambiar de plan después.`,
+            currentPeriodEnd: periodEnd,
+            daysRemaining
+          });
+        }
+      }
+    }
+
+    // Actualizar o crear suscripción
+    const updatedSubscription = await Subscription.findOneAndUpdate(
+      { userId },
+      {
+        tier: newTier,
+        status: 'active',
+        updatedAt: new Date(),
+        ...(newTier === 'free' && { 
+          stripeSubscriptionId: null,
+          stripeCustomerId: null,
+          currentPeriodEnd: null 
+        })
+      },
+      { upsert: true, new: true }
+    );
+
+    console.log(`✅ Usuario ${userId} cambió plan de ${currentSubscription?.tier || 'free'} a ${newTier}`);
+
+    res.json({
+      success: true,
+      message: newTier === 'free' 
+        ? 'Plan cancelado correctamente'
+        : 'Plan actualizado correctamente',
+      subscription: {
+        userId: updatedSubscription.userId,
+        tier: updatedSubscription.tier,
+        status: updatedSubscription.status,
+        currentPeriodEnd: updatedSubscription.currentPeriodEnd
+      }
+    });
+  } catch (error) {
+    console.error('❌ Error cambiando plan:', error);
+    res.status(500).json({ error: 'Error al cambiar plan' });
   }
 });
 

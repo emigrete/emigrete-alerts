@@ -138,6 +138,86 @@ export default function PricingPage() {
           ))}
         </div>
 
+        {/* EJEMPLOS PRÁCTICOS */}
+        <div className="bg-gradient-to-r from-primary/10 via-pink-500/10 to-cyan-500/10 border border-primary/30 rounded-2xl p-8 mb-8">
+          <h2 className="text-2xl font-bold text-white mb-6">¿Cuánto Rinde Cada Plan?</h2>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {/* FREE Plan Examples */}
+            <div className="bg-dark-card/50 rounded-xl p-6 border border-gray-500/30">
+              <h3 className="text-gray-400 font-bold mb-4 text-lg">Plan FREE</h3>
+              <div className="space-y-3 text-sm text-dark-muted">
+                <div>
+                  <p className="font-semibold text-gray-300 mb-1">20 Alertas/mes</p>
+                  <p className="text-xs">Para 4-5 streams semanales con triggers simples</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-300 mb-1">2,000 Caracteres TTS/mes</p>
+                  <p className="text-xs">~40 mensajes TTS cortos (50 chars c/u)</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-300 mb-1">100 MB Storage</p>
+                  <p className="text-xs">~3-5 archivos de audio cortos o efectos</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-300 mb-1">500 MB Bandwidth/mes</p>
+                  <p className="text-xs">~10-15 horas de streaming con reproducciones ocasionales</p>
+                </div>
+              </div>
+            </div>
+
+            {/* PRO Plan Examples */}
+            <div className="bg-blue-500/10 rounded-xl p-6 border border-blue-500/30">
+              <h3 className="text-blue-400 font-bold mb-4 text-lg">Plan PRO</h3>
+              <div className="space-y-3 text-sm text-dark-muted">
+                <div>
+                  <p className="font-semibold text-blue-300 mb-1">100 Alertas/mes</p>
+                  <p className="text-xs">Para 20-25 streams semanales con múltiples triggers</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-blue-300 mb-1">20,000 Caracteres TTS/mes</p>
+                  <p className="text-xs">~400 mensajes TTS (50 chars c/u) o 20 largos por stream</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-blue-300 mb-1">1 GB Storage</p>
+                  <p className="text-xs">~30-50 archivos de audio o videos cortos</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-blue-300 mb-1">5 GB Bandwidth/mes</p>
+                  <p className="text-xs">~100-150 horas de streaming con reproducción frecuente</p>
+                </div>
+              </div>
+            </div>
+
+            {/* PREMIUM Plan Examples */}
+            <div className="bg-purple-500/10 rounded-xl p-6 border border-purple-500/30">
+              <h3 className="text-purple-400 font-bold mb-4 text-lg">Plan PREMIUM</h3>
+              <div className="space-y-3 text-sm text-dark-muted">
+                <div>
+                  <p className="font-semibold text-purple-300 mb-1">Alertas Ilimitadas</p>
+                  <p className="text-xs">Streams 24/7 con todos los triggers que necesites</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-purple-300 mb-1">TTS Ilimitado</p>
+                  <p className="text-xs">Miles de mensajes, anuncios dinámicos sin restricción</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-purple-300 mb-1">10 GB Storage</p>
+                  <p className="text-xs">~300-500 archivos, base de datos completa de recursos</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-purple-300 mb-1">50 GB Bandwidth/mes</p>
+                  <p className="text-xs">~1000+ horas de streaming o distribución a muchos usuarios</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6 p-4 bg-dark-card rounded-lg border border-dark-border text-xs text-dark-muted">
+            <p><strong>Nota:</strong> Los números son estimaciones basadas en uso promedio. Tu consumo real dependerá de la frecuencia de streams, tamaño de archivos y cantidad de usuarios. El <strong>Bandwidth</strong> se resetea cada mes. El <strong>Storage</strong> es acumulativo.</p>
+          </div>
+        </div>
+
         {/* FAQ o Info */}
         <div className="bg-dark-card/50 border border-dark-border rounded-2xl p-8 mb-8">
           <h2 className="text-2xl font-bold text-white mb-6">Preguntas Frecuentes</h2>
@@ -167,7 +247,7 @@ export default function PricingPage() {
             <div>
               <h3 className="font-bold text-primary mb-2">¿Puedo cambiar de plan en cualquier momento?</h3>
               <p className="text-dark-muted text-sm">
-                Sí, puedes cambiar en cualquier momento. Los cambios se aplican inmediatamente y se ajusta tu próxima facturación.
+                <strong>Cambios de plan gratuitos:</strong> No tienen costo adicional. <strong>Subidas de plan</strong> (FREE→PRO, FREE→PREMIUM, PRO→PREMIUM) se procesan inmediatamente. <strong>Bajadas de plan</strong> (PRO→FREE, PREMIUM→PRO, PREMIUM→FREE) se aplican al final de tu período de facturación actual, así no hay sorpresas.
               </p>
             </div>
 
