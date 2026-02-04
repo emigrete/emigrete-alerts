@@ -110,7 +110,7 @@ export default function CreatorDashboard() {
     <div className="min-h-screen text-dark-text p-5 lg:p-12">
       <div className="max-w-7xl mx-auto">
         <Header username={username} userId={userId} onLogout={handleLogout} title="Mi Código de Creador" />
-        <Navigation />
+        <Navigation isCreator={true} />
 
         {/* CÓDIGO */}
         <div className="bg-gradient-to-br from-primary/20 to-accent/20 border border-primary/30 rounded-2xl p-8 mb-8">

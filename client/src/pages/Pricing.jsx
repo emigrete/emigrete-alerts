@@ -174,6 +174,41 @@ export default function PricingPage() {
           </p>
         </div>
 
+        {/* Selección de Proveedor de Pago */}
+        <div className="flex justify-center gap-4 mb-12">
+          <button
+            onClick={() => setPaymentProvider('mercadopago')}
+            className={`px-8 py-4 rounded-2xl font-bold transition-all flex items-center gap-3 border-2 ${
+              paymentProvider === 'mercadopago'
+                ? 'bg-cyan-500/20 border-cyan-500 text-white'
+                : 'bg-dark-card/50 border-dark-border text-dark-muted hover:border-cyan-500'
+            }`}
+          >
+            <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none" />
+              <text x="12" y="14" textAnchor="middle" fontSize="8" fontWeight="bold" fill="currentColor">MP</text>
+            </svg>
+            Mercado Pago
+          </button>
+          <button
+            onClick={() => {
+              setPaymentProvider('paypal');
+              toast.info('PayPal no disponible todavía');
+            }}
+            className={`px-8 py-4 rounded-2xl font-bold transition-all flex items-center gap-3 border-2 opacity-60 cursor-not-allowed ${
+              paymentProvider === 'paypal'
+                ? 'bg-blue-900/20 border-blue-900 text-white'
+                : 'bg-dark-card/50 border-dark-border text-dark-muted'
+            }`}
+            disabled
+          >
+            <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M9 5h6v2H9V5m0 3h6v2H9V8m0 3h6v2H9v-2m0 3h6v2H9v-2" stroke="currentColor" strokeWidth="1" fill="none" />
+            </svg>
+            PayPal (No disponible)
+          </button>
+        </div>
+
         {/* Planes */}
         <div className="grid md:grid-cols-3 gap-8 mb-12">
           {plans.map((plan, idx) => (
@@ -203,9 +238,14 @@ export default function PricingPage() {
                   <div className="flex items-end gap-2">
                     <span className="text-5xl font-black text-white">${getDisplayPrice(plan)}</span>
                     {plan.price !== 0 && (
-                      <span className="text-dark-muted text-sm">/mes</span>
+                      <span className="text-dark-muted text-sm">/mes USD</span>
                     )}
                   </div>
+                  {plan.price !== 0 && (
+                    <p className="text-xs text-dark-muted mt-2">
+                      ≈ ${(getDisplayPrice(plan) * 1450).toFixed(0)} ARS/mes
+                    </p>
+                  )}
                   {appliedDiscount && plan.price !== 0 && plan.name.toLowerCase() === appliedDiscount.planTier && (
                     <div className="text-xs text-green-400 mt-2">
                       Antes <span className="line-through text-dark-muted">${plan.price.toFixed(2)}</span>
@@ -373,41 +413,6 @@ export default function PricingPage() {
             ← Volver al Dashboard
           </Link>
         </div>
-
-        {/* Modal de Código */}
-        {showCodeModal && (
-          <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-            <div className="bg-dark-card border border-dark-border rounded-2xl p-8 max-w-sm w-full">
-              <h2 className="text-2xl font-black text-white mb-2">
-                {showCodeModal === 'pro' ? 'Plan PRO' : 'Plan PREMIUM'}
-              </h2>
-              <p className="text-dark-muted mb-6">¿Tenés código de creador?</p>
-
-              <input
-                value={creatorCode}
-                onChange={(e) => setCreatorCode(e.target.value)}
-                placeholder="Código de creador (opcional)"
-                className="w-full p-3 rounded-lg border-2 border-dark-border bg-dark-secondary text-white outline-none focus:border-primary mb-4"
-              />
-
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowCodeModal(null)}
-                  className="flex-1 py-3 rounded-lg border border-dark-border text-white font-bold hover:bg-dark-secondary"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleConfirmCheckout}
-                  disabled={checkoutPlan === showCodeModal}
-                  className="flex-1 py-3 rounded-lg bg-primary text-white font-bold hover:opacity-90 disabled:opacity-60"
-                >
-                  {checkoutPlan === showCodeModal ? 'Procesando...' : 'Continuar'}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Modal de Código */}
         <CheckoutModal
