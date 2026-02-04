@@ -104,7 +104,7 @@ export const Header = ({
             onClick={() => navigate('/admin')}
             className="bg-amber-500/10 border border-amber-500/30 text-amber-400 px-4 py-2 rounded-lg hover:bg-amber-500/20 hover:border-amber-500 transition-all font-semibold text-sm"
           >
-            👨‍💼 Admin
+            Admin
           </button>
         )}
         <button

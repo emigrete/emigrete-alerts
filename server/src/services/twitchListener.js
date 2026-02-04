@@ -9,15 +9,15 @@ const activeListeners = new Map();
 
 export async function startTwitchListener(userId) {
   if (activeListeners.has(userId)) {
-    console.log(`⚠️ Ya existe un listener activo para ${userId}`);
+    console.log(`Ya existe un listener activo para ${userId}`);
     return;
   }
 
-  console.log(`🎧 Iniciando listener para ${userId}...`);
+  console.log(`Iniciando listener para ${userId}...`);
 
   const tokenData = await UserToken.findOne({ userId });
   if (!tokenData) {
-    console.error(`❌ No hay tokens para ${userId}`);
+    console.error(`No hay tokens para ${userId}`);
     return;
   }
 
@@ -45,7 +45,7 @@ export async function startTwitchListener(userId) {
         scope: newTokenData.scope
       }
     );
-    console.log(`♻️ Tokens renovados para ${uid}`);
+    console.log(`Tokens renovados para ${uid}`);
   });
 
   authProvider.addUser(userId, plainToken);
@@ -57,16 +57,16 @@ export async function startTwitchListener(userId) {
 
   try {
     await listener.onChannelRedemptionAdd(userId, async (event) => {
-      console.log(`🎁 Canje: ${event.rewardTitle} (ID: ${event.rewardId})`);
+      console.log(`Canje: ${event.rewardTitle} (ID: ${event.rewardId})`);
 
-      // ✅ FIX: filtrar por userId también (si no, mezclás alertas entre canales)
+      // FIX: filtrar por userId también (si no, mezclás alertas entre canales)
       const trigger = await Trigger.findOne({
         twitchRewardId: event.rewardId,
         userId
       });
 
       if (!trigger) {
-        console.log(`⚠️ No hay alerta para rewardId=${event.rewardId} userId=${userId}`);
+        console.log(`No hay alerta para rewardId=${event.rewardId} userId=${userId}`);
         return;
       }
 
@@ -78,7 +78,7 @@ export async function startTwitchListener(userId) {
       const type = lastMedia?.type || (trigger.videoUrl ? 'video' : 'tts');
       const url = lastMedia?.url || trigger.videoUrl;
 
-      console.log(`🎬 Disparando alerta (${type}): ${trigger.fileName || 'TTS'}`);
+      console.log(`Disparando alerta (${type}): ${trigger.fileName || 'TTS'}`);
 
       // Mandamos todo al overlay, incluyendo TTS y datos del viewer
       io.to(`overlay-${userId}`).emit('media-trigger', {
@@ -93,9 +93,9 @@ export async function startTwitchListener(userId) {
     });
 
     activeListeners.set(userId, listener);
-    console.log(`✅ Escuchando eventos de ${tokenData.username}`);
+    console.log(`Escuchando eventos de ${tokenData.username}`);
 
   } catch (err) {
-    console.error('❌ Error suscribiendo evento:', err);
+    console.error('Error suscribiendo evento:', err);
   }
 }

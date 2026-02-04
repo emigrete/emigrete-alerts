@@ -38,7 +38,7 @@ export const AdminDashboard = () => {
         params: { adminId: userId }
       });
       const usersData = response.data.users || [];
-      console.log(`📊 Admin Dashboard: Recibidos ${usersData.length} usuarios`);
+      console.log(`Admin Dashboard: Recibidos ${usersData.length} usuarios`);
       console.log('First 3 users:', usersData.slice(0, 3).map(u => ({ id: u.userId, username: u.username, isCreator: u.isCreator })));
       setUsers(usersData);
       

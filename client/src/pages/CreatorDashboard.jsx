@@ -144,6 +144,37 @@ export default function CreatorDashboard() {
           )}
         </div>
 
+        {/* CÓMO FUNCIONAN LAS COMISIONES */}
+        <div className="bg-dark-card/70 border border-dark-border rounded-2xl p-8 mb-8">
+          <h3 className="text-2xl font-black text-white mb-6">Cómo Funcionan Tus Comisiones</h3>
+          
+          <div className="space-y-6">
+            <div className="bg-dark-secondary/50 rounded-lg p-5 border border-dark-border/50">
+              <p className="text-primary font-bold mb-2 text-lg">Descuentos para Usuarios</p>
+              <p className="text-dark-muted text-sm">Cuando alguien usa tu código de creador, automáticamente recibe un <strong className="text-primary">10% de descuento</strong> en la primera suscripción.</p>
+            </div>
+            
+            <div className="bg-dark-secondary/50 rounded-lg p-5 border border-dark-border/50">
+              <p className="text-primary font-bold mb-2 text-lg">Tu Ganancia por Referido</p>
+              <p className="text-dark-muted text-sm">Por cada usuario que se suscribe con tu código, <strong className="text-primary">ganas el 20% de la suscripción mensual</strong>. Por ejemplo:</p>
+              <ul className="text-dark-muted text-sm mt-3 space-y-2 ml-4">
+                <li>• Plan PRO ($7.500 ARS/mes) → Tú ganas $1.500 ARS/mes</li>
+                <li>• Plan PREMIUM ($15.000 ARS/mes) → Tú ganas $3.000 ARS/mes</li>
+              </ul>
+            </div>
+            
+            <div className="bg-dark-secondary/50 rounded-lg p-5 border border-dark-border/50">
+              <p className="text-primary font-bold mb-2 text-lg">Duración de la Comisión</p>
+              <p className="text-dark-muted text-sm">Mientras el usuario mantenga su suscripción activa, <strong className="text-primary">tú continuarás ganando</strong> cada mes. Si cancela, la comisión se detiene automáticamente.</p>
+            </div>
+            
+            <div className="bg-dark-secondary/50 rounded-lg p-5 border border-dark-border/50">
+              <p className="text-primary font-bold mb-2 text-lg">Cómo Compartir Tu Código</p>
+              <p className="text-dark-muted text-sm">Usa el enlace de arriba en redes sociales, Discord, Twitch o donde prefieras. Cuando otros se suscriban a través de ese enlace, el código se aplica automáticamente.</p>
+            </div>
+          </div>
+        </div>
+
         {/* MÉTRICAS */}
         <div className="grid md:grid-cols-3 gap-6 mb-8">
           <div className="bg-dark-card/70 border border-dark-border rounded-2xl p-6">

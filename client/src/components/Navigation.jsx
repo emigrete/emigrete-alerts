@@ -35,7 +35,7 @@ export const Navigation = ({ isCreator = false }) => {
               : 'bg-transparent text-dark-muted hover:bg-dark-secondary hover:text-white'
           }`}
         >
-          ✨ Creador
+          Creador
         </Link>
       )}
     </nav>

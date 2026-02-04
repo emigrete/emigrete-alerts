@@ -90,16 +90,16 @@ const ensureCreatorCode = async (creatorCode, userId) => {
   const creator = await CreatorProfile.findOne({ code: normalized, isActive: true });
   
   if (!creator) {
-    console.log(`[CREATOR CODE] ❌ No creator found with code: "${normalized}"`);
+    console.log(`[CREATOR CODE] No creator found with code: "${normalized}"`);
     return { valid: false, code: null };
   }
   
   if (creator.userId === userId) {
-    console.log(`[CREATOR CODE] ❌ User ${userId} tried to use their own code`);
+    console.log(`[CREATOR CODE] User ${userId} tried to use their own code`);
     return { valid: false, code: null };
   }
   
-  console.log(`[CREATOR CODE] ✅ Valid code: "${normalized}" from creator ${creator.userId}`);
+  console.log(`[CREATOR CODE] Valid code: "${normalized}" from creator ${creator.userId}`);
   return { valid: true, code: normalized };
 };
 
@@ -197,7 +197,7 @@ router.post('/checkout', async (req, res) => {
       if (!planId) {
         console.error(`Plan ID no encontrado para tier: ${planTier}, variant: ${planVariant}. Config:`, planConfig);
         return res.status(500).json({ 
-          error: `❌ CONFIGURACIÓN INCOMPLETA: Plan ${planTier} (${planVariant}) sin ID. Por favor configura en Railway:
+          error: `CONFIGURACIÓN INCOMPLETA: Plan ${planTier} (${planVariant}) sin ID. Por favor configura en Railway:
           - MP_PREAPPROVAL_PLAN_PRO_ID
           - MP_PREAPPROVAL_PLAN_PRO_DISCOUNT_ID
           - MP_PREAPPROVAL_PLAN_PREMIUM_ID
@@ -423,30 +423,30 @@ router.post('/webhook/paypal', async (req, res) => {
   }
 });
 
-// 🔍 Endpoint de diagnóstico para verificar configuración
+// Endpoint de diagnóstico para verificar configuración
 router.get('/diagnostics', (req, res) => {
   const diagnostics = {
     timestamp: new Date().toISOString(),
     status: 'CHECKING CONFIGURATION...',
     mercadoPago: {
-      hasAccessToken: !!MP_ACCESS_TOKEN ? '✅ YES' : '❌ MISSING: MP_ACCESS_TOKEN',
+      hasAccessToken: !!MP_ACCESS_TOKEN ? 'YES' : 'MISSING: MP_ACCESS_TOKEN',
       planIds: {
         pro: {
-          regular: MP_PLAN_IDS.pro.regular ? `✅ ${MP_PLAN_IDS.pro.regular.substring(0, 15)}...` : '❌ MISSING: MP_PREAPPROVAL_PLAN_PRO_ID',
-          withDiscount: MP_PLAN_IDS.pro.withDiscount ? `✅ ${MP_PLAN_IDS.pro.withDiscount.substring(0, 15)}...` : '❌ MISSING: MP_PREAPPROVAL_PLAN_PRO_DISCOUNT_ID'
+          regular: MP_PLAN_IDS.pro.regular ? `YES: ${MP_PLAN_IDS.pro.regular.substring(0, 15)}...` : 'MISSING: MP_PREAPPROVAL_PLAN_PRO_ID',
+          withDiscount: MP_PLAN_IDS.pro.withDiscount ? `YES: ${MP_PLAN_IDS.pro.withDiscount.substring(0, 15)}...` : 'MISSING: MP_PREAPPROVAL_PLAN_PRO_DISCOUNT_ID'
         },
         premium: {
-          regular: MP_PLAN_IDS.premium.regular ? `✅ ${MP_PLAN_IDS.premium.regular.substring(0, 15)}...` : '❌ MISSING: MP_PREAPPROVAL_PLAN_PREMIUM_ID',
-          withDiscount: MP_PLAN_IDS.premium.withDiscount ? `✅ ${MP_PLAN_IDS.premium.withDiscount.substring(0, 15)}...` : '❌ MISSING: MP_PREAPPROVAL_PLAN_PREMIUM_DISCOUNT_ID'
+          regular: MP_PLAN_IDS.premium.regular ? `YES: ${MP_PLAN_IDS.premium.regular.substring(0, 15)}...` : 'MISSING: MP_PREAPPROVAL_PLAN_PREMIUM_ID',
+          withDiscount: MP_PLAN_IDS.premium.withDiscount ? `YES: ${MP_PLAN_IDS.premium.withDiscount.substring(0, 15)}...` : 'MISSING: MP_PREAPPROVAL_PLAN_PREMIUM_DISCOUNT_ID'
         }
       }
     },
     paypal: {
-      hasClientId: !!PAYPAL_CLIENT_ID ? '✅ YES' : '❌ NO',
-      hasClientSecret: !!PAYPAL_CLIENT_SECRET ? '✅ YES' : '❌ NO',
+      hasClientId: !!PAYPAL_CLIENT_ID ? 'YES' : 'NO',
+      hasClientSecret: !!PAYPAL_CLIENT_SECRET ? 'YES' : 'NO',
       planIds: {
-        pro: PAYPAL_PLAN_IDS.pro ? `✅ ${PAYPAL_PLAN_IDS.pro.substring(0, 10)}...` : '❌ NO',
-        premium: PAYPAL_PLAN_IDS.premium ? `✅ ${PAYPAL_PLAN_IDS.premium.substring(0, 10)}...` : '❌ NO'
+        pro: PAYPAL_PLAN_IDS.pro ? `YES: ${PAYPAL_PLAN_IDS.pro.substring(0, 10)}...` : 'NO',
+        premium: PAYPAL_PLAN_IDS.premium ? `YES: ${PAYPAL_PLAN_IDS.premium.substring(0, 10)}...` : 'NO'
       }
     },
     frontend: {
