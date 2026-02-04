@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_URL } from '../constants/config';
 import { useNavigate } from 'react-router-dom';
+import { AppFooter } from '../components/AppFooter';
 
 export const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -304,7 +305,7 @@ export const AdminDashboard = () => {
                       <td className="px-6 py-4">
                         <div className="text-sm">
                           <p className="text-white font-bold">
-                            {user.alerts?.current || 0}/{user.alerts?.limit === Infinity ? '∞' : (user.alerts?.limit || 0)}
+                            {user.alerts?.current || 0}/{(user.alerts?.isUnlimited || user.alerts?.limit == null) ? 'Ilimitado' : (user.alerts?.limit || 0)}
                           </p>
                           <div className="flex items-center gap-2 mt-1">
                             <div className="flex-1 h-1.5 bg-dark-secondary rounded-full overflow-hidden">
@@ -325,7 +326,7 @@ export const AdminDashboard = () => {
                       <td className="px-6 py-4">
                         <div className="text-sm">
                           <p className="text-white font-bold">
-                            {(user.tts.current || 0).toLocaleString()} / {user.tts.limit === Infinity ? '∞' : (user.tts.limit || 0).toLocaleString()}
+                            {(user.tts.current || 0).toLocaleString()} / {(user.tts?.isUnlimited || user.tts?.limit == null) ? 'Ilimitado' : (user.tts.limit || 0).toLocaleString()}
                           </p>
                           <div className="flex items-center gap-2 mt-1">
                             <div className="flex-1 h-1.5 bg-dark-secondary rounded-full overflow-hidden">
@@ -346,7 +347,7 @@ export const AdminDashboard = () => {
                       <td className="px-6 py-4">
                         <div className="text-sm">
                           <p className="text-white font-bold">
-                            {formatBytes(user.storage?.current || 0)} / {user.storage?.limit === Infinity ? '∞' : formatBytes(user.storage?.limit || 0)}
+                            {formatBytes(user.storage?.current || 0)} / {(user.storage?.isUnlimited || user.storage?.limit == null) ? 'Ilimitado' : formatBytes(user.storage?.limit || 0)}
                           </p>
                           <div className="flex items-center gap-2 mt-1">
                             <div className="flex-1 h-1.5 bg-dark-secondary rounded-full overflow-hidden">
@@ -393,6 +394,8 @@ export const AdminDashboard = () => {
             <p className="text-dark-muted text-lg">No hay usuarios registrados</p>
           </div>
         )}
+
+        <AppFooter />
       </div>
     </div>
   );

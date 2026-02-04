@@ -62,9 +62,9 @@ export const Header = ({
 
   const getTierLabel = (tier) => {
     switch(tier) {
-      case 'free': return '🆓 Plan Gratuito';
-      case 'pro': return '⭐ Plan Pro';
-      case 'premium': return '👑 Plan Premium';
+      case 'free': return 'Plan Gratuito';
+      case 'pro': return 'Plan Pro';
+      case 'premium': return 'Plan Premium';
       default: return tier;
     }
   };

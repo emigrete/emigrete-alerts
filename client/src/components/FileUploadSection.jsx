@@ -203,7 +203,7 @@ export const FileUploadSection = ({
               </div>
             )}
             <div className="p-4 bg-blue-500/10 border border-blue-500/25 rounded-xl">
-              <p className="text-sm text-blue-400 font-semibold mb-2">📎 Tu plan:</p>
+              <p className="text-sm text-blue-400 font-semibold mb-2">Tu plan:</p>
               <p className="text-sm text-dark-muted">
                 Tu plan te permite subir archivos hasta <strong className="text-white text-base">{subscriptionData?.subscription?.maxFileSize || subscription?.maxFileSize || '5MB'}</strong> cada uno.
               </p>

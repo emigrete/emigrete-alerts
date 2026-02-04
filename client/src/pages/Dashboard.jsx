@@ -13,6 +13,7 @@ import { FileUploadSection } from '../components/FileUploadSection';
 import { TriggersTable } from '../components/TriggersTable';
 import { AlertsBadge } from '../components/AlertsBadge';
 import { SubscriptionStatus } from '../components/SubscriptionStatus';
+import { AppFooter } from '../components/AppFooter';
 
 export default function Dashboard() {
   // Modo demo: solo desarrollo
@@ -252,7 +253,6 @@ export default function Dashboard() {
         {/* Aviso de beta */}
         <div className="mb-10 p-5 bg-yellow-500/10 border-l-4 border-yellow-500 rounded-2xl">
           <div className="flex items-start gap-3">
-            <span className="text-2xl">⚠️</span>
             <div>
               <h3 className="text-yellow-500 font-bold mb-1">App en beta</h3>
               <p className="text-sm text-dark-muted">
@@ -318,6 +318,8 @@ export default function Dashboard() {
             />
           </section>
         </div>
+
+        <AppFooter />
       </div>
     </div>
   );

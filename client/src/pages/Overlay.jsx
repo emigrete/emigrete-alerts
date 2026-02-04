@@ -123,7 +123,7 @@ export default function Overlay() {
     } catch (error) {
       // Manejar error 402 (límite de TTS excedido)
       if (error.response?.status === 402) {
-        console.warn('⚠️ Límite de TTS alcanzado, reproduciendo sin audio');
+        console.warn('Límite de TTS alcanzado, reproduciendo sin audio');
         // Reproducir solo el video sin audio
       } else {
         console.error('Error reproduciendo TTS:', error);

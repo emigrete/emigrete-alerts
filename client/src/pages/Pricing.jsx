@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { AppFooter } from '../components/AppFooter';
 
 export default function PricingPage() {
   const plans = [
     {
-      name: '🆓 FREE',
+      name: 'FREE',
       price: '0',
       description: 'Perfecto para empezar',
       color: 'from-gray-500 to-gray-600',
@@ -19,7 +20,7 @@ export default function PricingPage() {
       ctaColor: 'bg-gray-500 hover:bg-gray-600'
     },
     {
-      name: '⭐ PRO',
+      name: 'PRO',
       price: '4.99',
       description: 'Para creadores activos',
       color: 'from-blue-500 to-blue-600',
@@ -34,7 +35,7 @@ export default function PricingPage() {
       ctaColor: 'bg-gradient-to-r from-blue-500 to-blue-600 hover:shadow-lg hover:shadow-blue-500/50'
     },
     {
-      name: '👑 PREMIUM',
+      name: 'PREMIUM',
       price: '9.99',
       description: 'Sin límites, máximo control',
       color: 'from-purple-500 via-pink-500 to-purple-600',
@@ -84,13 +85,13 @@ export default function PricingPage() {
             <div
               key={idx}
               className={`relative rounded-3xl border-2 overflow-hidden transition-all hover:shadow-2xl ${
-                plan.name.includes('PREMIUM')
+                plan.name === 'PREMIUM'
                   ? `border-pink-500/50 bg-gradient-to-br from-dark-card to-dark-secondary shadow-2xl shadow-pink-500/20 scale-105`
                   : `border-dark-border/50 bg-dark-card/50`
               }`}
             >
               {/* Badge "Popular" en PREMIUM */}
-              {plan.name.includes('PREMIUM') && (
+              {plan.name === 'PREMIUM' && (
                 <div className="absolute top-4 right-4 bg-gradient-to-r from-primary to-pink-500 text-white px-3 py-1 rounded-full text-xs font-bold animate-pulse">
                   MÁS POPULAR
                 </div>
@@ -122,12 +123,12 @@ export default function PricingPage() {
 
                 {/* CTA Button */}
                 <button
-                  disabled={plan.name.includes('FREE')}
+                  disabled={plan.name === 'FREE'}
                   className={`w-full text-white font-bold py-3 px-6 rounded-xl transition-all text-sm ${
-                    plan.name.includes('FREE') ? 'opacity-50 cursor-not-allowed bg-gray-500' : plan.ctaColor
+                    plan.name === 'FREE' ? 'opacity-50 cursor-not-allowed bg-gray-500' : plan.ctaColor
                   }`}
                 >
-                  {plan.name.includes('FREE') ? 'Tu plan actual' : 'Próximamente'}
+                  {plan.name === 'FREE' ? 'Tu plan actual' : 'Próximamente'}
                 </button>
               </div>
             </div>
@@ -185,6 +186,8 @@ export default function PricingPage() {
             ← Volver al Dashboard
           </Link>
         </div>
+
+        <AppFooter />
       </div>
     </div>
   );

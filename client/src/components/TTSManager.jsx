@@ -66,10 +66,11 @@ export const TTSManager = ({ triggers, rewards, userId, username, onRefresh, isD
   };
 
   const estimatedChars = calculateCharCount();
+  const isUnlimitedTTS = usage?.isUnlimited || usage?.charsLimit == null;
   const canCreateTTS = selectedReward && 
     (!ttsConfig.useViewerMessage ? ttsConfig.text?.trim() : true) &&
     usage && 
-    (usage.charsLimit === Infinity || usage.charsRemaining >= estimatedChars);
+    (isUnlimitedTTS || usage.charsRemaining >= estimatedChars);
 
   const handleCreateTTS = async () => {
     if (!selectedReward) {
@@ -83,7 +84,7 @@ export const TTSManager = ({ triggers, rewards, userId, username, onRefresh, isD
     }
 
     // Verificar límite antes de intentar
-    if (usage && usage.charsLimit !== Infinity && usage.charsRemaining < estimatedChars) {
+    if (usage && !isUnlimitedTTS && usage.charsRemaining < estimatedChars) {
       toast.error(`No hay suficientes caracteres. Necesitás ${estimatedChars}, disponibles: ${usage.charsRemaining}`);
       return;
     }
@@ -155,7 +156,7 @@ export const TTSManager = ({ triggers, rewards, userId, username, onRefresh, isD
       <div className="mt-8 space-y-3">
         {usage && !loadingUsage && (
           <div className={`p-4 rounded-2xl border ${
-            usage.charsLimit === Infinity
+            isUnlimitedTTS
               ? 'border-purple-500/60 bg-purple-500/10'
               : usage.percentageUsed > 80
               ? 'border-red-500/60 bg-red-500/10'
@@ -166,10 +167,10 @@ export const TTSManager = ({ triggers, rewards, userId, username, onRefresh, isD
             <div className="flex items-center justify-between mb-2">
               <p className="text-sm font-bold text-white">Límite mensual de TTS</p>
               <span className="text-xs text-dark-muted font-semibold">
-                {usage.charsLimit === Infinity ? '♾️ Ilimitado' : `${usage.percentageUsed}%`}
+                {isUnlimitedTTS ? 'Ilimitado' : `${usage.percentageUsed}%`}
               </span>
             </div>
-            {usage.charsLimit !== Infinity && (
+            {!isUnlimitedTTS && (
               <div className="w-full bg-dark-secondary rounded-full h-2 overflow-hidden">
                 <div
                   className={`h-full transition-all ${
@@ -184,14 +185,14 @@ export const TTSManager = ({ triggers, rewards, userId, username, onRefresh, isD
               </div>
             )}
             <p className="text-xs text-dark-muted mt-2">
-              Disponible: <strong>{usage.charsLimit === Infinity ? '∞ Ilimitado' : usage.charsRemaining}</strong> {usage.charsLimit !== Infinity && `de ${usage.charsLimit}`} caracteres
+              Disponible: <strong>{isUnlimitedTTS ? 'Ilimitado' : usage.charsRemaining}</strong> {!isUnlimitedTTS && `de ${usage.charsLimit}`} caracteres
             </p>
           </div>
         )}
         <div className="p-4 bg-purple-500/10 border border-purple-500/25 rounded-2xl">
-          <p className="text-sm text-purple-400 font-semibold mb-2">💎 Tu plan:</p>
+          <p className="text-sm text-purple-400 font-semibold mb-2">Tu plan:</p>
           <p className="text-sm text-dark-muted">
-            Tu plan te permite hasta <strong>{usage?.charsLimit === Infinity ? '∞ Ilimitados' : (usage?.charsLimit || '2.000')} caracteres de TTS</strong> por mes.
+            Tu plan te permite hasta <strong>{isUnlimitedTTS ? 'Ilimitados' : (usage?.charsLimit || '2.000')} caracteres de TTS</strong> por mes.
           </p>
           {usage?.nextResetDate && (
             <p className="text-xs text-dark-muted mt-2">
@@ -305,7 +306,7 @@ export const TTSManager = ({ triggers, rewards, userId, username, onRefresh, isD
           {/* Mostrar información de caracteres estimados y disponibles */}
           {usage && !loadingUsage && (
             <div className={`p-3 rounded-lg border text-xs ${
-              usage.charsLimit === Infinity
+              isUnlimitedTTS
                 ? 'border-purple-500/50 bg-purple-500/10 text-purple-400'
                 : usage.charsRemaining < estimatedChars
                 ? 'border-red-500/50 bg-red-500/10 text-red-400'
@@ -314,9 +315,9 @@ export const TTSManager = ({ triggers, rewards, userId, username, onRefresh, isD
                 : 'border-green-500/50 bg-green-500/10 text-green-400'
             }`}>
               <p className="font-semibold mb-1">Caracteres estimados: <strong>{estimatedChars}</strong></p>
-              <p>Disponibles: <strong>{usage.charsLimit === Infinity ? '∞ Ilimitados' : usage.charsRemaining}</strong> {usage.charsLimit !== Infinity && `de ${usage.charsLimit}`}</p>
-              {usage.charsLimit !== Infinity && usage.charsRemaining < estimatedChars && (
-                <p className="mt-2 text-red-400">⚠️ No hay caracteres suficientes. Upgrade tu plan.</p>
+              <p>Disponibles: <strong>{isUnlimitedTTS ? 'Ilimitados' : usage.charsRemaining}</strong> {!isUnlimitedTTS && `de ${usage.charsLimit}`}</p>
+              {!isUnlimitedTTS && usage.charsRemaining < estimatedChars && (
+                <p className="mt-2 text-red-400">No hay caracteres suficientes. Upgrade tu plan.</p>
               )}
             </div>
           )}

@@ -8,6 +8,7 @@ import { LoginCard } from '../components/LoginCard';
 import { Header } from '../components/Header';
 import { Navigation } from '../components/Navigation';
 import { TTSManager } from '../components/TTSManager';
+import { AppFooter } from '../components/AppFooter';
 
 export default function TTSPage() {
   // Modo demo: solo desarrollo
@@ -135,6 +136,8 @@ export default function TTSPage() {
           }}
         />
       </div>
+
+      <AppFooter />
     </div>
   );
 }

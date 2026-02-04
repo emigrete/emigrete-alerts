@@ -59,9 +59,9 @@ export const SubscriptionStatus = ({ userId }) => {
   };
 
   const tierLabels = {
-    free: '🆓 FREE',
-    pro: '⭐ PRO',
-    premium: '👑 PREMIUM'
+    free: 'FREE',
+    pro: 'PRO',
+    premium: 'PREMIUM'
   };
 
   return (
@@ -86,10 +86,10 @@ export const SubscriptionStatus = ({ userId }) => {
           <div className="flex justify-between mb-1">
             <span className="text-dark-muted">Alertas</span>
             <span className="font-bold text-dark-text">
-              {usage.alerts.current}/{usage.alerts.limit === Infinity ? '∞' : usage.alerts.limit}
+              {usage.alerts.current}/{(usage.alerts.isUnlimited || usage.alerts.limit == null) ? 'Ilimitado' : usage.alerts.limit}
             </span>
           </div>
-          {usage.alerts.limit !== Infinity && (
+          {!usage.alerts.isUnlimited && usage.alerts.limit != null && (
             <div className="w-full bg-dark-secondary rounded-full h-1.5 overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all ${
@@ -109,11 +109,11 @@ export const SubscriptionStatus = ({ userId }) => {
         <div>
           <div className="flex justify-between mb-1">
             <span className="text-dark-muted">TTS</span>
-            <span className="font-bold text-dark-text">
-              {usage.tts.current}/{usage.tts.limit === Infinity ? '∞' : usage.tts.limit}
+            <span className="font-bold text-dark-text text-xs">
+              {usage.tts.current}/{(usage.tts.isUnlimited || usage.tts.limit == null) ? 'Ilimitado' : usage.tts.limit}
             </span>
           </div>
-          {usage.tts.limit !== Infinity && (
+          {!usage.tts.isUnlimited && usage.tts.limit != null && (
             <div className="w-full bg-dark-secondary rounded-full h-1.5 overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all ${
@@ -134,10 +134,10 @@ export const SubscriptionStatus = ({ userId }) => {
           <div className="flex justify-between mb-1">
             <span className="text-dark-muted">Storage</span>
             <span className="font-bold text-dark-text text-xs">
-              {formatBytes(usage.storage.current)} / {usage.storage.limit === Infinity ? '∞' : formatBytes(usage.storage.limit)}
+              {formatBytes(usage.storage.current)} / {(usage.storage.isUnlimited || usage.storage.limit == null) ? 'Ilimitado' : formatBytes(usage.storage.limit)}
             </span>
           </div>
-          {usage.storage.limit !== Infinity && (
+          {!usage.storage.isUnlimited && usage.storage.limit != null && (
             <div className="w-full bg-dark-secondary rounded-full h-1.5 overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all ${

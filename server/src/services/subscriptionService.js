@@ -236,6 +236,10 @@ export const getUserSubscriptionStatus = async (userId) => {
     ? `${maxFileSizeMB / 1024}GB` 
     : `${maxFileSizeMB}MB`;
 
+  const alertsUnlimited = limits.maxAlerts === Infinity;
+  const ttsUnlimited = limits.maxTtsChars === Infinity;
+  const storageUnlimited = limits.maxStorageBytes === Infinity;
+
   return {
     subscription: {
       tier,
@@ -247,35 +251,41 @@ export const getUserSubscriptionStatus = async (userId) => {
     usage: {
       alerts: {
         current: metrics.alertsCount,
-        limit: limits.maxAlerts,
-        remaining: limits.maxAlerts === Infinity ? Infinity : limits.maxAlerts - metrics.alertsCount,
-        percentage: limits.maxAlerts === Infinity ? 0 : Math.round((metrics.alertsCount / limits.maxAlerts) * 100),
+        limit: alertsUnlimited ? null : limits.maxAlerts,
+        remaining: alertsUnlimited ? null : limits.maxAlerts - metrics.alertsCount,
+        percentage: alertsUnlimited ? 0 : Math.round((metrics.alertsCount / limits.maxAlerts) * 100),
+        isUnlimited: alertsUnlimited,
       },
       tts: {
         current: metrics.ttsCharsUsed,
-        limit: limits.maxTtsChars,
-        remaining: limits.maxTtsChars === Infinity ? Infinity : limits.maxTtsChars - metrics.ttsCharsUsed,
+        limit: ttsUnlimited ? null : limits.maxTtsChars,
+        remaining: ttsUnlimited ? null : limits.maxTtsChars - metrics.ttsCharsUsed,
         percentage:
-          limits.maxTtsChars === Infinity
+          ttsUnlimited
             ? 0
             : Math.round((metrics.ttsCharsUsed / limits.maxTtsChars) * 100),
+        isUnlimited: ttsUnlimited,
       },
       storage: {
         current: metrics.storageUsedBytes,
-        limit: limits.maxStorageBytes,
-        remaining: limits.maxStorageBytes === Infinity ? Infinity : limits.maxStorageBytes - metrics.storageUsedBytes,
+        limit: storageUnlimited ? null : limits.maxStorageBytes,
+        remaining: storageUnlimited ? null : limits.maxStorageBytes - metrics.storageUsedBytes,
         percentage:
-          limits.maxStorageBytes === Infinity
+          storageUnlimited
             ? 0
             : Math.round(
                 (metrics.storageUsedBytes / limits.maxStorageBytes) * 100
               ),
+        isUnlimited: storageUnlimited,
       },
     },
     limits: {
-      maxAlerts: limits.maxAlerts,
-      maxTtsChars: limits.maxTtsChars,
-      maxStorageBytes: limits.maxStorageBytes,
+      maxAlerts: alertsUnlimited ? null : limits.maxAlerts,
+      maxTtsChars: ttsUnlimited ? null : limits.maxTtsChars,
+      maxStorageBytes: storageUnlimited ? null : limits.maxStorageBytes,
+      alertsUnlimited,
+      ttsUnlimited,
+      storageUnlimited,
       maxFileBytes: limits.maxFileBytes,
       maxFileSize: maxFileSizeFormatted,
     },

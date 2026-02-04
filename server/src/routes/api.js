@@ -336,7 +336,8 @@ router.get('/tts/usage/:userId', async (req, res) => {
     const status = await getUserSubscriptionStatus(userId);
     
     // Manejar Infinity correctamente
-    const percentageUsed = status.usage.tts.limit === Infinity 
+    const isUnlimited = status.usage.tts.isUnlimited === true;
+    const percentageUsed = isUnlimited 
       ? 0 
       : Math.round((status.usage.tts.current / status.usage.tts.limit) * 100);
     
@@ -345,6 +346,7 @@ router.get('/tts/usage/:userId', async (req, res) => {
       charsLimit: status.usage.tts.limit,
       charsRemaining: status.usage.tts.remaining,
       percentageUsed,
+      isUnlimited,
       tier: status.subscription.tier,
       nextResetDate: status.nextResetDate
     });
@@ -542,18 +544,21 @@ router.get('/admin/users', async (req, res) => {
           triggers: triggerCount || 0,
           alerts: {
             current: status.usage?.alerts?.current || 0,
-            limit: status.usage?.alerts?.limit || 0,
+            limit: status.usage?.alerts?.limit ?? null,
             percentage: status.usage?.alerts?.percentage || 0,
+            isUnlimited: status.usage?.alerts?.isUnlimited || false,
           },
           tts: {
             current: status.usage?.tts?.current || 0,
-            limit: status.usage?.tts?.limit || 0,
+            limit: status.usage?.tts?.limit ?? null,
             percentage: status.usage?.tts?.percentage || 0,
+            isUnlimited: status.usage?.tts?.isUnlimited || false,
           },
           storage: {
             current: status.usage?.storage?.current || 0,
-            limit: status.usage?.storage?.limit || 0,
+            limit: status.usage?.storage?.limit ?? null,
             percentage: status.usage?.storage?.percentage || 0,
+            isUnlimited: status.usage?.storage?.isUnlimited || false,
           },
           nextResetDate: status.nextResetDate,
         });
