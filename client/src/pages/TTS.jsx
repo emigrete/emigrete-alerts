@@ -138,7 +138,7 @@ export default function TTSPage() {
         />
       </div>
 
-      <UsageStatsSidebar />
+      <UsageStatsSidebar userId={userId} />
       <AppFooter />
     </div>
   );

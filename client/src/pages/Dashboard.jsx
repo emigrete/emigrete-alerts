@@ -320,7 +320,7 @@ export default function Dashboard() {
           </section>
         </div>
 
-        <UsageStatsSidebar />
+        <UsageStatsSidebar userId={userId} />
         <AppFooter />
       </div>
     </div>

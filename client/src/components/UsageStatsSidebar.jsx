@@ -1,6 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useAuth } from '@twitch/auth-utils';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
@@ -62,18 +61,17 @@ const ProgressBar = ({ current, limit, isUnlimited, label }) => {
   );
 };
 
-export default function UsageStatsSidebar() {
+export default function UsageStatsSidebar({ userId }) {
   const [expanded, setExpanded] = useState(false);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(false);
-  const { user } = useAuth();
 
   const loadStats = async () => {
-    if (!user?.sub) return;
+    if (!userId) return;
 
     setLoading(true);
     try {
-      const response = await axios.get(`${API_URL}/subscription/status/${user.sub}`);
+      const response = await axios.get(`${API_URL}/subscription/status/${userId}`);
       setStats(response.data);
     } catch (error) {
       console.error('Error cargando estadísticas:', error);
@@ -89,7 +87,7 @@ export default function UsageStatsSidebar() {
     setExpanded(!expanded);
   };
 
-  if (!user) return null;
+  if (!userId) return null;
 
   return (
     <>
