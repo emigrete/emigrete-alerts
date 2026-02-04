@@ -194,12 +194,12 @@ router.post('/checkout', async (req, res) => {
       }
 
       try {
-        // Mercado Pago suscripciones usa el endpoint /preapproval
+        // Mercado Pago suscripciones usa /checkout/preferences para crear una URL de checkout con preapproval
         const reason = creatorCodeResult.valid 
           ? `TriggerApp Plan ${planTier.toUpperCase()} - Descuento Creador`
           : `TriggerApp Plan ${planTier.toUpperCase()}`;
         
-        const response = await fetch('https://api.mercadopago.com/preapproval', {
+        const response = await fetch('https://api.mercadopago.com/checkout/preferences', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${MP_ACCESS_TOKEN}`,
@@ -208,13 +208,23 @@ router.post('/checkout', async (req, res) => {
           body: JSON.stringify({
             reason,
             external_reference: externalRef,
-            preapproval_plan_id: planId,
-            back_url: `${FRONTEND_URL}/pricing?success=1`
+            auto_recurring: {
+              frequency: 1,
+              frequency_type: 'months',
+              transaction_amount: 0.01, // Dummy amount, MP usará el del plan
+              preapproval_plan_id: planId
+            },
+            back_urls: {
+              success: `${FRONTEND_URL}/pricing?success=1`,
+              failure: `${FRONTEND_URL}/pricing?canceled=1`,
+              pending: `${FRONTEND_URL}/pricing?pending=1`
+            }
+            // Nota: notification_url se configura en el dashboard de Mercado Pago, no en el request
           })
         });
 
         const data = await response.json();
-        if (!response.ok || !data.id) {
+        if (!response.ok || !data.init_point) {
           console.error('❌ Mercado Pago error:', {
             status: response.status,
             planId,
@@ -224,16 +234,16 @@ router.post('/checkout', async (req, res) => {
           });
           
           // Errores comunes
-          if (data.error && data.error.includes('template') && data.error.includes('does not exist')) {
+          if (data.message?.includes('template') || data.message?.includes('does not exist')) {
             return res.status(500).json({ 
               error: `El plan ${planTier} (${planVariant}) está mal configurado en Mercado Pago. El ID del template no existe: ${planId}` 
             });
           }
           
-          return res.status(500).json({ error: 'Error en Mercado Pago: ' + (data.message || data.error || 'Error desconocido') });
+          return res.status(500).json({ error: 'Error en Mercado Pago: ' + (data.message || JSON.stringify(data)) });
         }
 
-        console.log('✅ Mercado Pago preapproval creado:', data.init_point);
+        console.log('✅ Mercado Pago checkout creado:', data.init_point);
         return res.json({ url: data.init_point });
       } catch (fetchError) {
         console.error('❌ Error fetching Mercado Pago:', fetchError);
@@ -303,11 +313,30 @@ router.post('/checkout', async (req, res) => {
 
 router.post('/webhook/mercadopago', async (req, res) => {
   try {
-    const queryId = req.query.id || req.body?.data?.id || req.body?.id;
-    if (!queryId) return res.status(200).json({ received: true });
-    if (!MP_ACCESS_TOKEN) return res.status(500).json({ error: 'Mercado Pago no configurado' });
+    const type = req.query.type || req.body?.type;
+    const id = req.query.id || req.body?.data?.id || req.body?.id;
+    
+    if (!id) return res.status(200).json({ received: true });
+    if (!MP_ACCESS_TOKEN) {
+      console.error('MP_ACCESS_TOKEN no configurado en webhook');
+      return res.status(500).json({ error: 'Mercado Pago no configurado' });
+    }
 
-    const response = await fetch(`https://api.mercadopago.com/preapproval/${queryId}`, {
+    console.log(`🔔 [MP WEBHOOK] Recibido: type=${type}, id=${id}`);
+
+    // Determinar qué endpoint consultar
+    let endpoint;
+    let resourceType;
+    
+    if (type === 'preapproval' || (!type && id.length > 10)) {
+      endpoint = `https://api.mercadopago.com/preapproval/${id}`;
+      resourceType = 'preapproval';
+    } else {
+      endpoint = `https://api.mercadopago.com/v1/payments/${id}`;
+      resourceType = 'payment';
+    }
+
+    const response = await fetch(endpoint, {
       headers: {
         'Authorization': `Bearer ${MP_ACCESS_TOKEN}`
       }
@@ -315,27 +344,47 @@ router.post('/webhook/mercadopago', async (req, res) => {
 
     const data = await response.json();
     if (!response.ok) {
-      console.error('Mercado Pago fetch error:', data);
-      return res.status(500).json({ error: 'Error consultando preapproval' });
+      console.error(`❌ Error consultando ${resourceType}:`, data);
+      return res.status(200).json({ received: true }); // Retornar 200 para que MP no reintente
     }
 
-    const status = data.status === 'authorized' || data.status === 'active' ? 'active' : 'canceled';
-    const externalRef = data.external_reference;
+    // Extraer información según el tipo de recurso
+    let externalRef, status, subscriberId, subscriptionId;
+    
+    if (resourceType === 'preapproval') {
+      externalRef = data.external_reference;
+      status = data.status === 'authorized' || data.status === 'active' ? 'active' : 'canceled';
+      subscriberId = data.payer_id;
+      subscriptionId = data.id;
+      console.log(`✅ [MP WEBHOOK] Preapproval: ${status}`, { externalRef, subscriberId, subscriptionId });
+    } else {
+      // Payment
+      externalRef = data.external_reference;
+      // Los payments que son parte de preapproval tendrán status 'approved'
+      status = (data.status === 'approved' || data.status === 'authorized') ? 'active' : 'canceled';
+      subscriberId = data.payer?.id;
+      subscriptionId = data.id;
+      console.log(`✅ [MP WEBHOOK] Payment: ${status}`, { externalRef, subscriberId, subscriptionId });
+    }
+
     const { userId, planTier, creatorCode } = parseExternalRef(externalRef);
 
-    await updateSubscriptionAndReferral({
-      userId,
-      planTier,
-      providerCustomerId: data.payer_id,
-      providerSubscriptionId: data.id,
-      status,
-      creatorCode
-    });
+    if (userId && planTier) {
+      await updateSubscriptionAndReferral({
+        userId,
+        planTier,
+        providerCustomerId: subscriberId,
+        providerSubscriptionId: subscriptionId,
+        status,
+        creatorCode
+      });
+      console.log(`✅ [MP WEBHOOK] Suscripción actualizada: ${userId} -> ${planTier} (${status})`);
+    }
 
     return res.status(200).json({ received: true });
   } catch (error) {
-    console.error('Error en webhook Mercado Pago:', error);
-    return res.status(500).json({ error: 'Webhook error' });
+    console.error('❌ Error en webhook Mercado Pago:', error.message);
+    return res.status(200).json({ received: true }); // Siempre retornar 200 para que MP no reintente
   }
 });
 

@@ -904,42 +904,27 @@ router.post('/admin/users/:userId/creator-role', async (req, res) => {
       // Remover rol creador
       console.log(`🔍 [REMOVE CREATOR] Intentando remover rol para usuario ${userId}`);
       
-      let profile;
-      try {
-        profile = await CreatorProfile.findOne({ userId });
-      } catch (queryError) {
-        console.error(`❌ [REMOVE CREATOR] Error en findOne:`, queryError.message);
-        throw queryError;
-      }
+      // Usar findOneAndUpdate para evitar problemas de validación
+      const updatedProfile = await CreatorProfile.findOneAndUpdate(
+        { userId },
+        { 
+          isAssigned: false,
+          isActive: false
+        },
+        { new: true } // Retornar documento actualizado
+      );
       
-      console.log(`🔍 [REMOVE CREATOR] Perfil encontrado:`, profile ? { userId: profile.userId, code: profile.code, isAssigned: profile.isAssigned } : 'NO ENCONTRADO');
-      
-      if (!profile) {
+      if (!updatedProfile) {
         console.warn(`⚠️ [REMOVE CREATOR] Perfil no encontrado para ${userId}`);
         return res.status(404).json({ error: 'Perfil de creador no encontrado' });
       }
       
-      // Cambiar flags de forma segura
-      profile.isAssigned = false;
-      profile.isActive = false;
-      
-      let updatedProfile;
-      try {
-        updatedProfile = await profile.save();
-        console.log(`✅ [REMOVE CREATOR] Perfil actualizado exitosamente:`, { 
-          userId: updatedProfile.userId,
-          code: updatedProfile.code,
-          isAssigned: updatedProfile.isAssigned, 
-          isActive: updatedProfile.isActive 
-        });
-      } catch (saveError) {
-        console.error(`❌ [REMOVE CREATOR] Error en profile.save():`, {
-          message: saveError.message,
-          code: saveError.code,
-          name: saveError.name
-        });
-        throw saveError;
-      }
+      console.log(`✅ [REMOVE CREATOR] Perfil actualizado exitosamente:`, { 
+        userId: updatedProfile.userId,
+        code: updatedProfile.code,
+        isAssigned: updatedProfile.isAssigned, 
+        isActive: updatedProfile.isActive 
+      });
       
       return res.json({
         success: true,
