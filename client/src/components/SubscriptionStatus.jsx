@@ -31,7 +31,7 @@ export const SubscriptionStatus = ({ userId }) => {
     fetchStatus();
   }, [userId]);
 
-  if (loading) return <div className="text-dark-muted text-base mb-4">⏳ Cargando plan...</div>;
+  if (loading) return <div className="text-dark-muted text-base mb-4">Cargando plan...</div>;
   if (error) return null;
   if (!status) return null;
 
@@ -74,7 +74,7 @@ export const SubscriptionStatus = ({ userId }) => {
             className="px-3 py-1.5 rounded-lg bg-primary hover:bg-primary-dark text-white text-xs font-bold transition"
             title="Ver detalles de consumo"
           >
-            📊 Ver consumos
+            Ver consumos
           </button>
         </div>
       </div>
@@ -85,7 +85,7 @@ export const SubscriptionStatus = ({ userId }) => {
           onClick={() => navigate('/pricing')}
           className="mt-3 w-full text-xs font-bold py-2 px-3 rounded-lg bg-gradient-to-r from-yellow-500 to-orange-500 text-white hover:shadow-lg transition"
         >
-          ⚠️ Estás cerca del límite - Upgrade Plan
+          Estás cerca del límite - Upgrade Plan
         </button>
       )}
     </div>

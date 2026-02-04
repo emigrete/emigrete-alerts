@@ -155,7 +155,7 @@ export const TTSManager = ({ triggers, rewards, userId, username, onRefresh, isD
       {/* Aviso simple sobre límite */}
       <div className="mt-8 p-4 bg-purple-500/10 border border-purple-500/25 rounded-2xl">
         <p className="text-sm text-dark-muted">
-          Para ver tus consumos detallados, abre el panel de <strong>📊 Consumos</strong> en la esquina inferior derecha.
+          Para ver tus consumos detallados, abre el panel de Consumos en la esquina inferior derecha.
         </p>
       </div>
 

@@ -71,7 +71,9 @@ export default function UsageStatsSidebar({ userId }) {
 
     setLoading(true);
     try {
-      const response = await axios.get(`${API_URL}/subscription/status/${userId}`);
+      const response = await axios.get(`${API_URL}/api/subscription/status`, {
+        params: { userId }
+      });
       setStats(response.data);
     } catch (error) {
       console.error('Error cargando estadísticas:', error);
@@ -102,14 +104,14 @@ export default function UsageStatsSidebar({ userId }) {
         } w-14 h-14 flex items-center justify-center font-bold text-xl`}
         title={expanded ? 'Cerrar' : 'Ver consumos'}
       >
-        {expanded ? '✕' : '📊'}
+        {expanded ? '✕' : 'Consumos'}
       </button>
 
       {/* Panel lateral expandible */}
       {expanded && (
         <div className="fixed bottom-24 right-6 z-40 w-80 bg-dark-card border-2 border-dark-border rounded-2xl shadow-2xl p-6 max-h-96 overflow-y-auto">
           <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-            <span>📊 Mis Consumos</span>
+            <span>Mis Consumos</span>
             <span className="text-xs bg-primary/20 text-primary px-2 py-1 rounded">
               {stats?.subscription?.tier?.toUpperCase() || 'FREE'}
             </span>
@@ -190,8 +192,7 @@ export default function UsageStatsSidebar({ userId }) {
               {/* INFO DE RESET */}
               <div className="pt-4 border-t border-dark-border">
                 <p className="text-xs text-dark-muted">
-                  ⏰ Próximo reset:{' '}
-                  <span className="text-primary font-semibold">
+                  Próximo reset: <span className="text-primary font-semibold">
                     {new Date(stats.nextResetDate).toLocaleDateString('es-AR')}
                   </span>
                 </p>
