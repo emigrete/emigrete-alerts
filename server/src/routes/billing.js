@@ -79,10 +79,27 @@ const getPayPalAccessToken = async () => {
 };
 
 const ensureCreatorCode = async (creatorCode, userId) => {
-  if (!creatorCode) return { valid: false, code: null };
+  if (!creatorCode) {
+    console.log('[CREATOR CODE] No code provided');
+    return { valid: false, code: null };
+  }
+  
   const normalized = sanitizeCode(creatorCode);
+  console.log(`[CREATOR CODE] Input: "${creatorCode}" → Normalized: "${normalized}"`);
+  
   const creator = await CreatorProfile.findOne({ code: normalized, isActive: true });
-  if (!creator || creator.userId === userId) return { valid: false, code: null };
+  
+  if (!creator) {
+    console.log(`[CREATOR CODE] ❌ No creator found with code: "${normalized}"`);
+    return { valid: false, code: null };
+  }
+  
+  if (creator.userId === userId) {
+    console.log(`[CREATOR CODE] ❌ User ${userId} tried to use their own code`);
+    return { valid: false, code: null };
+  }
+  
+  console.log(`[CREATOR CODE] ✅ Valid code: "${normalized}" from creator ${creator.userId}`);
   return { valid: true, code: normalized };
 };
 
@@ -446,6 +463,27 @@ router.get('/diagnostics', (req, res) => {
 
   console.log('📊 Diagnósticos de configuración:', diagnostics);
   res.json(diagnostics);
+});
+
+// 🔍 Diagnóstico de códigos de creador
+router.get('/diagnostics/creators', async (req, res) => {
+  try {
+    const creators = await CreatorProfile.find({ isActive: true }).select('userId code discountRate commissionRate totalReferred totalEstimatedEarningsCents');
+    res.json({
+      total: creators.length,
+      creators: creators.map(c => ({
+        userId: c.userId,
+        code: c.code,
+        discountRate: c.discountRate,
+        commissionRate: c.commissionRate,
+        totalReferred: c.totalReferred,
+        estimatedEarnings: (c.totalEstimatedEarningsCents / 100).toFixed(2) + ' ARS'
+      }))
+    });
+  } catch (error) {
+    console.error('Error fetching creators:', error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
 /**
