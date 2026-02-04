@@ -198,17 +198,14 @@ router.post('/checkout', async (req, res) => {
       }
 
       try {
-        // Construir el init_point directamente con los parámetros necesarios
-        const initPoint = `https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=${planId}`;
-        const checkoutUrl = new URL(initPoint);
-        checkoutUrl.searchParams.set('external_reference', externalRef);
-        checkoutUrl.searchParams.set('payer_email', String(payerEmail).trim());
-        checkoutUrl.searchParams.set('back_url', `${FRONTEND_URL}/pricing?mp=1`);
+        // Construir URL de checkout con back_url que incluye userId y código
+        const backUrl = `${FRONTEND_URL}/pricing?mp=1&userId=${userId}&planTier=${planTier}&creatorCode=${creatorCodeResult.code || ''}`;
+        const initPoint = `https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=${planId}&back_url=${encodeURIComponent(backUrl)}`;
 
         console.log(`MP checkout - Plan: ${planTier} | Variant: ${planVariant} | ID: ${planId}`);
-        console.log('Redirigiendo a:', checkoutUrl.toString());
+        console.log('Redirigiendo a:', initPoint);
         
-        return res.json({ url: checkoutUrl.toString() });
+        return res.json({ url: initPoint });
       } catch (fetchError) {
         console.error('Error fetching Mercado Pago:', fetchError);
         return res.status(500).json({ error: 'Error conectando con Mercado Pago: ' + fetchError.message });
