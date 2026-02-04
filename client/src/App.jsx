@@ -16,7 +16,7 @@ function App() {
         <Route path="/tts" element={<TTSPage />} />
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/creator" element={<CreatorDashboard />} />
-        <Route path="/" element={<AdminDashboard />} />
+        <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/" element={<Dashboard />} />
       </Routes>
     </BrowserRouter>
