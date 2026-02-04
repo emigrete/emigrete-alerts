@@ -486,6 +486,39 @@ router.get('/diagnostics/creators', async (req, res) => {
   }
 });
 
+// 🧪 TESTING: Simular pago exitoso (sin pasar por MP)
+router.post('/test/simulate-payment', async (req, res) => {
+  try {
+    const { userId, planTier, creatorCode } = req.body;
+    
+    if (!userId || !planTier) {
+      return res.status(400).json({ error: 'userId y planTier requeridos' });
+    }
+
+    console.log(`🧪 [TEST] Simulando pago: userId=${userId}, plan=${planTier}, code=${creatorCode || 'ninguno'}`);
+
+    // Simular webhook de Mercado Pago
+    await updateSubscriptionAndReferral({
+      userId,
+      planTier,
+      providerCustomerId: 'TEST_CUSTOMER_' + Date.now(),
+      providerSubscriptionId: 'TEST_SUB_' + Date.now(),
+      status: 'active',
+      creatorCode: creatorCode || null
+    });
+
+    res.json({ 
+      success: true,
+      message: 'Pago simulado exitosamente',
+      subscription: await Subscription.findOne({ userId }),
+      referral: await CreatorReferral.findOne({ referredUserId: userId })
+    });
+  } catch (error) {
+    console.error('Error simulando pago:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 /**
  * 🚨 CANCELAR SUSCRIPCIÓN EN MERCADO PAGO
  * POST /api/billing/cancel-subscription

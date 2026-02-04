@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { API_URL } from '../constants/config';
@@ -8,6 +8,18 @@ export function CheckoutModal({ isOpen, planTier, onClose, userId }) {
   const [payerEmail, setPayerEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState('mercadopago');
+
+  // Auto-completar código de creador desde URL (?ref=CODE)
+  useEffect(() => {
+    if (isOpen && !creatorCode) {
+      const params = new URLSearchParams(window.location.search);
+      const refCode = params.get('ref');
+      if (refCode) {
+        setCreatorCode(refCode.toUpperCase());
+        toast.success(`Código de creador aplicado: ${refCode.toUpperCase()}`);
+      }
+    }
+  }, [isOpen]);
 
   const handleConfirmCheckout = async () => {
     if (!userId) {
