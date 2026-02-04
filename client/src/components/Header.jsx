@@ -53,18 +53,18 @@ export const Header = ({
 
   const getTierColor = (tier) => {
     switch(tier) {
-      case 'FREE': return 'bg-blue-500/20 border-blue-500/50 text-blue-400';
-      case 'PRO': return 'bg-purple-500/20 border-purple-500/50 text-purple-400';
-      case 'PREMIUM': return 'bg-pink-500/20 border-pink-500/50 text-pink-400';
-      default: return 'bg-gray-500/20 border-gray-500/50 text-gray-400';
+      case 'free': return 'bg-gradient-to-r from-gray-500 to-gray-600 border-gray-400/50 shadow-gray-500/20';
+      case 'pro': return 'bg-gradient-to-r from-blue-500 to-blue-600 border-blue-400/50 shadow-blue-500/30';
+      case 'premium': return 'bg-gradient-to-r from-purple-500 via-pink-500 to-purple-600 border-pink-400/50 shadow-pink-500/40 animate-pulse';
+      default: return 'bg-gradient-to-r from-gray-500 to-gray-600 border-gray-400/50';
     }
   };
 
   const getTierLabel = (tier) => {
     switch(tier) {
-      case 'FREE': return 'Plan Gratuito';
-      case 'PRO': return 'Plan Pro';
-      case 'PREMIUM': return 'Plan Premium';
+      case 'free': return '🆓 Plan Gratuito';
+      case 'pro': return '⭐ Plan Pro';
+      case 'premium': return '👑 Plan Premium';
       default: return tier;
     }
   };
@@ -89,7 +89,7 @@ export const Header = ({
               </span>
             </div>
             {!loadingSubscription && subscription && (
-              <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-lg border ${getTierColor(subscription.subscription.tier)} text-xs font-bold w-fit`}>
+              <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg border-2 ${getTierColor(subscription.subscription.tier)} text-white text-sm font-black uppercase tracking-wide shadow-lg w-fit`}>
                 {getTierLabel(subscription.subscription.tier)}
               </div>
             )}

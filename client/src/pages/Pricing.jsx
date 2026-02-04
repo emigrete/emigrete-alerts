@@ -4,10 +4,10 @@ import { Link } from 'react-router-dom';
 export default function PricingPage() {
   const plans = [
     {
-      name: 'FREE',
+      name: '🆓 FREE',
       price: '0',
       description: 'Perfecto para empezar',
-      color: 'from-blue-500 to-blue-600',
+      color: 'from-gray-500 to-gray-600',
       limits: [
         { label: 'Alertas/mes', value: '20' },
         { label: 'Caracteres TTS/mes', value: '2.000' },
@@ -19,10 +19,10 @@ export default function PricingPage() {
       ctaColor: 'bg-gray-500 hover:bg-gray-600'
     },
     {
-      name: 'PRO',
+      name: '⭐ PRO',
       price: '4.99',
       description: 'Para creadores activos',
-      color: 'from-purple-500 to-purple-600',
+      color: 'from-blue-500 to-blue-600',
       limits: [
         { label: 'Alertas/mes', value: '100' },
         { label: 'Caracteres TTS/mes', value: '20.000' },
@@ -31,13 +31,13 @@ export default function PricingPage() {
         { label: 'Tamaño máx de archivo', value: '30 MB' },
       ],
       cta: 'Upgrade a PRO',
-      ctaColor: 'bg-gradient-to-r from-purple-500 to-purple-600 hover:shadow-lg hover:shadow-purple-500/50'
+      ctaColor: 'bg-gradient-to-r from-blue-500 to-blue-600 hover:shadow-lg hover:shadow-blue-500/50'
     },
     {
-      name: 'PREMIUM',
+      name: '👑 PREMIUM',
       price: '9.99',
       description: 'Sin límites, máximo control',
-      color: 'from-pink-500 to-pink-600',
+      color: 'from-purple-500 via-pink-500 to-purple-600',
       limits: [
         { label: 'Alertas/mes', value: '∞ Ilimitadas' },
         { label: 'Caracteres TTS/mes', value: '∞ Ilimitados' },
@@ -46,7 +46,7 @@ export default function PricingPage() {
         { label: 'Tamaño máx de archivo', value: '500 MB' },
       ],
       cta: 'Upgrade a PREMIUM',
-      ctaColor: 'bg-gradient-to-r from-pink-500 to-pink-600 hover:shadow-lg hover:shadow-pink-500/50'
+      ctaColor: 'bg-gradient-to-r from-purple-500 via-pink-500 to-purple-600 hover:shadow-lg hover:shadow-pink-500/50'
     }
   ];
 
@@ -84,14 +84,14 @@ export default function PricingPage() {
             <div
               key={idx}
               className={`relative rounded-3xl border-2 overflow-hidden transition-all hover:shadow-2xl ${
-                plan.name === 'PREMIUM'
+                plan.name.includes('PREMIUM')
                   ? `border-pink-500/50 bg-gradient-to-br from-dark-card to-dark-secondary shadow-2xl shadow-pink-500/20 scale-105`
                   : `border-dark-border/50 bg-dark-card/50`
               }`}
             >
               {/* Badge "Popular" en PREMIUM */}
-              {plan.name === 'PREMIUM' && (
-                <div className="absolute top-4 right-4 bg-gradient-to-r from-primary to-pink-500 text-white px-3 py-1 rounded-full text-xs font-bold">
+              {plan.name.includes('PREMIUM') && (
+                <div className="absolute top-4 right-4 bg-gradient-to-r from-primary to-pink-500 text-white px-3 py-1 rounded-full text-xs font-bold animate-pulse">
                   MÁS POPULAR
                 </div>
               )}
@@ -122,12 +122,12 @@ export default function PricingPage() {
 
                 {/* CTA Button */}
                 <button
-                  disabled={plan.name === 'FREE'}
+                  disabled={plan.name.includes('FREE')}
                   className={`w-full text-white font-bold py-3 px-6 rounded-xl transition-all text-sm ${
-                    plan.name === 'FREE' ? 'opacity-50 cursor-not-allowed bg-gray-500' : plan.ctaColor
+                    plan.name.includes('FREE') ? 'opacity-50 cursor-not-allowed bg-gray-500' : plan.ctaColor
                   }`}
                 >
-                  {plan.name === 'FREE' ? 'Tu plan actual' : 'Próximamente'}
+                  {plan.name.includes('FREE') ? 'Tu plan actual' : 'Próximamente'}
                 </button>
               </div>
             </div>

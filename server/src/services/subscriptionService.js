@@ -107,6 +107,12 @@ export const canUseTTS = async (userId, charCount) => {
   const subscription = await getOrCreateSubscription(userId);
   const metrics = await checkAndResetUsageIfNeeded(userId);
   const limit = LIMITS[subscription.tier].maxTtsChars;
+  
+  // Si el límite es infinito, siempre se permite
+  if (limit === Infinity) {
+    return { allowed: true };
+  }
+  
   const projected = metrics.ttsCharsUsed + charCount;
 
   return projected <= limit
@@ -224,23 +230,31 @@ export const getUserSubscriptionStatus = async (userId) => {
   const limits = LIMITS[tier];
   const nextResetDate = getNextResetDate();
 
+  // Formatear maxFileSize para el cliente
+  const maxFileSizeMB = limits.maxFileBytes / (1024 * 1024);
+  const maxFileSizeFormatted = maxFileSizeMB >= 1000 
+    ? `${maxFileSizeMB / 1024}GB` 
+    : `${maxFileSizeMB}MB`;
+
   return {
     subscription: {
       tier,
       status: subscription.status,
       currentPeriodEnd: subscription.currentPeriodEnd,
+      maxFileSize: maxFileSizeFormatted,
+      maxFileSizeBytes: limits.maxFileBytes,
     },
     usage: {
       alerts: {
         current: metrics.alertsCount,
         limit: limits.maxAlerts,
-        remaining: limits.maxAlerts - metrics.alertsCount,
-        percentage: Math.round((metrics.alertsCount / limits.maxAlerts) * 100),
+        remaining: limits.maxAlerts === Infinity ? Infinity : limits.maxAlerts - metrics.alertsCount,
+        percentage: limits.maxAlerts === Infinity ? 0 : Math.round((metrics.alertsCount / limits.maxAlerts) * 100),
       },
       tts: {
         current: metrics.ttsCharsUsed,
         limit: limits.maxTtsChars,
-        remaining: limits.maxTtsChars - metrics.ttsCharsUsed,
+        remaining: limits.maxTtsChars === Infinity ? Infinity : limits.maxTtsChars - metrics.ttsCharsUsed,
         percentage:
           limits.maxTtsChars === Infinity
             ? 0
@@ -249,7 +263,7 @@ export const getUserSubscriptionStatus = async (userId) => {
       storage: {
         current: metrics.storageUsedBytes,
         limit: limits.maxStorageBytes,
-        remaining: limits.maxStorageBytes - metrics.storageUsedBytes,
+        remaining: limits.maxStorageBytes === Infinity ? Infinity : limits.maxStorageBytes - metrics.storageUsedBytes,
         percentage:
           limits.maxStorageBytes === Infinity
             ? 0
@@ -257,6 +271,13 @@ export const getUserSubscriptionStatus = async (userId) => {
                 (metrics.storageUsedBytes / limits.maxStorageBytes) * 100
               ),
       },
+    },
+    limits: {
+      maxAlerts: limits.maxAlerts,
+      maxTtsChars: limits.maxTtsChars,
+      maxStorageBytes: limits.maxStorageBytes,
+      maxFileBytes: limits.maxFileBytes,
+      maxFileSize: maxFileSizeFormatted,
     },
     nextResetDate: nextResetDate.toISOString(),
   };

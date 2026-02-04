@@ -38,12 +38,12 @@ export const AdminDashboard = () => {
       const usersData = response.data.users || [];
       setUsers(usersData);
       
-      // Calcular estadísticas totales
+      // Calcular estadísticas totales con validaciones
       const totalStats = usersData.reduce((acc, user) => ({
-        totalAlerts: acc.totalAlerts + user.alerts.current,
-        totalTTS: acc.totalTTS + user.tts.current,
-        totalStorage: acc.totalStorage + user.storage.current,
-        totalTriggers: acc.totalTriggers + user.triggers
+        totalAlerts: acc.totalAlerts + (user.alerts?.current || 0),
+        totalTTS: acc.totalTTS + (user.tts?.current || 0),
+        totalStorage: acc.totalStorage + (user.storage?.current || 0),
+        totalTriggers: acc.totalTriggers + (user.triggers || 0)
       }), { totalAlerts: 0, totalTTS: 0, totalStorage: 0, totalTriggers: 0 });
       
       setStats(totalStats);
@@ -224,12 +224,12 @@ export const AdminDashboard = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20 rounded-xl p-6 hover:border-blue-500/40 transition">
               <p className="text-blue-400 text-sm font-semibold mb-3">Alertas Totales</p>
-              <p className="text-3xl font-black text-white">{stats.totalAlerts.toLocaleString()}</p>
+              <p className="text-3xl font-black text-white">{(stats.totalAlerts || 0).toLocaleString()}</p>
             </div>
             
             <div className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border border-purple-500/20 rounded-xl p-6 hover:border-purple-500/40 transition">
               <p className="text-purple-400 text-sm font-semibold mb-3">Caracteres TTS</p>
-              <p className="text-3xl font-black text-white">{stats.totalTTS.toLocaleString()}</p>
+              <p className="text-3xl font-black text-white">{(stats.totalTTS || 0).toLocaleString()}</p>
             </div>
             
             <div className="bg-gradient-to-br from-green-500/10 to-green-600/5 border border-green-500/20 rounded-xl p-6 hover:border-green-500/40 transition">
@@ -304,20 +304,20 @@ export const AdminDashboard = () => {
                       <td className="px-6 py-4">
                         <div className="text-sm">
                           <p className="text-white font-bold">
-                            {user.alerts.current}/{user.alerts.limit === Infinity ? '∞' : user.alerts.limit}
+                            {user.alerts?.current || 0}/{user.alerts?.limit === Infinity ? '∞' : (user.alerts?.limit || 0)}
                           </p>
                           <div className="flex items-center gap-2 mt-1">
                             <div className="flex-1 h-1.5 bg-dark-secondary rounded-full overflow-hidden">
                               <div 
                                 className={`h-full rounded-full transition-all ${
-                                  user.alerts.percentage > 80 ? 'bg-red-500' :
-                                  user.alerts.percentage > 50 ? 'bg-yellow-500' : 'bg-green-500'
+                                  (user.alerts?.percentage || 0) > 80 ? 'bg-red-500' :
+                                  (user.alerts?.percentage || 0) > 50 ? 'bg-yellow-500' : 'bg-green-500'
                                 }`}
-                                style={{ width: `${user.alerts.percentage}%` }}
+                                style={{ width: `${user.alerts?.percentage || 0}%` }}
                               />
                             </div>
-                            <span className={`text-xs font-bold ${getUsageColor(user.alerts.percentage)}`}>
-                              {user.alerts.percentage}%
+                            <span className={`text-xs font-bold ${getUsageColor(user.alerts?.percentage || 0)}`}>
+                              {user.alerts?.percentage || 0}%
                             </span>
                           </div>
                         </div>
@@ -325,20 +325,20 @@ export const AdminDashboard = () => {
                       <td className="px-6 py-4">
                         <div className="text-sm">
                           <p className="text-white font-bold">
-                            {user.tts.current.toLocaleString()} / {user.tts.limit === Infinity ? '∞' : user.tts.limit.toLocaleString()}
+                            {(user.tts.current || 0).toLocaleString()} / {user.tts.limit === Infinity ? '∞' : (user.tts.limit || 0).toLocaleString()}
                           </p>
                           <div className="flex items-center gap-2 mt-1">
                             <div className="flex-1 h-1.5 bg-dark-secondary rounded-full overflow-hidden">
                               <div 
                                 className={`h-full rounded-full transition-all ${
-                                  user.tts.percentage > 80 ? 'bg-red-500' :
-                                  user.tts.percentage > 50 ? 'bg-yellow-500' : 'bg-green-500'
+                                  (user.tts.percentage || 0) > 80 ? 'bg-red-500' :
+                                  (user.tts.percentage || 0) > 50 ? 'bg-yellow-500' : 'bg-green-500'
                                 }`}
-                                style={{ width: `${user.tts.percentage}%` }}
+                                style={{ width: `${user.tts.percentage || 0}%` }}
                               />
                             </div>
-                            <span className={`text-xs font-bold ${getUsageColor(user.tts.percentage)}`}>
-                              {user.tts.percentage}%
+                            <span className={`text-xs font-bold ${getUsageColor(user.tts.percentage || 0)}`}>
+                              {user.tts.percentage || 0}%
                             </span>
                           </div>
                         </div>
@@ -346,27 +346,27 @@ export const AdminDashboard = () => {
                       <td className="px-6 py-4">
                         <div className="text-sm">
                           <p className="text-white font-bold">
-                            {formatBytes(user.storage.current)} / {user.storage.limit === Infinity ? '∞' : formatBytes(user.storage.limit)}
+                            {formatBytes(user.storage?.current || 0)} / {user.storage?.limit === Infinity ? '∞' : formatBytes(user.storage?.limit || 0)}
                           </p>
                           <div className="flex items-center gap-2 mt-1">
                             <div className="flex-1 h-1.5 bg-dark-secondary rounded-full overflow-hidden">
                               <div 
                                 className={`h-full rounded-full transition-all ${
-                                  user.storage.percentage > 80 ? 'bg-red-500' :
-                                  user.storage.percentage > 50 ? 'bg-yellow-500' : 'bg-green-500'
+                                  (user.storage?.percentage || 0) > 80 ? 'bg-red-500' :
+                                  (user.storage?.percentage || 0) > 50 ? 'bg-yellow-500' : 'bg-green-500'
                                 }`}
-                                style={{ width: `${user.storage.percentage}%` }}
+                                style={{ width: `${user.storage?.percentage || 0}%` }}
                               />
                             </div>
-                            <span className={`text-xs font-bold ${getUsageColor(user.storage.percentage)}`}>
-                              {user.storage.percentage}%
+                            <span className={`text-xs font-bold ${getUsageColor(user.storage?.percentage || 0)}`}>
+                              {user.storage?.percentage || 0}%
                             </span>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
                         <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary/20 text-primary font-black text-base">
-                          {user.triggers}
+                          {user.triggers || 0}
                         </span>
                       </td>
                       <td className="px-6 py-4">

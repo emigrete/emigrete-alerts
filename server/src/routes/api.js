@@ -335,11 +335,16 @@ router.get('/tts/usage/:userId', async (req, res) => {
     // Usar el nuevo sistema de suscripción
     const status = await getUserSubscriptionStatus(userId);
     
+    // Manejar Infinity correctamente
+    const percentageUsed = status.usage.tts.limit === Infinity 
+      ? 0 
+      : Math.round((status.usage.tts.current / status.usage.tts.limit) * 100);
+    
     res.json({
       charsUsed: status.usage.tts.current,
       charsLimit: status.usage.tts.limit,
       charsRemaining: status.usage.tts.remaining,
-      percentageUsed: Math.round((status.usage.tts.current / status.usage.tts.limit) * 100),
+      percentageUsed,
       tier: status.subscription.tier,
       nextResetDate: status.nextResetDate
     });
@@ -532,23 +537,23 @@ router.get('/admin/users', async (req, res) => {
         
         usersData.push({
           userId: userToken.userId,
-          username: userToken.username,
-          tier: status.subscription.tier,
-          triggers: triggerCount,
+          username: userToken.username || 'Unknown',
+          tier: status.subscription?.tier || 'free',
+          triggers: triggerCount || 0,
           alerts: {
-            current: status.usage.alerts.current,
-            limit: status.usage.alerts.limit,
-            percentage: status.usage.alerts.percentage,
+            current: status.usage?.alerts?.current || 0,
+            limit: status.usage?.alerts?.limit || 0,
+            percentage: status.usage?.alerts?.percentage || 0,
           },
           tts: {
-            current: status.usage.tts.current,
-            limit: status.usage.tts.limit,
-            percentage: status.usage.tts.percentage,
+            current: status.usage?.tts?.current || 0,
+            limit: status.usage?.tts?.limit || 0,
+            percentage: status.usage?.tts?.percentage || 0,
           },
           storage: {
-            current: status.usage.storage.current,
-            limit: status.usage.storage.limit,
-            percentage: status.usage.storage.percentage,
+            current: status.usage?.storage?.current || 0,
+            limit: status.usage?.storage?.limit || 0,
+            percentage: status.usage?.storage?.percentage || 0,
           },
           nextResetDate: status.nextResetDate,
         });

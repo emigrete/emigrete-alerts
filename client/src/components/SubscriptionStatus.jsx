@@ -55,13 +55,13 @@ export const SubscriptionStatus = ({ userId }) => {
   const tierColors = {
     free: 'from-gray-500 to-gray-600',
     pro: 'from-blue-500 to-blue-600',
-    premium: 'from-purple-500 to-pink-500'
+    premium: 'from-purple-500 via-pink-500 to-purple-600'
   };
 
   const tierLabels = {
-    free: 'FREE',
-    pro: 'PRO',
-    premium: 'PREMIUM'
+    free: '🆓 FREE',
+    pro: '⭐ PRO',
+    premium: '👑 PREMIUM'
   };
 
   return (
@@ -74,7 +74,7 @@ export const SubscriptionStatus = ({ userId }) => {
             Se reinicia el {formatDate(nextResetDate)}
           </p>
         </div>
-        <span className={`px-3 py-1 rounded-full text-white text-xs font-bold bg-gradient-to-r ${tierColors[subscription.tier]}`}>
+        <span className={`px-4 py-1.5 rounded-full text-white text-xs font-black uppercase tracking-wide bg-gradient-to-r ${tierColors[subscription.tier]} shadow-lg ${subscription.tier === 'premium' ? 'animate-pulse' : ''}`}>
           {tierLabels[subscription.tier]}
         </span>
       </div>
