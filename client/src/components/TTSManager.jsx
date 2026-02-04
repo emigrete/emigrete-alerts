@@ -94,9 +94,6 @@ export const TTSManager = ({ triggers, rewards, userId, username, onRefresh, isD
       return voiceTierLevel <= userTierLevel;
     });
   };
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' });
-  };
 
   // Crear alerta TTS desde recompensa existente
   // Calcular caracteres totales que se usarán
