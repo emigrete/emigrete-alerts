@@ -548,6 +548,8 @@ router.get('/admin/users', async (req, res) => {
         const triggerCount = await Trigger.countDocuments({ userId: userToken.userId });
         const creatorProfile = await CreatorProfile.findOne({ userId: userToken.userId });
         
+        console.log(`📊 User ${userToken.userId} (${userToken.username}): creatorProfile =`, creatorProfile ? { isAssigned: creatorProfile.isAssigned, isActive: creatorProfile.isActive } : null);
+        
         usersData.push({
           userId: userToken.userId,
           username: userToken.username || 'Unknown',
@@ -838,7 +840,7 @@ router.post('/admin/users/:userId/creator-role', async (req, res) => {
         }
       );
 
-      console.log(`✅ Admin asignó rol creador a ${userId}`);
+      console.log(`✅ [ADMIN] Asignó rol creador a ${userId}. Result:`, { isAssigned: profile.isAssigned, isActive: profile.isActive });
       return res.json({
         success: true,
         message: 'Rol creador asignado',
@@ -849,13 +851,15 @@ router.post('/admin/users/:userId/creator-role', async (req, res) => {
         }
       });
     } else {
-      // Remover rol creador
+      // Remover rol creador - usar upserts:true en caso de que no exista registro previo
       const result = await CreatorProfile.findOneAndUpdate(
         { userId },
         { isAssigned: false, isActive: false },
-        { new: true }
+        { new: true, upsert: true }
       );
 
+      console.log(`❌ [ADMIN] Removió rol creador de ${userId}. Result:`, { isAssigned: result.isAssigned, isActive: result.isActive });
+      
       if (!result) {
         return res.status(404).json({ error: 'Perfil de creador no encontrado' });
       }

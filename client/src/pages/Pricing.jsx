@@ -123,8 +123,7 @@ export default function PricingPage() {
         { label: 'Tamaño máx de archivo', value: '30 MB' },
         { label: 'Bandwidth/mes', value: '5 GB' },
       ],
-      cta: 'Upgrade a PRO',
-      ctaColor: 'bg-gradient-to-r from-blue-500 to-blue-600 hover:shadow-lg hover:shadow-blue-500/50'
+      ctaColor: 'bg-gradient-to-r from-blue-500 to-cyan-500 hover:shadow-lg hover:shadow-blue-500/50'
     },
     {
       name: 'PREMIUM',
@@ -139,8 +138,7 @@ export default function PricingPage() {
         { label: 'Bandwidth/mes', value: '50 GB' },
         { label: 'Tamaño máx de archivo', value: '500 MB' },
       ],
-      cta: 'Upgrade a PREMIUM',
-      ctaColor: 'bg-gradient-to-r from-purple-500 via-pink-500 to-purple-600 hover:shadow-lg hover:shadow-pink-500/50'
+      ctaColor: 'bg-gradient-to-r from-purple-500 to-pink-500 hover:shadow-lg hover:shadow-pink-500/50'
     }
   ];
 
@@ -233,7 +231,7 @@ export default function PricingPage() {
                   className={`w-full text-white font-bold py-3 px-6 rounded-xl transition-all text-sm ${
                     plan.name === 'FREE' 
                       ? 'opacity-50 cursor-not-allowed bg-gray-500' 
-                      : 'bg-gradient-to-r from-cyan-500 to-cyan-600 hover:shadow-lg hover:shadow-cyan-500/50'
+                      : plan.ctaColor
                   }`}
                   onClick={() => plan.name !== 'FREE' && handleClickCheckout(plan.name.toLowerCase())}
                 >

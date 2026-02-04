@@ -161,6 +161,11 @@ router.post('/checkout', async (req, res) => {
       }
 
       try {
+        const PLAN_PRICES = {
+          pro: 4.99,
+          premium: 9.99
+        };
+
         const response = await fetch('https://api.mercadopago.com/checkout/preferences', {
           method: 'POST',
           headers: {
@@ -172,6 +177,16 @@ router.post('/checkout', async (req, res) => {
             payer: {
               id: userId
             },
+            items: [
+              {
+                id: planTier,
+                title: `TriggerApp Plan ${planTier.toUpperCase()} - Suscripción Mensual`,
+                description: planTier === 'pro' ? '100 alertas/mes, 20k TTS chars' : 'Alertas ilimitadas, TTS ilimitado',
+                quantity: 1,
+                currency_id: 'USD',
+                unit_price: PLAN_PRICES[planTier]
+              }
+            ],
             subscription_plan_id: planId,
             back_urls: {
               success: `${FRONTEND_URL}/pricing?success=1`,

@@ -38,6 +38,8 @@ export const AdminDashboard = () => {
         params: { adminId: userId }
       });
       const usersData = response.data.users || [];
+      console.log(`📊 Admin Dashboard: Recibidos ${usersData.length} usuarios`);
+      console.log('First 3 users:', usersData.slice(0, 3).map(u => ({ id: u.userId, username: u.username, isCreator: u.isCreator })));
       setUsers(usersData);
       
       // Calcular estadísticas totales con validaciones
@@ -170,6 +172,7 @@ export const AdminDashboard = () => {
     }
 
     try {
+      console.log(`🎬 [Creator Toggle] Toggling creator role for ${targetUserId}, current: ${isCurrentlyCreator}, new: ${!isCurrentlyCreator}`);
       await axios.post(`${API_URL}/api/admin/users/${targetUserId}/creator-role`, {
         adminId: userId,
         isCreator: !isCurrentlyCreator
@@ -204,7 +207,7 @@ export const AdminDashboard = () => {
               {error || 'Acceso denegado'}
             </p>
             <button 
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate('/')}
               className="w-full px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/80 transition"
             >
               Volver al Dashboard
@@ -229,7 +232,7 @@ export const AdminDashboard = () => {
             </p>
           </div>
           <button 
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate('/')}
             className="px-6 py-2.5 bg-dark-card/70 border border-dark-border text-white rounded-lg hover:bg-dark-secondary hover:border-primary/50 transition-all font-semibold"
           >
             ← Volver
