@@ -836,6 +836,7 @@ router.post('/admin/users/:userId/creator-role', async (req, res) => {
         profile.isAssigned = true;
         profile.isActive = true;
         await profile.save();
+        console.log(`✅ [ADMIN] Asignó rol creador a ${userId}. Perfil existente:`, { code: profile.code, isAssigned: profile.isAssigned });
       } else {
         // Si no existe, crear con código personalizado o generado
         const sanitizeCode = (value) =>
@@ -844,7 +845,7 @@ router.post('/admin/users/:userId/creator-role', async (req, res) => {
             .replace(/[^A-Z0-9]/g, '')
             .slice(0, 16);
         
-        const generateCode = async (userId, username) => {
+        const generateCode = (username) => {
           const base = sanitizeCode(username || 'CREADOR');
           const suffix = Math.random().toString(36).substring(2, 6).toUpperCase();
           return sanitizeCode(`${base}${suffix}`);
@@ -860,8 +861,18 @@ router.post('/admin/users/:userId/creator-role', async (req, res) => {
             return res.status(409).json({ error: `El código "${code}" ya está en uso` });
           }
         } else {
-          // Generar código automáticamente
-          code = await generateCode(userId, user.username);
+          // Generar código automáticamente con retry
+          let attempts = 0;
+          const maxAttempts = 10;
+          while (attempts < maxAttempts) {
+            code = generateCode(user.username);
+            const existingCode = await CreatorProfile.findOne({ code });
+            if (!existingCode) break;
+            attempts++;
+          }
+          if (attempts >= maxAttempts) {
+            return res.status(500).json({ error: 'No se pudo generar un código único. Intenta con un código personalizado.' });
+          }
         }
         
         profile = await CreatorProfile.create({
@@ -870,9 +881,9 @@ router.post('/admin/users/:userId/creator-role', async (req, res) => {
           isAssigned: true,
           isActive: true
         });
+        console.log(`✅ [ADMIN] Asignó rol creador a ${userId}. Nuevo perfil creado:`, { code: profile.code, isAssigned: profile.isAssigned });
       }
 
-      console.log(`✅ [ADMIN] Asignó rol creador a ${userId}. Result:`, { code: profile.code, isAssigned: profile.isAssigned, isActive: profile.isActive });
       return res.json({
         success: true,
         message: 'Rol creador asignado',

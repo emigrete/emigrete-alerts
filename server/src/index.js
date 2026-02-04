@@ -33,6 +33,8 @@ const FRONTEND_URL = process.env.FRONTEND_URL || '*';
 app.use(cors({
   origin: FRONTEND_URL,
   methods: ['GET', 'POST', 'DELETE', 'PUT', 'OPTIONS'],
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 app.use('/api/billing/webhook/mercadopago', express.raw({ type: 'application/json' }));

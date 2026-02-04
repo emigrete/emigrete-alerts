@@ -172,14 +172,7 @@ router.post('/checkout', async (req, res) => {
             reason: `TriggerApp Plan ${planTier.toUpperCase()}`,
             external_reference: externalRef,
             preapproval_plan_id: planId,
-            payer_email: null, // Se pedirá en el checkout
-            back_url: `${FRONTEND_URL}/pricing?success=1`,
-            auto_recurring: {
-              frequency: 1,
-              frequency_type: 'months',
-              transaction_amount: planTier === 'pro' ? 7500 : 15000, // ARS redondeados
-              currency_id: 'ARS'
-            }
+            back_url: `${FRONTEND_URL}/pricing?success=1`
           })
         });
 
