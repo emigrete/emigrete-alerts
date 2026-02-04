@@ -8,33 +8,33 @@ import { RewardCreatorTTS } from './RewardCreatorTTS';
 
 const ELEVENLABS_VOICES = [
   // FREE: 2 voces
-  { id: 'onwK4e9ZLuTAKqWW03F9', name: 'Daniel (Masculino, Argentina)', flag: '🇦🇷', tier: 'free' },
-  { id: 'ThT5KcBeYPX3keUQqHPh', name: 'Elena (Femenino, Chile)', flag: '🇨🇱', tier: 'free' },
+  { id: 'onwK4e9ZLuTAKqWW03F9', name: 'Daniel (Argentina)', tier: 'free' },
+  { id: 'ThT5KcBeYPX3keUQqHPh', name: 'Elena (Chile)', tier: 'free' },
   
   // PRO: Voces adicionales (11 más)
-  { id: 'dlGxemPxFMTY7iXagmOj', name: 'Sofia (Femenino, México)', flag: '🇲🇽', tier: 'pro' },
-  { id: 'sDh3eviBhiuHKi0MjTNq', name: 'Carlos (Masculino, España)', flag: '🇪🇸', tier: 'pro' },
-  { id: 'AxFLn9byyiDbMn5fmyqu', name: 'Valentina (Femenino, Argentina)', flag: '🇦🇷', tier: 'pro' },
-  { id: 'gD1IexrzCvsXPHUuT0s3', name: 'Diego (Masculino, Colombia)', flag: '🇨🇴', tier: 'pro' },
-  { id: 'ajOR9IDAaubDK5qtLUqQ', name: 'Lucia (Femenino, Perú)', flag: '🇵🇪', tier: 'pro' },
-  { id: 'iDEmt5MnqUotdwCIVplo', name: 'Andrés (Masculino, Venezuela)', flag: '🇻🇪', tier: 'pro' },
-  { id: 'ay4iqk10DLwc8KGSrf2t', name: 'Martina (Femenino, Uruguay)', flag: '🇺🇾', tier: 'pro' },
-  { id: '0cheeVA5B3Cv6DGq65cT', name: 'Roberto (Masculino, Panamá)', flag: '🇵🇦', tier: 'pro' },
-  { id: 'ClNifCEVq1smkl4M3aTk', name: 'Gabriela (Femenino, Guatemala)', flag: '🇬🇹', tier: 'pro' },
-  { id: 'x5IDPSl4ZUbhosMmVFTk', name: 'Miguel (Masculino, República Dominicana)', flag: '🇩🇴', tier: 'pro' },
+  { id: 'dlGxemPxFMTY7iXagmOj', name: 'Sofia (México)', tier: 'pro' },
+  { id: 'sDh3eviBhiuHKi0MjTNq', name: 'Carlos (España)', tier: 'pro' },
+  { id: 'AxFLn9byyiDbMn5fmyqu', name: 'Valentina (Argentina)', tier: 'pro' },
+  { id: 'gD1IexrzCvsXPHUuT0s3', name: 'Diego (Colombia)', tier: 'pro' },
+  { id: 'ajOR9IDAaubDK5qtLUqQ', name: 'Lucia (Perú)', tier: 'pro' },
+  { id: 'iDEmt5MnqUotdwCIVplo', name: 'Andrés (Venezuela)', tier: 'pro' },
+  { id: 'ay4iqk10DLwc8KGSrf2t', name: 'Martina (Uruguay)', tier: 'pro' },
+  { id: '0cheeVA5B3Cv6DGq65cT', name: 'Roberto (Panamá)', tier: 'pro' },
+  { id: 'ClNifCEVq1smkl4M3aTk', name: 'Gabriela (Guatemala)', tier: 'pro' },
+  { id: 'x5IDPSl4ZUbhosMmVFTk', name: 'Miguel (República Dominicana)', tier: 'pro' },
   
   // PREMIUM: Voces premium (11 más)
-  { id: 'o2vbTbO3g4GrKUg7rehy', name: 'Narrador (Épico)', flag: '🎭', tier: 'premium' },
-  { id: '9oPKasc15pfAbMr7N6Gs', name: 'Locutora (Radio)', flag: '🎭', tier: 'premium' },
-  { id: 'gBTPbHzRd0ZmV75Z5Zk4', name: 'Streamer (Entusiasmado)', flag: '🎭', tier: 'premium' },
-  { id: 'wBXNqKUATyqu0RtYt25i', name: 'ASMR (Susurro)', flag: '🎭', tier: 'premium' },
-  { id: 'wJqPPQ618aTW29mptyoc', name: 'Villano (Oscuro)', flag: '🎭', tier: 'premium' },
-  { id: 'gJEfHTTiifXEDmO687lC', name: 'Comediante (Sarcástico)', flag: '🎭', tier: 'premium' },
-  { id: 'wcs09USXSN5Bl7FXohVZ', name: 'Informativo (Serio)', flag: '🎭', tier: 'premium' },
-  { id: 'sRYzP8TwEiiqAWebdYPJ', name: 'Romántica (Suave)', flag: '🎭', tier: 'premium' },
-  { id: 'rpNe0HOx7heUulPiOEaG', name: 'Suspense (Misterio)', flag: '🎭', tier: 'premium' },
-  { id: 'YNOujSUmHtgN6anjqXPf', name: 'Cómico (Divertido)', flag: '🎭', tier: 'premium' },
-  { id: 'GDzHdQOi6jjf8zaXhCYD', name: 'Deep (Profundo)', flag: '🎭', tier: 'premium' }
+  { id: 'o2vbTbO3g4GrKUg7rehy', name: 'Narrador (Épico)', tier: 'premium' },
+  { id: '9oPKasc15pfAbMr7N6Gs', name: 'Locutora (Radio)', tier: 'premium' },
+  { id: 'gBTPbHzRd0ZmV75Z5Zk4', name: 'Streamer (Entusiasmado)', tier: 'premium' },
+  { id: 'wBXNqKUATyqu0RtYt25i', name: 'ASMR (Susurro)', tier: 'premium' },
+  { id: 'wJqPPQ618aTW29mptyoc', name: 'Villano (Oscuro)', tier: 'premium' },
+  { id: 'gJEfHTTiifXEDmO687lC', name: 'Comediante (Sarcástico)', tier: 'premium' },
+  { id: 'wcs09USXSN5Bl7FXohVZ', name: 'Informativo (Serio)', tier: 'premium' },
+  { id: 'sRYzP8TwEiiqAWebdYPJ', name: 'Romántica (Suave)', tier: 'premium' },
+  { id: 'rpNe0HOx7heUulPiOEaG', name: 'Suspense (Misterio)', tier: 'premium' },
+  { id: 'YNOujSUmHtgN6anjqXPf', name: 'Cómico (Divertido)', tier: 'premium' },
+  { id: 'GDzHdQOi6jjf8zaXhCYD', name: 'Deep (Profundo)', tier: 'premium' }
 ];
 
 export const TTSManager = ({ triggers, rewards, userId, username, onRefresh, isDemo, onCreated }) => {

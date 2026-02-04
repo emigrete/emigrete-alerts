@@ -5,33 +5,33 @@ import { API_URL } from '../constants/config';
 
 const ELEVENLABS_VOICES = [
   // FREE: 2 voces
-  { id: 'onwK4e9ZLuTAKqWW03F9', name: 'Daniel (Masculino, Argentina)', flag: '🇦🇷', tier: 'free' },
-  { id: 'ThT5KcBeYPX3keUQqHPh', name: 'Elena (Femenino, Chile)', flag: '🇨🇱', tier: 'free' },
+  { id: 'onwK4e9ZLuTAKqWW03F9', name: 'Daniel (Argentina)', tier: 'free' },
+  { id: 'ThT5KcBeYPX3keUQqHPh', name: 'Elena (Chile)', tier: 'free' },
   
   // PRO: Voces adicionales (11 más)
-  { id: 'dlGxemPxFMTY7iXagmOj', name: 'Sofia (Femenino, México)', flag: '🇲🇽', tier: 'pro' },
-  { id: 'sDh3eviBhiuHKi0MjTNq', name: 'Carlos (Masculino, España)', flag: '🇪🇸', tier: 'pro' },
-  { id: 'AxFLn9byyiDbMn5fmyqu', name: 'Valentina (Femenino, Argentina)', flag: '🇦🇷', tier: 'pro' },
-  { id: 'gD1IexrzCvsXPHUuT0s3', name: 'Diego (Masculino, Colombia)', flag: '🇨🇴', tier: 'pro' },
-  { id: 'ajOR9IDAaubDK5qtLUqQ', name: 'Lucia (Femenino, Perú)', flag: '🇵🇪', tier: 'pro' },
-  { id: 'iDEmt5MnqUotdwCIVplo', name: 'Andrés (Masculino, Venezuela)', flag: '🇻🇪', tier: 'pro' },
-  { id: 'ay4iqk10DLwc8KGSrf2t', name: 'Martina (Femenino, Uruguay)', flag: '🇺🇾', tier: 'pro' },
-  { id: '0cheeVA5B3Cv6DGq65cT', name: 'Roberto (Masculino, Panamá)', flag: '🇵🇦', tier: 'pro' },
-  { id: 'ClNifCEVq1smkl4M3aTk', name: 'Gabriela (Femenino, Guatemala)', flag: '🇬🇹', tier: 'pro' },
-  { id: 'x5IDPSl4ZUbhosMmVFTk', name: 'Miguel (Masculino, República Dominicana)', flag: '🇩🇴', tier: 'pro' },
+  { id: 'dlGxemPxFMTY7iXagmOj', name: 'Sofia (México)', tier: 'pro' },
+  { id: 'sDh3eviBhiuHKi0MjTNq', name: 'Carlos (España)', tier: 'pro' },
+  { id: 'AxFLn9byyiDbMn5fmyqu', name: 'Valentina (Argentina)', tier: 'pro' },
+  { id: 'gD1IexrzCvsXPHUuT0s3', name: 'Diego (Colombia)', tier: 'pro' },
+  { id: 'ajOR9IDAaubDK5qtLUqQ', name: 'Lucia (Perú)', tier: 'pro' },
+  { id: 'iDEmt5MnqUotdwCIVplo', name: 'Andrés (Venezuela)', tier: 'pro' },
+  { id: 'ay4iqk10DLwc8KGSrf2t', name: 'Martina (Uruguay)', tier: 'pro' },
+  { id: '0cheeVA5B3Cv6DGq65cT', name: 'Roberto (Panamá)', tier: 'pro' },
+  { id: 'ClNifCEVq1smkl4M3aTk', name: 'Gabriela (Guatemala)', tier: 'pro' },
+  { id: 'x5IDPSl4ZUbhosMmVFTk', name: 'Miguel (República Dominicana)', tier: 'pro' },
   
   // PREMIUM: Voces premium (11 más)
-  { id: 'o2vbTbO3g4GrKUg7rehy', name: 'Narrador (Épico)', flag: '🎭', tier: 'premium' },
-  { id: '9oPKasc15pfAbMr7N6Gs', name: 'Locutora (Radio)', flag: '🎭', tier: 'premium' },
-  { id: 'gBTPbHzRd0ZmV75Z5Zk4', name: 'Streamer (Entusiasmado)', flag: '🎭', tier: 'premium' },
-  { id: 'wBXNqKUATyqu0RtYt25i', name: 'ASMR (Susurro)', flag: '🎭', tier: 'premium' },
-  { id: 'wJqPPQ618aTW29mptyoc', name: 'Villano (Oscuro)', flag: '🎭', tier: 'premium' },
-  { id: 'gJEfHTTiifXEDmO687lC', name: 'Comediante (Sarcástico)', flag: '🎭', tier: 'premium' },
-  { id: 'wcs09USXSN5Bl7FXohVZ', name: 'Informativo (Serio)', flag: '🎭', tier: 'premium' },
-  { id: 'sRYzP8TwEiiqAWebdYPJ', name: 'Romántica (Suave)', flag: '🎭', tier: 'premium' },
-  { id: 'rpNe0HOx7heUulPiOEaG', name: 'Suspense (Misterio)', flag: '🎭', tier: 'premium' },
-  { id: 'YNOujSUmHtgN6anjqXPf', name: 'Cómico (Divertido)', flag: '🎭', tier: 'premium' },
-  { id: 'GDzHdQOi6jjf8zaXhCYD', name: 'Deep (Profundo)', flag: '🎭', tier: 'premium' }
+  { id: 'o2vbTbO3g4GrKUg7rehy', name: 'Narrador (Épico)', tier: 'premium' },
+  { id: '9oPKasc15pfAbMr7N6Gs', name: 'Locutora (Radio)', tier: 'premium' },
+  { id: 'gBTPbHzRd0ZmV75Z5Zk4', name: 'Streamer (Entusiasmado)', tier: 'premium' },
+  { id: 'wBXNqKUATyqu0RtYt25i', name: 'ASMR (Susurro)', tier: 'premium' },
+  { id: 'wJqPPQ618aTW29mptyoc', name: 'Villano (Oscuro)', tier: 'premium' },
+  { id: 'gJEfHTTiifXEDmO687lC', name: 'Comediante (Sarcástico)', tier: 'premium' },
+  { id: 'wcs09USXSN5Bl7FXohVZ', name: 'Informativo (Serio)', tier: 'premium' },
+  { id: 'sRYzP8TwEiiqAWebdYPJ', name: 'Romántica (Suave)', tier: 'premium' },
+  { id: 'rpNe0HOx7heUulPiOEaG', name: 'Suspense (Misterio)', tier: 'premium' },
+  { id: 'YNOujSUmHtgN6anjqXPf', name: 'Cómico (Divertido)', tier: 'premium' },
+  { id: 'GDzHdQOi6jjf8zaXhCYD', name: 'Deep (Profundo)', tier: 'premium' }
 ];
 
 export const TTSConfig = ({ triggerId, initialConfig, onClose, onUpdate, userId, userTier = 'free' }) => {
@@ -285,19 +285,12 @@ export const TTSConfig = ({ triggerId, initialConfig, onClose, onUpdate, userId,
                 }}
               >
                 {getAvailableVoices().map(voice => (
-                  <option key={voice.id} value={voice.id} style={{ backgroundColor: '#1a1a2e', color: '#fff' }}>{voice.flag} {voice.name}</option>
+                  <option key={voice.id} value={voice.id} style={{ backgroundColor: '#1a1a2e', color: '#fff' }}>{voice.name}</option>
                 ))}
               </select>
               <p className="text-xs text-dark-muted mt-2 p-2 bg-blue-500/10 border border-blue-500/20 rounded">
                 <strong>Plan {userTier.toUpperCase()}:</strong> {getAvailableVoices().length} voces disponibles
               </p>
-              <input
-                type="text"
-                value={config.voiceId || ''}
-                onChange={(e) => setConfig({ ...config, voiceId: e.target.value.trim() })}
-                placeholder="O pega un ID personalizado de ElevenLabs"
-                className="mt-2 w-full p-2 rounded-lg border border-dark-border bg-black text-white outline-none focus:border-primary transition text-xs"
-              />
             </div>
 
             {/* Usar mensaje del viewer */}
@@ -378,6 +371,26 @@ export const TTSConfig = ({ triggerId, initialConfig, onClose, onUpdate, userId,
               />
               <small className="text-dark-muted">Mayor = más similar a la voz original</small>
             </div>
+
+            {/* ID personalizado - Solo PREMIUM */}
+            {userTier === 'premium' && (
+              <div className="mb-6 p-4 bg-purple-500/10 border border-purple-500/30 rounded-xl">
+                <label className="block mb-2 font-semibold text-purple-300 text-sm uppercase tracking-wider">
+                  ID Personalizado (Premium)
+                </label>
+                <p className="text-xs text-dark-muted mb-3">
+                  Usa voces personalizadas de ElevenLabs. <a href="https://elevenlabs.io/voice-lab" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-semibold">Ir a ElevenLabs Voice Lab</a>
+                </p>
+                <input
+                  type="text"
+                  value={config.voiceId || ''}
+                  onChange={(e) => setConfig({ ...config, voiceId: e.target.value.trim() })}
+                  placeholder="Pega el ID de voz de ElevenLabs aquí"
+                  className="w-full p-2 rounded-lg border border-purple-500/30 bg-black text-white outline-none focus:border-purple-500 transition text-xs"
+                />
+                <small className="text-dark-muted mt-2 block">Ejemplo: abc123def456ghi789jkl</small>
+              </div>
+            )}
 
             {/* Botón de prueba */}
             <button
