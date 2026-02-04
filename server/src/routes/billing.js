@@ -194,43 +194,21 @@ router.post('/checkout', async (req, res) => {
       }
 
       try {
-        // Mercado Pago suscripciones: usar /checkout/preferences con items
+        // Usar el endpoint /preapproval directamente con los planes preaprobados existentes
         const reason = creatorCodeResult.valid 
-          ? `TriggerApp Plan ${planTier.toUpperCase()} - Descuento Creador`
-          : `TriggerApp Plan ${planTier.toUpperCase()}`;
+          ? `WelyAlerts ${planTier.toUpperCase()} - Código: ${creatorCodeResult.code}`
+          : `WelyAlerts ${planTier.toUpperCase()}`;
         
-        const planPriceUSD = planTier === 'pro' ? 5.17 : 10.34; // Conversión aproximada
-        
-        const response = await fetch('https://api.mercadopago.com/checkout/preferences', {
+        const response = await fetch('https://api.mercadopago.com/preapproval', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${MP_ACCESS_TOKEN}`,
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
+            preapproval_plan_id: planId,
             reason,
-            external_reference: externalRef,
-            items: [
-              {
-                title: reason,
-                description: `Suscripción al plan ${planTier.toUpperCase()} de TriggerApp`,
-                quantity: 1,
-                currency_id: 'USD',
-                unit_price: planPriceUSD
-              }
-            ],
-            auto_recurring: {
-              frequency: 1,
-              frequency_type: 'months',
-              transaction_amount: planPriceUSD,
-              debit_type: 'debit'
-            },
-            back_urls: {
-              success: `${FRONTEND_URL}/pricing?success=1`,
-              failure: `${FRONTEND_URL}/pricing?canceled=1`,
-              pending: `${FRONTEND_URL}/pricing?pending=1`
-            }
-            // Nota: notification_url se configura en el dashboard de Mercado Pago, no en el request
+            external_reference: externalRef
           })
         });
 
@@ -244,7 +222,6 @@ router.post('/checkout', async (req, res) => {
             responseBody: data
           });
           
-          // Errores comunes
           if (data.message?.includes('template') || data.message?.includes('does not exist')) {
             return res.status(500).json({ 
               error: `El plan ${planTier} (${planVariant}) está mal configurado en Mercado Pago. El ID del template no existe: ${planId}` 

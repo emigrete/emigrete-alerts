@@ -19,7 +19,7 @@ export function CheckoutModal({ isOpen, planTier, onClose, userId }) {
     const toastId = toast.loading('Creando checkout con ' + providerName + '...');
 
     try {
-      console.log('📦 Iniciando checkout:', { userId, planTier, selectedProvider });
+      console.log('Iniciando checkout:', { userId, planTier, selectedProvider });
       
       const res = await axios.post(`${API_URL}/api/billing/checkout`, {
         userId,
@@ -28,17 +28,17 @@ export function CheckoutModal({ isOpen, planTier, onClose, userId }) {
         provider: selectedProvider
       });
 
-      console.log('✅ Checkout response:', res.data);
+      console.log('Checkout response:', res.data);
 
       if (res.data?.url) {
-        console.log('🔄 Redirigiendo a:', res.data.url);
+        console.log('Redirigiendo a:', res.data.url);
         window.location.href = res.data.url;
       } else {
         toast.error('No se pudo iniciar el checkout - sin URL de redirección', { id: toastId });
       }
     } catch (error) {
       const errorMsg = error.response?.data?.error || error.message || 'Error iniciando checkout';
-      console.error('❌ Checkout error:', { error: error.response?.data, status: error.response?.status, message: error.message });
+      console.error('Checkout error:', { error: error.response?.data, status: error.response?.status, message: error.message });
       toast.error(errorMsg, { id: toastId });
     } finally {
       setLoading(false);
@@ -48,12 +48,14 @@ export function CheckoutModal({ isOpen, planTier, onClose, userId }) {
   if (!isOpen) return null;
 
   const planName = planTier === 'pro' ? 'Plan PRO' : 'Plan PREMIUM';
+  const planPrice = planTier === 'pro' ? '7.500' : '15.000'; // ARS
 
   return (
     <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
       <div className="bg-dark-card border border-dark-border rounded-2xl p-8 max-w-md w-full">
         <h2 className="text-2xl font-black text-white mb-1">{planName}</h2>
-        <p className="text-dark-muted text-sm mb-6">Selecciona tu método de pago</p>
+        <p className="text-dark-muted text-sm mb-2">Selecciona tu método de pago</p>
+        <p className="text-cyan-400 text-sm font-semibold mb-6">Suscripción: ${planPrice} ARS/mes</p>
 
         {/* Payment Provider Selection */}
         <div className="grid grid-cols-2 gap-3 mb-6">

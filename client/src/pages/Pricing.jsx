@@ -84,13 +84,13 @@ export default function PricingPage() {
   };
 
   const getDisplayPrice = (plan) => {
-    if (plan.price === 0) return '0';
-    if (!appliedDiscount) return plan.price.toFixed(2);
+    if (plan.price === 0) return 0;
+    if (!appliedDiscount) return Math.round(plan.price);
 
     const planKey = plan.name.toLowerCase();
-    if (planKey !== appliedDiscount.planTier) return plan.price.toFixed(2);
+    if (planKey !== appliedDiscount.planTier) return Math.round(plan.price);
     const discounted = plan.price * (1 - appliedDiscount.discountRate);
-    return discounted.toFixed(2);
+    return Math.round(discounted);
   };
 
   const plans = [
@@ -112,7 +112,7 @@ export default function PricingPage() {
     },
     {
       name: 'PRO',
-      price: 4.99,
+      price: 7500,
       description: 'Para creadores activos',
       color: 'from-blue-500 to-blue-600',
       limits: [
@@ -127,7 +127,7 @@ export default function PricingPage() {
     },
     {
       name: 'PREMIUM',
-      price: 9.99,
+      price: 15000,
       description: 'Sin límites, máximo control',
       color: 'from-purple-500 via-pink-500 to-purple-600',
       limits: [
@@ -198,19 +198,17 @@ export default function PricingPage() {
 
                 <div className="mb-6">
                   <div className="flex items-end gap-2">
-                    <span className="text-5xl font-black text-white">${getDisplayPrice(plan)}</span>
+                    <span className="text-5xl font-black text-white">${getDisplayPrice(plan).toLocaleString()}</span>
                     {plan.price !== 0 && (
-                      <span className="text-dark-muted text-sm">/mes USD</span>
+                      <span className="text-dark-muted text-sm">/mes ARS</span>
                     )}
                   </div>
                   {plan.price !== 0 && (
-                    <p className="text-sm text-cyan-400 font-semibold mt-2">
-                      ≈ ${Math.ceil(getDisplayPrice(plan) * 1450 / 1000) * 1000} ARS/mes
-                    </p>
+                    <p className="text-xs text-gray-400 mt-1">Suscripción mensual</p>
                   )}
                   {appliedDiscount && plan.price !== 0 && plan.name.toLowerCase() === appliedDiscount.planTier && (
                     <div className="text-xs text-green-400 mt-2">
-                      Antes <span className="line-through text-dark-muted">${plan.price.toFixed(2)}</span>
+                      Antes <span className="line-through text-dark-muted">${plan.price.toLocaleString()}</span>
                     </div>
                   )}
                 </div>
