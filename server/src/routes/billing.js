@@ -162,8 +162,8 @@ router.post('/checkout', async (req, res) => {
 
       try {
         const PLAN_PRICES = {
-          pro: 4.99,
-          premium: 9.99
+          pro: 5,
+          premium: 10
         };
 
         const response = await fetch('https://api.mercadopago.com/checkout/preferences', {

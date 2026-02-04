@@ -828,19 +828,39 @@ router.post('/admin/users/:userId/creator-role', async (req, res) => {
         return res.status(404).json({ error: 'Usuario no encontrado' });
       }
 
-      const profile = await CreatorProfile.findOneAndUpdate(
-        { userId },
-        { 
+      // Verificar si ya existe un perfil
+      let profile = await CreatorProfile.findOne({ userId });
+      
+      if (profile) {
+        // Si existe, solo actualizar flags
+        profile.isAssigned = true;
+        profile.isActive = true;
+        await profile.save();
+      } else {
+        // Si no existe, crear con código generado
+        const sanitizeCode = (value) =>
+          String(value || '')
+            .toUpperCase()
+            .replace(/[^A-Z0-9]/g, '')
+            .slice(0, 16);
+        
+        const generateCode = async (userId, username) => {
+          const base = sanitizeCode(username || 'CREADOR');
+          const suffix = Math.random().toString(36).substring(2, 6).toUpperCase();
+          return sanitizeCode(`${base}${suffix}`);
+        };
+        
+        const code = await generateCode(userId, user.username);
+        
+        profile = await CreatorProfile.create({
+          userId,
+          code,
           isAssigned: true,
           isActive: true
-        },
-        { 
-          upsert: true, 
-          new: true 
-        }
-      );
+        });
+      }
 
-      console.log(`✅ [ADMIN] Asignó rol creador a ${userId}. Result:`, { isAssigned: profile.isAssigned, isActive: profile.isActive });
+      console.log(`✅ [ADMIN] Asignó rol creador a ${userId}. Result:`, { code: profile.code, isAssigned: profile.isAssigned, isActive: profile.isActive });
       return res.json({
         success: true,
         message: 'Rol creador asignado',
@@ -851,20 +871,19 @@ router.post('/admin/users/:userId/creator-role', async (req, res) => {
         }
       });
     } else {
-      // Remover rol creador - usar upserts:true en caso de que no exista registro previo
-      const result = await CreatorProfile.findOneAndUpdate(
-        { userId },
-        { isAssigned: false, isActive: false },
-        { new: true, upsert: true }
-      );
-
-      console.log(`❌ [ADMIN] Removió rol creador de ${userId}. Result:`, { isAssigned: result.isAssigned, isActive: result.isActive });
+      // Remover rol creador
+      const profile = await CreatorProfile.findOne({ userId });
       
-      if (!result) {
+      if (!profile) {
         return res.status(404).json({ error: 'Perfil de creador no encontrado' });
       }
+      
+      profile.isAssigned = false;
+      profile.isActive = false;
+      await profile.save();
 
-      console.log(`✅ Admin removió rol creador de ${userId}`);
+      console.log(`❌ [ADMIN] Removió rol creador de ${userId}. Result:`, { isAssigned: profile.isAssigned, isActive: profile.isActive });
+      
       return res.json({
         success: true,
         message: 'Rol creador removido'
