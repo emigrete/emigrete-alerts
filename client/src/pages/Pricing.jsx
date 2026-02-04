@@ -1,12 +1,107 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
+import { Toaster, toast } from 'sonner';
+import { API_URL } from '../constants/config';
 import { AppFooter } from '../components/AppFooter';
 
 export default function PricingPage() {
+  const [creatorCode, setCreatorCode] = useState('');
+  const [planTier, setPlanTier] = useState('pro');
+  const [applying, setApplying] = useState(false);
+  const [appliedDiscount, setAppliedDiscount] = useState(null);
+  const [checkoutPlan, setCheckoutPlan] = useState(null);
+  const [paymentProvider, setPaymentProvider] = useState('mercadopago');
+  const userId = localStorage.getItem('twitchUserId');
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get('ref');
+    if (ref) setCreatorCode(ref);
+
+    if (params.get('success') === '1') {
+      toast.success('Pago completado. Tu suscripción se activará en breve.');
+    }
+    if (params.get('canceled') === '1') {
+      toast.warning('Pago cancelado.');
+    }
+  }, []);
+
+  const handleApplyCode = async () => {
+    if (!creatorCode.trim()) {
+      toast.warning('Ingresá un código');
+      return;
+    }
+    if (!userId) {
+      toast.warning('Iniciá sesión para aplicar el código');
+      return;
+    }
+
+    setApplying(true);
+    const toastId = toast.loading('Aplicando código...');
+    try {
+      const res = await axios.post(`${API_URL}/api/creator/apply`, {
+        userId,
+        code: creatorCode,
+        planTier
+      });
+      setAppliedDiscount({
+        code: res.data.normalizedCode || creatorCode.toUpperCase(),
+        discountRate: res.data.discountRate,
+        planTier
+      });
+      toast.success('Código aplicado', { id: toastId });
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'No se pudo aplicar el código', { id: toastId });
+    } finally {
+      setApplying(false);
+    }
+  };
+
+  const handleCheckout = async (tier) => {
+    if (!userId) {
+      toast.warning('Iniciá sesión para suscribirte');
+      return;
+    }
+
+    setCheckoutPlan(tier);
+    const toastId = toast.loading('Creando checkout...');
+
+    try {
+      const codeToSend = appliedDiscount?.planTier === tier ? appliedDiscount.code : '';
+      const res = await axios.post(`${API_URL}/api/billing/checkout`, {
+        userId,
+        planTier: tier,
+        creatorCode: codeToSend,
+        provider: paymentProvider
+      });
+
+      if (res.data?.url) {
+        window.location.href = res.data.url;
+      } else {
+        toast.error('No se pudo iniciar el checkout', { id: toastId });
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Error iniciando checkout', { id: toastId });
+    } finally {
+      setCheckoutPlan(null);
+    }
+  };
+
+  const getDisplayPrice = (plan) => {
+    if (plan.price === 0) return '0';
+    if (!appliedDiscount) return plan.price.toFixed(2);
+
+    const planKey = plan.name.toLowerCase();
+    if (planKey !== appliedDiscount.planTier) return plan.price.toFixed(2);
+    const discounted = plan.price * (1 - appliedDiscount.discountRate);
+    return discounted.toFixed(2);
+  };
+
   const plans = [
     {
       name: 'FREE',
-      price: '0',
+      price: 0,
       description: 'Perfecto para empezar',
       color: 'from-gray-500 to-gray-600',
       limits: [
@@ -22,13 +117,13 @@ export default function PricingPage() {
     },
     {
       name: 'PRO',
-      price: '4.99',
+      price: 4.99,
       description: 'Para creadores activos',
       color: 'from-blue-500 to-blue-600',
       limits: [
         { label: 'Alertas/mes', value: '100' },
         { label: 'Caracteres TTS/mes', value: '20.000' },
-        { label: 'Voces disponibles', value: '13' },
+        { label: 'Voces disponibles', value: '5' },
         { label: 'Storage total', value: '1 GB' },
         { label: 'Tamaño máx de archivo', value: '30 MB' },
         { label: 'Bandwidth/mes', value: '5 GB' },
@@ -38,13 +133,13 @@ export default function PricingPage() {
     },
     {
       name: 'PREMIUM',
-      price: '9.99',
+      price: 9.99,
       description: 'Sin límites, máximo control',
       color: 'from-purple-500 via-pink-500 to-purple-600',
       limits: [
         { label: 'Alertas/mes', value: '∞ Ilimitadas' },
         { label: 'Caracteres TTS/mes', value: '∞ Ilimitados' },
-        { label: 'Voces disponibles', value: '23' },
+        { label: 'Voces disponibles', value: '10' },
         { label: 'Storage total', value: '10 GB' },
         { label: 'Bandwidth/mes', value: '50 GB' },
         { label: 'Tamaño máx de archivo', value: '500 MB' },
@@ -56,6 +151,7 @@ export default function PricingPage() {
 
   return (
     <div className="min-h-screen text-dark-text p-5 lg:p-12 relative overflow-hidden">
+      <Toaster position="top-right" theme="dark" richColors />
       {/* Fondo decorativo */}
       <div className="fixed inset-0 z-0 pointer-events-none opacity-5">
         <svg className="w-full h-full" viewBox="0 0 1440 800" preserveAspectRatio="xMidYMid slice">
@@ -80,6 +176,52 @@ export default function PricingPage() {
           <p className="text-dark-muted text-xl">
             Elige el plan perfecto para tu stream
           </p>
+        </div>
+
+        <div className="bg-dark-card/60 border border-dark-border rounded-2xl p-6 mb-10">
+          <h2 className="text-xl font-bold text-white mb-3">Código de creador</h2>
+          <p className="text-sm text-dark-muted mb-4">
+            Aplicá un código y obtené <strong>10% de descuento</strong>.
+          </p>
+          <div className="grid md:grid-cols-[1fr_160px_160px] gap-3">
+            <input
+              value={creatorCode}
+              onChange={(e) => setCreatorCode(e.target.value)}
+              placeholder="Ingresá tu código"
+              className="w-full p-3 rounded-lg border-2 border-dark-border bg-dark-secondary text-white outline-none focus:border-primary"
+            />
+            <select
+              value={planTier}
+              onChange={(e) => setPlanTier(e.target.value)}
+              className="w-full p-3 rounded-lg border-2 border-dark-border bg-dark-secondary text-white outline-none focus:border-primary"
+            >
+              <option value="pro">PRO</option>
+              <option value="premium">PREMIUM</option>
+            </select>
+            <button
+              onClick={handleApplyCode}
+              disabled={applying}
+              className="bg-primary text-white font-bold py-3 px-6 rounded-lg hover:opacity-90 disabled:opacity-60"
+            >
+              {applying ? 'Aplicando...' : 'Aplicar'}
+            </button>
+          </div>
+          <div className="mt-4 grid md:grid-cols-[220px_1fr] gap-3 items-center">
+            <label className="text-sm text-dark-muted">Método de pago</label>
+            <select
+              value={paymentProvider}
+              onChange={(e) => setPaymentProvider(e.target.value)}
+              className="w-full p-3 rounded-lg border-2 border-dark-border bg-dark-secondary text-white outline-none focus:border-primary"
+            >
+              <option value="mercadopago">Mercado Pago</option>
+              <option value="paypal">PayPal</option>
+            </select>
+          </div>
+          {appliedDiscount && (
+            <p className="text-xs text-green-400 mt-3">
+              Código {appliedDiscount.code} aplicado en plan {appliedDiscount.planTier.toUpperCase()}.
+            </p>
+          )}
         </div>
 
         {/* Planes */}
@@ -108,9 +250,16 @@ export default function PricingPage() {
                 <p className="text-dark-muted text-sm mb-4">{plan.description}</p>
 
                 <div className="mb-6">
-                  <span className="text-5xl font-black text-white">${plan.price}</span>
-                  {plan.price !== '0' && (
-                    <span className="text-dark-muted text-sm ml-2">/mes</span>
+                  <div className="flex items-end gap-2">
+                    <span className="text-5xl font-black text-white">${getDisplayPrice(plan)}</span>
+                    {plan.price !== 0 && (
+                      <span className="text-dark-muted text-sm">/mes</span>
+                    )}
+                  </div>
+                  {appliedDiscount && plan.price !== 0 && plan.name.toLowerCase() === appliedDiscount.planTier && (
+                    <div className="text-xs text-green-400 mt-2">
+                      Antes <span className="line-through text-dark-muted">${plan.price.toFixed(2)}</span>
+                    </div>
                   )}
                 </div>
 
@@ -130,8 +279,13 @@ export default function PricingPage() {
                   className={`w-full text-white font-bold py-3 px-6 rounded-xl transition-all text-sm ${
                     plan.name === 'FREE' ? 'opacity-50 cursor-not-allowed bg-gray-500' : plan.ctaColor
                   }`}
+                  onClick={() => plan.name !== 'FREE' && handleCheckout(plan.name.toLowerCase())}
                 >
-                  {plan.name === 'FREE' ? 'Tu plan actual' : 'Próximamente'}
+                  {plan.name === 'FREE'
+                    ? 'Tu plan actual'
+                    : checkoutPlan === plan.name.toLowerCase()
+                    ? 'Redirigiendo...'
+                    : `Suscribirse con ${paymentProvider === 'paypal' ? 'PayPal' : 'Mercado Pago'}`}
                 </button>
               </div>
             </div>

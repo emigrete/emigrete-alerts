@@ -1,39 +1,11 @@
+import { ELEVENLABS_VOICES, TIER_HIERARCHY } from '../constants/ttsVoices';
+
 export const TTSGuide = ({ userTier = 'free' }) => {
   // Calcular cantidad de voces disponibles
-  const tierHierarchy = { free: 0, pro: 1, premium: 2 };
-  const userTierLevel = tierHierarchy[userTier] || 0;
-  
-  const allVoices = [
-    // FREE: 2 voces
-    { id: 'onwK4e9ZLuTAKqWW03F9', name: 'Daniel', tier: 'free' },
-    { id: 'ThT5KcBeYPX3keUQqHPh', name: 'Elena', tier: 'free' },
-    // PRO: 11 voces más
-    { id: 'dlGxemPxFMTY7iXagmOj', name: 'Sofia', tier: 'pro' },
-    { id: 'sDh3eviBhiuHKi0MjTNq', name: 'Carlos', tier: 'pro' },
-    { id: 'AxFLn9byyiDbMn5fmyqu', name: 'Valentina', tier: 'pro' },
-    { id: 'gD1IexrzCvsXPHUuT0s3', name: 'Diego', tier: 'pro' },
-    { id: 'ajOR9IDAaubDK5qtLUqQ', name: 'Lucia', tier: 'pro' },
-    { id: 'iDEmt5MnqUotdwCIVplo', name: 'Andrés', tier: 'pro' },
-    { id: 'ay4iqk10DLwc8KGSrf2t', name: 'Martina', tier: 'pro' },
-    { id: '0cheeVA5B3Cv6DGq65cT', name: 'Roberto', tier: 'pro' },
-    { id: 'ClNifCEVq1smkl4M3aTk', name: 'Gabriela', tier: 'pro' },
-    { id: 'x5IDPSl4ZUbhosMmVFTk', name: 'Miguel', tier: 'pro' },
-    { id: 'o2vbTbO3g4GrKUg7rehy', name: 'Narrador', tier: 'premium' },
-    // PREMIUM: 10 voces más
-    { id: '9oPKasc15pfAbMr7N6Gs', name: 'Locutora', tier: 'premium' },
-    { id: 'gBTPbHzRd0ZmV75Z5Zk4', name: 'Streamer', tier: 'premium' },
-    { id: 'wBXNqKUATyqu0RtYt25i', name: 'ASMR', tier: 'premium' },
-    { id: 'wJqPPQ618aTW29mptyoc', name: 'Villano', tier: 'premium' },
-    { id: 'gJEfHTTiifXEDmO687lC', name: 'Comediante', tier: 'premium' },
-    { id: 'wcs09USXSN5Bl7FXohVZ', name: 'Informativo', tier: 'premium' },
-    { id: 'sRYzP8TwEiiqAWebdYPJ', name: 'Romántica', tier: 'premium' },
-    { id: 'rpNe0HOx7heUulPiOEaG', name: 'Suspense', tier: 'premium' },
-    { id: 'YNOujSUmHtgN6anjqXPf', name: 'Cómico', tier: 'premium' },
-    { id: 'GDzHdQOi6jjf8zaXhCYD', name: 'Deep', tier: 'premium' }
-  ];
-  
-  const availableVoices = allVoices.filter(voice => {
-    const voiceTierLevel = tierHierarchy[voice.tier] || 0;
+  const userTierLevel = TIER_HIERARCHY[userTier] || 0;
+
+  const availableVoices = ELEVENLABS_VOICES.filter(voice => {
+    const voiceTierLevel = TIER_HIERARCHY[voice.tier] || 0;
     return voiceTierLevel <= userTierLevel;
   }).length;
 
@@ -86,7 +58,7 @@ export const TTSGuide = ({ userTier = 'free' }) => {
       <div className="mt-6 pt-6 border-t border-dark-border">
         <div className="space-y-2 text-xs text-dark-muted">
           <p><strong className="text-primary">{availableVoices} voces</strong> disponibles en tu plan {userTier.toUpperCase()}</p>
-          <p><strong className="text-primary">Voces adicionales:</strong> FREE (2) → PRO (13) → PREMIUM (23)</p>
+          <p><strong className="text-primary">Voces adicionales:</strong> FREE (2) → PRO (5) → PREMIUM (10)</p>
           <p><strong className="text-primary">Idioma</strong> español</p>
           <p><strong className="text-primary">Límite mensual</strong> de caracteres por usuario</p>
           <p><strong className="text-primary">Personalizable</strong> - nombre, mensaje, estabilidad</p>

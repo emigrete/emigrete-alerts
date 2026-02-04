@@ -2,30 +2,13 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { API_URL } from '../constants/config';
-
-const ELEVENLABS_VOICES = [
-  // FREE: 2 voces
-  { id: 'dlGxemPxFMTY7iXagmOj', name: 'Fernando Martínez', tier: 'free' },
-  { id: 'ajOR9IDAaubDK5qtLUqQ', name: 'Daniela', tier: 'free' },
-  
-  // PRO: 3 voces más (total 5 para PRO)
-  { id: '9oPKasc15pfAbMr7N6Gs', name: 'Valeria (Argentina)', tier: 'pro' },
-  { id: 'L7pBVwjueW3IPcQt4Ej9', name: 'Manuel (Argentina)', tier: 'pro' },
-  { id: '0cheeVA5B3Cv6DGq65cT', name: 'Alejandro (Chile)', tier: 'pro' },
-  
-  // PREMIUM: 5 voces más (total 10 para PREMIUM)
-  { id: 'sDh3eviBhiuHKi0MjTNq', name: 'Francis (México)', tier: 'premium' },
-  { id: 'x5IDPSl4ZUbhosMmVFTk', name: 'Lumina (Colombia)', tier: 'premium' },
-  { id: 'l1zE9xgNpUTaQCZzpNJa', name: 'Alberto Rodríguez', tier: 'premium' },
-  { id: 'ClNifCEVq1smkl4M3aTk', name: 'Cristian Cornejo (Chile)', tier: 'premium' },
-  { id: 'wBXNqKUATyqu0RtYt25i', name: 'Adam (English)', tier: 'premium' }
-];
+import { ELEVENLABS_VOICES, TIER_HIERARCHY } from '../constants/ttsVoices';
 
 export const TTSConfig = ({ triggerId, initialConfig, onClose, onUpdate, userId, userTier = 'free' }) => {
   // Estado local del modal
   const [config, setConfig] = useState({
     enabled: false,
-    voiceId: 'onwK4e9ZLuTAKqWW03F9',
+    voiceId: ELEVENLABS_VOICES[0]?.id,
     text: '',
     useViewerMessage: true,
     readUsername: true,
@@ -41,11 +24,10 @@ export const TTSConfig = ({ triggerId, initialConfig, onClose, onUpdate, userId,
 
   // Helper para obtener voces disponibles según tier
   const getAvailableVoices = () => {
-    const tierHierarchy = { free: 0, pro: 1, premium: 2 };
-    const userTierLevel = tierHierarchy[userTier] || 0;
+    const userTierLevel = TIER_HIERARCHY[userTier] || 0;
     
     return ELEVENLABS_VOICES.filter(voice => {
-      const voiceTierLevel = tierHierarchy[voice.tier] || 0;
+      const voiceTierLevel = TIER_HIERARCHY[voice.tier] || 0;
       return voiceTierLevel <= userTierLevel;
     });
   };

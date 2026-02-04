@@ -13,6 +13,8 @@ import { getStorage } from 'firebase-admin/storage';
 import apiRoutes from './routes/api.js';
 import authRoutes from './routes/auth.js';
 import subscriptionRoutes from './routes/subscription.js';
+import creatorRoutes from './routes/creator.js';
+import billingRoutes from './routes/billing.js';
 import { Trigger } from './models/Trigger.js';
 import { startTwitchListener } from './services/twitchListener.js';
 import { UserToken } from './models/UserToken.js';
@@ -33,7 +35,12 @@ app.use(cors({
   methods: ['GET', 'POST', 'DELETE', 'PUT', 'OPTIONS'],
 }));
 
-app.use(express.json());
+app.use('/api/billing/webhook/mercadopago', express.raw({ type: 'application/json' }));
+app.use('/api/billing/webhook/paypal', express.raw({ type: 'application/json' }));
+app.use((req, res, next) => {
+  if (req.originalUrl.startsWith('/api/billing/webhook/')) return next();
+  return express.json()(req, res, next);
+});
 
 // ✅ Socket.IO con origin correcto
 export const io = new Server(httpServer, {
@@ -152,6 +159,8 @@ const validateStorageLimit = async (req, res, next) => {
 app.use('/auth', authRoutes);
 app.use('/api', apiRoutes);
 app.use('/api/subscription', subscriptionRoutes);
+app.use('/api/creator', creatorRoutes);
+app.use('/api/billing', billingRoutes);
 
 // Detectar tipo de media según MIME type
 function getMediaType(mimeType) {
