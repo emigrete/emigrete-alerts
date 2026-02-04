@@ -167,22 +167,32 @@ export const AdminDashboard = () => {
 
   const handleToggleCreator = async (targetUserId, isCurrentlyCreator, username) => {
     const action = isCurrentlyCreator ? 'remover' : 'asignar';
-    if (!window.confirm(`¿${action === 'asignar' ? 'Asignar' : 'Remover'} rol de creador a @${username}?`)) {
-      return;
+    
+    let creatorCode = null;
+    if (!isCurrentlyCreator) {
+      // Si está asignando el rol, pedir código personalizado (opcional)
+      creatorCode = prompt(`Código de creador para @${username} (opcional, se generará uno si lo dejas vacío):`);
+      if (creatorCode === null) return; // Usuario canceló
+      creatorCode = creatorCode.trim().toUpperCase() || null;
+    } else {
+      if (!window.confirm(`¿Remover rol de creador de @${username}?`)) {
+        return;
+      }
     }
 
     try {
-      console.log(`🎬 [Creator Toggle] Toggling creator role for ${targetUserId}, current: ${isCurrentlyCreator}, new: ${!isCurrentlyCreator}`);
+      console.log(`🎬 [Creator Toggle] Toggling creator role for ${targetUserId}, current: ${isCurrentlyCreator}, new: ${!isCurrentlyCreator}, code: ${creatorCode}`);
       await axios.post(`${API_URL}/api/admin/users/${targetUserId}/creator-role`, {
         adminId: userId,
-        isCreator: !isCurrentlyCreator
+        isCreator: !isCurrentlyCreator,
+        code: creatorCode
       });
 
       // Recargar usuarios
       await fetchUsers();
       
       // Notificación de éxito
-      setSuccessMessage(`✅ Rol de creador ${action}o de @${username} exitosamente`);
+      setSuccessMessage(`✅ Rol de creador ${action}do a @${username} exitosamente`);
       setTimeout(() => setSuccessMessage(null), 5000);
     } catch (error) {
       console.error('Error toggling creator role:', error);

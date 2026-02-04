@@ -161,39 +161,25 @@ router.post('/checkout', async (req, res) => {
       }
 
       try {
-        const PLAN_PRICES = {
-          pro: 5,
-          premium: 10
-        };
-
-        const response = await fetch('https://api.mercadopago.com/checkout/preferences', {
+        // Mercado Pago suscripciones usa el endpoint /preapproval
+        const response = await fetch('https://api.mercadopago.com/preapproval', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${MP_ACCESS_TOKEN}`,
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
+            reason: `TriggerApp Plan ${planTier.toUpperCase()}`,
             external_reference: externalRef,
-            payer: {
-              id: userId
-            },
-            items: [
-              {
-                id: planTier,
-                title: `TriggerApp Plan ${planTier.toUpperCase()} - Suscripción Mensual`,
-                description: planTier === 'pro' ? '100 alertas/mes, 20k TTS chars' : 'Alertas ilimitadas, TTS ilimitado',
-                quantity: 1,
-                currency_id: 'USD',
-                unit_price: PLAN_PRICES[planTier]
-              }
-            ],
-            subscription_plan_id: planId,
-            back_urls: {
-              success: `${FRONTEND_URL}/pricing?success=1`,
-              pending: `${FRONTEND_URL}/pricing`,
-              failure: `${FRONTEND_URL}/pricing?canceled=1`
-            },
-            auto_return: 'approved'
+            preapproval_plan_id: planId,
+            payer_email: null, // Se pedirá en el checkout
+            back_url: `${FRONTEND_URL}/pricing?success=1`,
+            auto_recurring: {
+              frequency: 1,
+              frequency_type: 'months',
+              transaction_amount: planTier === 'pro' ? 7500 : 15000, // ARS redondeados
+              currency_id: 'ARS'
+            }
           })
         });
 
@@ -203,7 +189,7 @@ router.post('/checkout', async (req, res) => {
           return res.status(500).json({ error: 'Error en Mercado Pago: ' + (data.message || data.error || 'Error desconocido') });
         }
 
-        console.log('✅ Mercado Pago checkout creado:', data.init_point);
+        console.log('✅ Mercado Pago preapproval creado:', data.init_point);
         return res.json({ url: data.init_point });
       } catch (fetchError) {
         console.error('❌ Error fetching Mercado Pago:', fetchError);

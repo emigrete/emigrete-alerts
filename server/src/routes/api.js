@@ -802,12 +802,12 @@ router.post('/admin/users/:userId/reset', async (req, res) => {
 /**
  * ADMIN: TOGGLE ROL CREADOR
  * POST /api/admin/users/:userId/creator-role
- * Body: { isCreator: boolean, adminId: string }
+ * Body: { isCreator: boolean, adminId: string, code?: string }
  */
 router.post('/admin/users/:userId/creator-role', async (req, res) => {
   try {
     const { userId } = req.params;
-    const { isCreator, adminId } = req.body;
+    const { isCreator, adminId, code: customCode } = req.body;
 
     // Verificar que sea admin
     const ADMIN_USER_IDS = process.env.ADMIN_USER_IDS?.split(',') || [];
@@ -837,7 +837,7 @@ router.post('/admin/users/:userId/creator-role', async (req, res) => {
         profile.isActive = true;
         await profile.save();
       } else {
-        // Si no existe, crear con código generado
+        // Si no existe, crear con código personalizado o generado
         const sanitizeCode = (value) =>
           String(value || '')
             .toUpperCase()
@@ -850,7 +850,19 @@ router.post('/admin/users/:userId/creator-role', async (req, res) => {
           return sanitizeCode(`${base}${suffix}`);
         };
         
-        const code = await generateCode(userId, user.username);
+        let code;
+        if (customCode && customCode.trim()) {
+          // Usar código personalizado
+          code = sanitizeCode(customCode);
+          // Verificar que no exista
+          const existingCode = await CreatorProfile.findOne({ code });
+          if (existingCode) {
+            return res.status(409).json({ error: `El código "${code}" ya está en uso` });
+          }
+        } else {
+          // Generar código automáticamente
+          code = await generateCode(userId, user.username);
+        }
         
         profile = await CreatorProfile.create({
           userId,

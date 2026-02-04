@@ -204,8 +204,8 @@ export default function PricingPage() {
                     )}
                   </div>
                   {plan.price !== 0 && (
-                    <p className="text-xs text-dark-muted mt-2">
-                      ≈ ${(getDisplayPrice(plan) * 1450).toFixed(0)} ARS/mes
+                    <p className="text-sm text-cyan-400 font-semibold mt-2">
+                      ≈ ${Math.ceil(getDisplayPrice(plan) * 1450 / 1000) * 1000} ARS/mes
                     </p>
                   )}
                   {appliedDiscount && plan.price !== 0 && plan.name.toLowerCase() === appliedDiscount.planTier && (

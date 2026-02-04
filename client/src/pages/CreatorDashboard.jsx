@@ -18,8 +18,12 @@ export default function CreatorDashboard() {
 
   const loginUrl = `${API_URL}/auth/twitch`;
 
-  const formatMoney = (cents) =>
-    new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'USD' }).format((cents || 0) / 100);
+  const formatMoney = (cents, currency = 'USD') => {
+    if (currency === 'ARS') {
+      return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format((cents || 0) / 100);
+    }
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format((cents || 0) / 100);
+  };
 
   const shareLink = useMemo(() => {
     if (!profile?.code) return '';
@@ -105,6 +109,13 @@ export default function CreatorDashboard() {
   }
 
   const totalEarnings = referrals.reduce((sum, ref) => sum + (ref.estimatedEarningsCents || 0), 0);
+  // Separar por moneda (ARS para Mercado Pago, USD para PayPal en el futuro)
+  const earningsARS = referrals
+    .filter(ref => ref.paymentProvider === 'mercadopago' || !ref.paymentProvider)
+    .reduce((sum, ref) => sum + (ref.estimatedEarningsCents || 0), 0);
+  const earningsUSD = referrals
+    .filter(ref => ref.paymentProvider === 'paypal')
+    .reduce((sum, ref) => sum + (ref.estimatedEarningsCents || 0), 0);
 
   return (
     <div className="min-h-screen text-dark-text p-5 lg:p-12">
@@ -134,14 +145,24 @@ export default function CreatorDashboard() {
         </div>
 
         {/* MÉTRICAS */}
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
           <div className="bg-dark-card/70 border border-dark-border rounded-2xl p-6">
             <p className="text-dark-muted text-sm mb-2">Usuarios Referidos</p>
             <p className="text-5xl font-black text-white">{referrals.length}</p>
           </div>
-          <div className="bg-dark-card/70 border border-dark-border rounded-2xl p-6">
-            <p className="text-dark-muted text-sm mb-2">Ganancias Estimadas</p>
-            <p className="text-4xl font-black text-primary">{formatMoney(totalEarnings)}</p>
+          <div className="bg-dark-card/70 border border-cyan-500/30 rounded-2xl p-6">
+            <p className="text-dark-muted text-sm mb-2 flex items-center gap-2">
+              Ganancias ARS
+              <span className="text-xs text-cyan-400">(Mercado Pago)</span>
+            </p>
+            <p className="text-4xl font-black text-cyan-400">{formatMoney(earningsARS, 'ARS')}</p>
+          </div>
+          <div className="bg-dark-card/70 border border-blue-500/30 rounded-2xl p-6">
+            <p className="text-dark-muted text-sm mb-2 flex items-center gap-2">
+              Ganancias USD
+              <span className="text-xs text-blue-400">(PayPal)</span>
+            </p>
+            <p className="text-3xl font-black text-blue-400 opacity-50">Próximamente</p>
           </div>
         </div>
 
