@@ -207,6 +207,15 @@ export const incrementAlertCount = async (userId) => {
 };
 
 /**
+ * Incrementa uso de TTS (cuando se genera TTS)
+ */
+export const incrementTTSUsage = async (userId, charCount) => {
+  const metrics = await checkAndResetUsageIfNeeded(userId);
+  metrics.ttsCharsUsed += charCount;
+  await metrics.save();
+};
+
+/**
  * Decrementa uso de TTS (cuando se borra un trigger con TTS)
  */
 export const decrementTTSUsage = async (userId, charCount) => {
