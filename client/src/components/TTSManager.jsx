@@ -7,34 +7,42 @@ import { TTSConfig } from './TTSConfig';
 import { RewardCreatorTTS } from './RewardCreatorTTS';
 
 const ELEVENLABS_VOICES = [
-  // FREE: 2 voces
-  { id: 'onwK4e9ZLuTAKqWW03F9', name: 'Daniel (Argentina)', tier: 'free' },
-  { id: 'ThT5KcBeYPX3keUQqHPh', name: 'Elena (Chile)', tier: 'free' },
+  // FREE: 2 voces base
+  { id: 'dlGxemPxFMTY7iXagmOj', name: 'Fernando Martínez (Latinoamericano)', tier: 'free' },
+  { id: 'ajOR9IDAaubDK5qtLUqQ', name: 'Daniela (Latinoamericana)', tier: 'free' },
   
   // PRO: Voces adicionales (11 más)
-  { id: 'dlGxemPxFMTY7iXagmOj', name: 'Sofia (México)', tier: 'pro' },
-  { id: 'sDh3eviBhiuHKi0MjTNq', name: 'Carlos (España)', tier: 'pro' },
-  { id: 'AxFLn9byyiDbMn5fmyqu', name: 'Valentina (Argentina)', tier: 'pro' },
-  { id: 'gD1IexrzCvsXPHUuT0s3', name: 'Diego (Colombia)', tier: 'pro' },
-  { id: 'ajOR9IDAaubDK5qtLUqQ', name: 'Lucia (Perú)', tier: 'pro' },
-  { id: 'iDEmt5MnqUotdwCIVplo', name: 'Andrés (Venezuela)', tier: 'pro' },
-  { id: 'ay4iqk10DLwc8KGSrf2t', name: 'Martina (Uruguay)', tier: 'pro' },
-  { id: '0cheeVA5B3Cv6DGq65cT', name: 'Roberto (Panamá)', tier: 'pro' },
-  { id: 'ClNifCEVq1smkl4M3aTk', name: 'Gabriela (Guatemala)', tier: 'pro' },
-  { id: 'x5IDPSl4ZUbhosMmVFTk', name: 'Miguel (República Dominicana)', tier: 'pro' },
+  // Argentino
+  { id: '9oPKasc15pfAbMr7N6Gs', name: 'Valeria (Argentina)', tier: 'pro' },
+  { id: 'L7pBVwjueW3IPcQt4Ej9', name: 'Manuel (Argentina)', tier: 'pro' },
+  // Chileno
+  { id: '0cheeVA5B3Cv6DGq65cT', name: 'Alejandro (Chile)', tier: 'pro' },
+  { id: 'ClNifCEVq1smkl4M3aTk', name: 'Cristian Cornejo (Chile)', tier: 'pro' },
+  // Colombiano
+  { id: 'x5IDPSl4ZUbhosMmVFTk', name: 'Lumina (Colombia)', tier: 'pro' },
+  { id: 'ucWwAruuGtBeHfnAaKcJ', name: 'Juan Restrepo (Colombia)', tier: 'pro' },
+  // Mexicano
+  { id: 'sDh3eviBhiuHKi0MjTNq', name: 'Francis (México)', tier: 'pro' },
+  { id: 'iDEmt5MnqUotdwCIVplo', name: 'Enrique Mondragón (México)', tier: 'pro' },
+  // Venezolano
+  { id: 'YYSDvkDDnQXWMDjhmB8P', name: 'Fabriccio Gutierrez (Venezuela)', tier: 'pro' },
   
-  // PREMIUM: Voces premium (11 más)
-  { id: 'o2vbTbO3g4GrKUg7rehy', name: 'Narrador (Épico)', tier: 'premium' },
-  { id: '9oPKasc15pfAbMr7N6Gs', name: 'Locutora (Radio)', tier: 'premium' },
-  { id: 'gBTPbHzRd0ZmV75Z5Zk4', name: 'Streamer (Entusiasmado)', tier: 'premium' },
-  { id: 'wBXNqKUATyqu0RtYt25i', name: 'ASMR (Susurro)', tier: 'premium' },
-  { id: 'wJqPPQ618aTW29mptyoc', name: 'Villano (Oscuro)', tier: 'premium' },
-  { id: 'gJEfHTTiifXEDmO687lC', name: 'Comediante (Sarcástico)', tier: 'premium' },
-  { id: 'wcs09USXSN5Bl7FXohVZ', name: 'Informativo (Serio)', tier: 'premium' },
-  { id: 'sRYzP8TwEiiqAWebdYPJ', name: 'Romántica (Suave)', tier: 'premium' },
-  { id: 'rpNe0HOx7heUulPiOEaG', name: 'Suspense (Misterio)', tier: 'premium' },
-  { id: 'YNOujSUmHtgN6anjqXPf', name: 'Cómico (Divertido)', tier: 'premium' },
-  { id: 'GDzHdQOi6jjf8zaXhCYD', name: 'Deep (Profundo)', tier: 'premium' }
+  // PREMIUM: Voces premium (12 más)
+  // Latinoamericano adicional
+  { id: 'l1zE9xgNpUTaQCZzpNJa', name: 'Alberto Rodríguez (Latinoamericano)', tier: 'premium' },
+  // Chileno adicional
+  { id: 'cLzIVykddLltvgkzos6C', name: 'Vale (Chile)', tier: 'premium' },
+  // Mexicano adicional
+  { id: 'iBGVhgcEZS6A5gTOjqSJ', name: 'Gabiyoya (México)', tier: 'premium' },
+  // Venezolano adicional
+  { id: 'O5hbneAmtjLMgfg5UFIm', name: 'Andrea (Venezuela)', tier: 'premium' },
+  // English
+  { id: 'wBXNqKUATyqu0RtYt25i', name: 'Adam (English)', tier: 'premium' },
+  { id: 'dXtC3XhB9GtPusIpNtQx', name: 'Hale (English)', tier: 'premium' },
+  { id: 'gJx1vCzNCD1EQHT212Ls', name: 'Ava (English)', tier: 'premium' },
+  // Chinese
+  { id: 'hkfHEbBvdQFNX4uWHqRF', name: 'Stacy (Chinese)', tier: 'premium' },
+  { id: 'MI36FIkp9wRP7cpWKPTl', name: 'Evan Zhao (Chinese)', tier: 'premium' }
 ];
 
 export const TTSManager = ({ triggers, rewards, userId, username, onRefresh, isDemo, onCreated }) => {

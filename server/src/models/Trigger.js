@@ -20,7 +20,7 @@ const AlertConfigSchema = new mongoose.Schema({
 
 const TTSConfigSchema = new mongoose.Schema({
   enabled: { type: Boolean, default: false },
-  voiceId: { type: String, default: 'onwK4e9ZLuTAKqWW03F9' }, // Daniel Argentina (ElevenLabs) - voz en español por defecto
+  voiceId: { type: String, default: 'dlGxemPxFMTY7iXagmOj' }, // Fernando Martínez (Latinoamericano) - voz en español por defecto
   text: { type: String }, // Texto personalizado o usar mensaje del viewer
   useViewerMessage: { type: Boolean, default: true }, // Si true, lee el mensaje del viewer
   readUsername: { type: Boolean, default: true }, // Si true, dice el nombre antes del mensaje
