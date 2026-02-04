@@ -9,9 +9,17 @@ const router = Router();
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 
 const MP_ACCESS_TOKEN = process.env.MP_ACCESS_TOKEN;
+
+// Planes en Mercado Pago: 4 opciones (con y sin descuento de creador)
 const MP_PLAN_IDS = {
-  pro: process.env.MP_PREAPPROVAL_PLAN_PRO_ID,
-  premium: process.env.MP_PREAPPROVAL_PLAN_PREMIUM_ID
+  pro: {
+    regular: process.env.MP_PREAPPROVAL_PLAN_PRO_ID || 'pro_regular',
+    withDiscount: process.env.MP_PREAPPROVAL_PLAN_PRO_DISCOUNT_ID || 'pro_discount'
+  },
+  premium: {
+    regular: process.env.MP_PREAPPROVAL_PLAN_PREMIUM_ID || 'premium_regular',
+    withDiscount: process.env.MP_PREAPPROVAL_PLAN_PREMIUM_DISCOUNT_ID || 'premium_discount'
+  }
 };
 
 const PAYPAL_CLIENT_ID = process.env.PAYPAL_CLIENT_ID;
@@ -71,11 +79,11 @@ const getPayPalAccessToken = async () => {
 };
 
 const ensureCreatorCode = async (creatorCode, userId) => {
-  if (!creatorCode) return null;
+  if (!creatorCode) return { valid: false, code: null };
   const normalized = sanitizeCode(creatorCode);
   const creator = await CreatorProfile.findOne({ code: normalized, isActive: true });
-  if (!creator || creator.userId === userId) return null;
-  return normalized;
+  if (!creator || creator.userId === userId) return { valid: false, code: null };
+  return { valid: true, code: normalized };
 };
 
 const updateSubscriptionAndReferral = async ({
@@ -145,8 +153,9 @@ router.post('/checkout', async (req, res) => {
       return res.status(400).json({ error: 'userId, planTier y provider requeridos' });
     }
 
-    const normalizedCode = await ensureCreatorCode(creatorCode, userId);
-    const externalRef = buildExternalRef({ userId, planTier, creatorCode: normalizedCode });
+    // Validar código de creador
+    const creatorCodeResult = await ensureCreatorCode(creatorCode, userId);
+    const externalRef = buildExternalRef({ userId, planTier, creatorCode: creatorCodeResult.code });
 
     if (provider === 'mercadopago') {
       if (!MP_ACCESS_TOKEN) {
@@ -154,14 +163,34 @@ router.post('/checkout', async (req, res) => {
         return res.status(500).json({ error: 'Mercado Pago no está configurado. Por favor configura MP_ACCESS_TOKEN en el servidor.' });
       }
 
-      const planId = MP_PLAN_IDS[planTier];
-      if (!planId) {
-        console.error(`❌ Plan ID no encontrado para tier: ${planTier}. MP_PLAN_IDS:`, MP_PLAN_IDS);
+      // Seleccionar plan: con descuento si tiene código válido, sin descuento si no
+      const planVariant = creatorCodeResult.valid ? 'withDiscount' : 'regular';
+      const planConfig = MP_PLAN_IDS[planTier];
+      
+      if (!planConfig) {
+        console.error(`❌ Configuración de plane no encontrada para tier: ${planTier}. MP_PLAN_IDS:`, MP_PLAN_IDS);
         return res.status(400).json({ error: `Plan ${planTier} no está configurado en Mercado Pago` });
+      }
+
+      const planId = planConfig[planVariant];
+      if (!planId) {
+        console.error(`❌ Plan ID no encontrado para tier: ${planTier}, variant: ${planVariant}`);
+        return res.status(400).json({ error: `Plan ${planTier} (${planVariant}) no está configurado en Mercado Pago` });
+      }
+
+      console.log(`📍 MP checkout - Plan: ${planTier} | Variant: ${planVariant} | ID: ${planId} | CreatorCode: ${creatorCodeResult.code || 'ninguno'}`);
+      
+      if (!planId || planId.length < 10) {
+        console.error(`❌ Plan ID sospechosamente corto para ${planTier} (${planVariant}): "${planId}"`);
+        return res.status(400).json({ error: `El ID del plan ${planTier} no parece ser válido. Por favor verifica la configuración de Mercado Pago.` });
       }
 
       try {
         // Mercado Pago suscripciones usa el endpoint /preapproval
+        const reason = creatorCodeResult.valid 
+          ? `TriggerApp Plan ${planTier.toUpperCase()} - Descuento Creador`
+          : `TriggerApp Plan ${planTier.toUpperCase()}`;
+        
         const response = await fetch('https://api.mercadopago.com/preapproval', {
           method: 'POST',
           headers: {
@@ -169,7 +198,7 @@ router.post('/checkout', async (req, res) => {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            reason: `TriggerApp Plan ${planTier.toUpperCase()}`,
+            reason,
             external_reference: externalRef,
             preapproval_plan_id: planId,
             back_url: `${FRONTEND_URL}/pricing?success=1`
@@ -178,7 +207,21 @@ router.post('/checkout', async (req, res) => {
 
         const data = await response.json();
         if (!response.ok || !data.id) {
-          console.error('❌ Mercado Pago error:', data);
+          console.error('❌ Mercado Pago error:', {
+            status: response.status,
+            planId,
+            planTier,
+            variant: planVariant,
+            error: data
+          });
+          
+          // Errores comunes
+          if (data.error && data.error.includes('template') && data.error.includes('does not exist')) {
+            return res.status(500).json({ 
+              error: `El plan ${planTier} (${planVariant}) está mal configurado en Mercado Pago. El ID del template no existe: ${planId}` 
+            });
+          }
+          
           return res.status(500).json({ error: 'Error en Mercado Pago: ' + (data.message || data.error || 'Error desconocido') });
         }
 
@@ -343,6 +386,40 @@ router.post('/webhook/paypal', async (req, res) => {
     console.error('Error en webhook PayPal:', error);
     return res.status(500).json({ error: 'Webhook error' });
   }
+});
+
+// 🔍 Endpoint de diagnóstico para verificar configuración
+router.get('/diagnostics', (req, res) => {
+  const diagnostics = {
+    timestamp: new Date().toISOString(),
+    mercadoPago: {
+      hasAccessToken: !!MP_ACCESS_TOKEN,
+      planIds: {
+        pro: {
+          regular: MP_PLAN_IDS.pro.regular ? `✅ ${MP_PLAN_IDS.pro.regular.substring(0, 15)}...` : '❌ No configurado',
+          withDiscount: MP_PLAN_IDS.pro.withDiscount ? `✅ ${MP_PLAN_IDS.pro.withDiscount.substring(0, 15)}...` : '❌ No configurado'
+        },
+        premium: {
+          regular: MP_PLAN_IDS.premium.regular ? `✅ ${MP_PLAN_IDS.premium.regular.substring(0, 15)}...` : '❌ No configurado',
+          withDiscount: MP_PLAN_IDS.premium.withDiscount ? `✅ ${MP_PLAN_IDS.premium.withDiscount.substring(0, 15)}...` : '❌ No configurado'
+        }
+      }
+    },
+    paypal: {
+      hasClientId: !!PAYPAL_CLIENT_ID,
+      hasClientSecret: !!PAYPAL_CLIENT_SECRET,
+      planIds: {
+        pro: PAYPAL_PLAN_IDS.pro ? `✅ Configurado: ${PAYPAL_PLAN_IDS.pro.substring(0, 10)}...` : '❌ No configurado',
+        premium: PAYPAL_PLAN_IDS.premium ? `✅ Configurado: ${PAYPAL_PLAN_IDS.premium.substring(0, 10)}...` : '❌ No configurado'
+      }
+    },
+    frontend: {
+      url: FRONTEND_URL
+    }
+  };
+
+  console.log('📊 Diagnósticos de configuración:', diagnostics);
+  res.json(diagnostics);
 });
 
 export default router;

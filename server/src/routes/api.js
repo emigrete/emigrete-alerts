@@ -7,6 +7,8 @@ import { Trigger } from '../models/Trigger.js';
 import { TTSUsage } from '../models/TTSUsage.js';
 import Subscription from '../models/Subscription.js';
 import UsageMetrics from '../models/UsageMetrics.js';
+import CreatorProfile from '../models/CreatorProfile.js';
+import CreatorReferral from '../models/CreatorReferral.js';
 import {
   canCreateAlert,
   incrementAlertCount,
@@ -535,8 +537,6 @@ router.get('/admin/users', async (req, res) => {
       return res.status(403).json({ error: 'No autorizado' });
     }
 
-    const CreatorProfile = await import('../models/CreatorProfile.js').then(m => m.default);
-
     // Obtener todos los usuarios con tokens (usuarios activos)
     const userTokens = await UserToken.find().select('userId username');
     
@@ -818,8 +818,6 @@ router.post('/admin/users/:userId/creator-role', async (req, res) => {
     if (isCreator === undefined) {
       return res.status(400).json({ error: 'isCreator requerido' });
     }
-
-    const CreatorProfile = await import('../models/CreatorProfile.js').then(m => m.default);
     
     if (isCreator) {
       // Crear o actualizar perfil de creador
