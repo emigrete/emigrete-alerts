@@ -33,7 +33,7 @@ router.get('/profile', async (req, res) => {
     const profile = await CreatorProfile.findOne({ userId });
     if (!profile) return res.json({ exists: false });
 
-    return res.json({ exists: true, profile });
+    return res.json({ exists: true, isAssigned: profile.isAssigned, profile });
   } catch (error) {
     console.error('Error en /creator/profile:', error);
     return res.status(500).json({ error: 'Error obteniendo perfil de creador' });

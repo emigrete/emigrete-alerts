@@ -8,6 +8,7 @@ const creatorProfileSchema = new mongoose.Schema(
     commissionRate: { type: Number, default: 0.2 },
     totalEstimatedEarningsCents: { type: Number, default: 0 },
     totalReferred: { type: Number, default: 0 },
+    isAssigned: { type: Boolean, default: false }, // Solo si admin lo asignó
     isActive: { type: Boolean, default: true }
   },
   { timestamps: true }

@@ -4,6 +4,7 @@ import axios from 'axios';
 import { Toaster, toast } from 'sonner';
 import { API_URL } from '../constants/config';
 import { AppFooter } from '../components/AppFooter';
+import { CheckoutModal } from '../components/CheckoutModal';
 
 export default function PricingPage() {
   const [creatorCode, setCreatorCode] = useState('');
@@ -12,6 +13,8 @@ export default function PricingPage() {
   const [appliedDiscount, setAppliedDiscount] = useState(null);
   const [checkoutPlan, setCheckoutPlan] = useState(null);
   const [paymentProvider, setPaymentProvider] = useState('mercadopago');
+  const [isCreator, setIsCreator] = useState(false);
+  const [showCodeModal, setShowCodeModal] = useState(null); // null | 'pro' | 'premium'
   const userId = localStorage.getItem('twitchUserId');
 
   useEffect(() => {
@@ -25,7 +28,21 @@ export default function PricingPage() {
     if (params.get('canceled') === '1') {
       toast.warning('Pago cancelado.');
     }
-  }, []);
+
+    // Verificar si el usuario es creador
+    const checkCreatorStatus = async () => {
+      if (!userId) return;
+      try {
+        const res = await axios.get(`${API_URL}/api/creator/profile?userId=${userId}`);
+        if (res.data?.exists && res.data?.isAssigned) {
+          setIsCreator(true);
+        }
+      } catch (error) {
+        console.error('Error checking creator status:', error);
+      }
+    };
+    checkCreatorStatus();
+  }, [userId]);
 
   const handleApplyCode = async () => {
     if (!creatorCode.trim()) {
@@ -58,34 +75,13 @@ export default function PricingPage() {
     }
   };
 
-  const handleCheckout = async (tier) => {
+  const handleClickCheckout = (tier) => {
     if (!userId) {
       toast.warning('Iniciá sesión para suscribirte');
       return;
     }
-
-    setCheckoutPlan(tier);
-    const toastId = toast.loading('Creando checkout...');
-
-    try {
-      const codeToSend = appliedDiscount?.planTier === tier ? appliedDiscount.code : '';
-      const res = await axios.post(`${API_URL}/api/billing/checkout`, {
-        userId,
-        planTier: tier,
-        creatorCode: codeToSend,
-        provider: paymentProvider
-      });
-
-      if (res.data?.url) {
-        window.location.href = res.data.url;
-      } else {
-        toast.error('No se pudo iniciar el checkout', { id: toastId });
-      }
-    } catch (error) {
-      toast.error(error.response?.data?.error || 'Error iniciando checkout', { id: toastId });
-    } finally {
-      setCheckoutPlan(null);
-    }
+    // Mostrar modal para código
+    setShowCodeModal(tier);
   };
 
   const getDisplayPrice = (plan) => {
@@ -178,52 +174,6 @@ export default function PricingPage() {
           </p>
         </div>
 
-        <div className="bg-dark-card/60 border border-dark-border rounded-2xl p-6 mb-10">
-          <h2 className="text-xl font-bold text-white mb-3">Código de creador</h2>
-          <p className="text-sm text-dark-muted mb-4">
-            Aplicá un código y obtené <strong>10% de descuento</strong>.
-          </p>
-          <div className="grid md:grid-cols-[1fr_160px_160px] gap-3">
-            <input
-              value={creatorCode}
-              onChange={(e) => setCreatorCode(e.target.value)}
-              placeholder="Ingresá tu código"
-              className="w-full p-3 rounded-lg border-2 border-dark-border bg-dark-secondary text-white outline-none focus:border-primary"
-            />
-            <select
-              value={planTier}
-              onChange={(e) => setPlanTier(e.target.value)}
-              className="w-full p-3 rounded-lg border-2 border-dark-border bg-dark-secondary text-white outline-none focus:border-primary"
-            >
-              <option value="pro">PRO</option>
-              <option value="premium">PREMIUM</option>
-            </select>
-            <button
-              onClick={handleApplyCode}
-              disabled={applying}
-              className="bg-primary text-white font-bold py-3 px-6 rounded-lg hover:opacity-90 disabled:opacity-60"
-            >
-              {applying ? 'Aplicando...' : 'Aplicar'}
-            </button>
-          </div>
-          <div className="mt-4 grid md:grid-cols-[220px_1fr] gap-3 items-center">
-            <label className="text-sm text-dark-muted">Método de pago</label>
-            <select
-              value={paymentProvider}
-              onChange={(e) => setPaymentProvider(e.target.value)}
-              className="w-full p-3 rounded-lg border-2 border-dark-border bg-dark-secondary text-white outline-none focus:border-primary"
-            >
-              <option value="mercadopago">Mercado Pago</option>
-              <option value="paypal">PayPal</option>
-            </select>
-          </div>
-          {appliedDiscount && (
-            <p className="text-xs text-green-400 mt-3">
-              Código {appliedDiscount.code} aplicado en plan {appliedDiscount.planTier.toUpperCase()}.
-            </p>
-          )}
-        </div>
-
         {/* Planes */}
         <div className="grid md:grid-cols-3 gap-8 mb-12">
           {plans.map((plan, idx) => (
@@ -279,7 +229,7 @@ export default function PricingPage() {
                   className={`w-full text-white font-bold py-3 px-6 rounded-xl transition-all text-sm ${
                     plan.name === 'FREE' ? 'opacity-50 cursor-not-allowed bg-gray-500' : plan.ctaColor
                   }`}
-                  onClick={() => plan.name !== 'FREE' && handleCheckout(plan.name.toLowerCase())}
+                  onClick={() => plan.name !== 'FREE' && handleClickCheckout(plan.name.toLowerCase())}
                 >
                   {plan.name === 'FREE'
                     ? 'Tu plan actual'
@@ -423,6 +373,50 @@ export default function PricingPage() {
             ← Volver al Dashboard
           </Link>
         </div>
+
+        {/* Modal de Código */}
+        {showCodeModal && (
+          <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+            <div className="bg-dark-card border border-dark-border rounded-2xl p-8 max-w-sm w-full">
+              <h2 className="text-2xl font-black text-white mb-2">
+                {showCodeModal === 'pro' ? 'Plan PRO' : 'Plan PREMIUM'}
+              </h2>
+              <p className="text-dark-muted mb-6">¿Tenés código de creador?</p>
+
+              <input
+                value={creatorCode}
+                onChange={(e) => setCreatorCode(e.target.value)}
+                placeholder="Código de creador (opcional)"
+                className="w-full p-3 rounded-lg border-2 border-dark-border bg-dark-secondary text-white outline-none focus:border-primary mb-4"
+              />
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowCodeModal(null)}
+                  className="flex-1 py-3 rounded-lg border border-dark-border text-white font-bold hover:bg-dark-secondary"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleConfirmCheckout}
+                  disabled={checkoutPlan === showCodeModal}
+                  className="flex-1 py-3 rounded-lg bg-primary text-white font-bold hover:opacity-90 disabled:opacity-60"
+                >
+                  {checkoutPlan === showCodeModal ? 'Procesando...' : 'Continuar'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal de Código */}
+        <CheckoutModal
+          isOpen={showCodeModal !== null}
+          planTier={showCodeModal}
+          onClose={() => setShowCodeModal(null)}
+          userId={userId}
+          paymentProvider={paymentProvider}
+        />
 
         <AppFooter />
       </div>
