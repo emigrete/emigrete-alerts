@@ -198,47 +198,17 @@ router.post('/checkout', async (req, res) => {
       }
 
       try {
-        // Usar el endpoint /preapproval directamente con los planes preaprobados existentes
-        const reason = creatorCodeResult.valid 
-          ? `WelyAlerts ${planTier.toUpperCase()} - Código: ${creatorCodeResult.code}`
-          : `WelyAlerts ${planTier.toUpperCase()}`;
+        // Construir el init_point directamente con los parámetros necesarios
+        const initPoint = `https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=${planId}`;
+        const checkoutUrl = new URL(initPoint);
+        checkoutUrl.searchParams.set('external_reference', externalRef);
+        checkoutUrl.searchParams.set('payer_email', String(payerEmail).trim());
+        checkoutUrl.searchParams.set('back_url', `${FRONTEND_URL}/pricing?mp=1`);
+
+        console.log(`MP checkout - Plan: ${planTier} | Variant: ${planVariant} | ID: ${planId}`);
+        console.log('Redirigiendo a:', checkoutUrl.toString());
         
-        const response = await fetch('https://api.mercadopago.com/preapproval', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${MP_ACCESS_TOKEN}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            preapproval_plan_id: planId,
-            reason,
-            external_reference: externalRef,
-            payer_email: String(payerEmail).trim(),
-            back_url: `${FRONTEND_URL}/pricing?mp=1`
-          })
-        });
-
-        const data = await response.json();
-        if (!response.ok || !data.init_point) {
-          console.error('Mercado Pago error:', {
-            status: response.status,
-            planId,
-            planTier,
-            variant: planVariant,
-            responseBody: data
-          });
-          
-          if (data.message?.includes('template') || data.message?.includes('does not exist')) {
-            return res.status(500).json({ 
-              error: `El plan ${planTier} (${planVariant}) está mal configurado en Mercado Pago. El ID del template no existe: ${planId}` 
-            });
-          }
-          
-          return res.status(500).json({ error: 'Error en Mercado Pago: ' + (data.message || JSON.stringify(data)) });
-        }
-
-        console.log('Mercado Pago checkout creado:', data.init_point);
-        return res.json({ url: data.init_point });
+        return res.json({ url: checkoutUrl.toString() });
       } catch (fetchError) {
         console.error('Error fetching Mercado Pago:', fetchError);
         return res.status(500).json({ error: 'Error conectando con Mercado Pago: ' + fetchError.message });
