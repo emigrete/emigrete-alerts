@@ -809,8 +809,17 @@ router.post('/admin/users/:userId/creator-role', async (req, res) => {
     const { userId } = req.params;
     const { isCreator, adminId, code: customCode } = req.body;
 
+    console.log(`\n🔄 [CREATOR_ROLE_ENDPOINT] Request inicio:`, {
+      userId,
+      isCreator,
+      adminId,
+      customCode: customCode ? '***' : undefined
+    });
+
     // Verificar que sea admin
     const ADMIN_USER_IDS = process.env.ADMIN_USER_IDS?.split(',') || [];
+    console.log(`[AUTH_CHECK] ADMIN_USER_IDS:`, ADMIN_USER_IDS, `adminId:`, adminId);
+    
     if (!adminId || !ADMIN_USER_IDS.includes(adminId)) {
       return res.status(403).json({ error: 'No autorizado' });
     }
@@ -893,26 +902,73 @@ router.post('/admin/users/:userId/creator-role', async (req, res) => {
       });
     } else {
       // Remover rol creador
-      const profile = await CreatorProfile.findOne({ userId });
+      console.log(`🔍 [REMOVE CREATOR] Intentando remover rol para usuario ${userId}`);
+      
+      let profile;
+      try {
+        profile = await CreatorProfile.findOne({ userId });
+      } catch (queryError) {
+        console.error(`❌ [REMOVE CREATOR] Error en findOne:`, queryError.message);
+        throw queryError;
+      }
+      
+      console.log(`🔍 [REMOVE CREATOR] Perfil encontrado:`, profile ? { userId: profile.userId, code: profile.code, isAssigned: profile.isAssigned } : 'NO ENCONTRADO');
       
       if (!profile) {
+        console.warn(`⚠️ [REMOVE CREATOR] Perfil no encontrado para ${userId}`);
         return res.status(404).json({ error: 'Perfil de creador no encontrado' });
       }
       
+      // Cambiar flags de forma segura
       profile.isAssigned = false;
       profile.isActive = false;
-      await profile.save();
-
-      console.log(`❌ [ADMIN] Removió rol creador de ${userId}. Result:`, { isAssigned: profile.isAssigned, isActive: profile.isActive });
+      
+      let updatedProfile;
+      try {
+        updatedProfile = await profile.save();
+        console.log(`✅ [REMOVE CREATOR] Perfil actualizado exitosamente:`, { 
+          userId: updatedProfile.userId,
+          code: updatedProfile.code,
+          isAssigned: updatedProfile.isAssigned, 
+          isActive: updatedProfile.isActive 
+        });
+      } catch (saveError) {
+        console.error(`❌ [REMOVE CREATOR] Error en profile.save():`, {
+          message: saveError.message,
+          code: saveError.code,
+          name: saveError.name
+        });
+        throw saveError;
+      }
       
       return res.json({
         success: true,
-        message: 'Rol creador removido'
+        message: 'Rol creador removido',
+        profile: {
+          userId: updatedProfile.userId,
+          code: updatedProfile.code,
+          isAssigned: updatedProfile.isAssigned,
+          isActive: updatedProfile.isActive
+        }
       });
     }
   } catch (error) {
-    console.error('❌ Error toggling creator role:', error);
-    res.status(500).json({ error: 'Error al cambiar rol creador' });
+    console.error('❌ Error toggling creator role:', {
+      message: error.message,
+      code: error.code,
+      name: error.name,
+      stack: error.stack
+    });
+    
+    // Mensajes más específicos según el tipo de error
+    let errorMsg = 'Error al cambiar rol creador';
+    if (error.name === 'ValidationError') {
+      errorMsg = `Validación: ${Object.values(error.errors).map(e => e.message).join(', ')}`;
+    } else if (error.name === 'MongoError' || error.name === 'MongoServerError') {
+      errorMsg = `DB error: ${error.message}`;
+    }
+    
+    res.status(500).json({ error: errorMsg, details: error.message });
   }
 });
 

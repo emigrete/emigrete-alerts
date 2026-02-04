@@ -13,12 +13,12 @@ const MP_ACCESS_TOKEN = process.env.MP_ACCESS_TOKEN;
 // Planes en Mercado Pago: 4 opciones (con y sin descuento de creador)
 const MP_PLAN_IDS = {
   pro: {
-    regular: process.env.MP_PREAPPROVAL_PLAN_PRO_ID || 'pro_regular',
-    withDiscount: process.env.MP_PREAPPROVAL_PLAN_PRO_DISCOUNT_ID || 'pro_discount'
+    regular: process.env.MP_PREAPPROVAL_PLAN_PRO_ID,
+    withDiscount: process.env.MP_PREAPPROVAL_PLAN_PRO_DISCOUNT_ID
   },
   premium: {
-    regular: process.env.MP_PREAPPROVAL_PLAN_PREMIUM_ID || 'premium_regular',
-    withDiscount: process.env.MP_PREAPPROVAL_PLAN_PREMIUM_DISCOUNT_ID || 'premium_discount'
+    regular: process.env.MP_PREAPPROVAL_PLAN_PREMIUM_ID,
+    withDiscount: process.env.MP_PREAPPROVAL_PLAN_PREMIUM_DISCOUNT_ID
   }
 };
 
@@ -174,8 +174,16 @@ router.post('/checkout', async (req, res) => {
 
       const planId = planConfig[planVariant];
       if (!planId) {
-        console.error(`❌ Plan ID no encontrado para tier: ${planTier}, variant: ${planVariant}`);
-        return res.status(400).json({ error: `Plan ${planTier} (${planVariant}) no está configurado en Mercado Pago` });
+        console.error(`❌ Plan ID no encontrado para tier: ${planTier}, variant: ${planVariant}. Config:`, planConfig);
+        return res.status(500).json({ 
+          error: `❌ CONFIGURACIÓN INCOMPLETA: Plan ${planTier} (${planVariant}) sin ID. Por favor configura en Railway:
+          - MP_PREAPPROVAL_PLAN_PRO_ID
+          - MP_PREAPPROVAL_PLAN_PRO_DISCOUNT_ID
+          - MP_PREAPPROVAL_PLAN_PREMIUM_ID
+          - MP_PREAPPROVAL_PLAN_PREMIUM_DISCOUNT_ID`,
+          tierRequested: planTier,
+          variantRequested: planVariant
+        });
       }
 
       console.log(`📍 MP checkout - Plan: ${planTier} | Variant: ${planVariant} | ID: ${planId} | CreatorCode: ${creatorCodeResult.code || 'ninguno'}`);
@@ -392,34 +400,162 @@ router.post('/webhook/paypal', async (req, res) => {
 router.get('/diagnostics', (req, res) => {
   const diagnostics = {
     timestamp: new Date().toISOString(),
+    status: 'CHECKING CONFIGURATION...',
     mercadoPago: {
-      hasAccessToken: !!MP_ACCESS_TOKEN,
+      hasAccessToken: !!MP_ACCESS_TOKEN ? '✅ YES' : '❌ MISSING: MP_ACCESS_TOKEN',
       planIds: {
         pro: {
-          regular: MP_PLAN_IDS.pro.regular ? `✅ ${MP_PLAN_IDS.pro.regular.substring(0, 15)}...` : '❌ No configurado',
-          withDiscount: MP_PLAN_IDS.pro.withDiscount ? `✅ ${MP_PLAN_IDS.pro.withDiscount.substring(0, 15)}...` : '❌ No configurado'
+          regular: MP_PLAN_IDS.pro.regular ? `✅ ${MP_PLAN_IDS.pro.regular.substring(0, 15)}...` : '❌ MISSING: MP_PREAPPROVAL_PLAN_PRO_ID',
+          withDiscount: MP_PLAN_IDS.pro.withDiscount ? `✅ ${MP_PLAN_IDS.pro.withDiscount.substring(0, 15)}...` : '❌ MISSING: MP_PREAPPROVAL_PLAN_PRO_DISCOUNT_ID'
         },
         premium: {
-          regular: MP_PLAN_IDS.premium.regular ? `✅ ${MP_PLAN_IDS.premium.regular.substring(0, 15)}...` : '❌ No configurado',
-          withDiscount: MP_PLAN_IDS.premium.withDiscount ? `✅ ${MP_PLAN_IDS.premium.withDiscount.substring(0, 15)}...` : '❌ No configurado'
+          regular: MP_PLAN_IDS.premium.regular ? `✅ ${MP_PLAN_IDS.premium.regular.substring(0, 15)}...` : '❌ MISSING: MP_PREAPPROVAL_PLAN_PREMIUM_ID',
+          withDiscount: MP_PLAN_IDS.premium.withDiscount ? `✅ ${MP_PLAN_IDS.premium.withDiscount.substring(0, 15)}...` : '❌ MISSING: MP_PREAPPROVAL_PLAN_PREMIUM_DISCOUNT_ID'
         }
       }
     },
     paypal: {
-      hasClientId: !!PAYPAL_CLIENT_ID,
-      hasClientSecret: !!PAYPAL_CLIENT_SECRET,
+      hasClientId: !!PAYPAL_CLIENT_ID ? '✅ YES' : '❌ NO',
+      hasClientSecret: !!PAYPAL_CLIENT_SECRET ? '✅ YES' : '❌ NO',
       planIds: {
-        pro: PAYPAL_PLAN_IDS.pro ? `✅ Configurado: ${PAYPAL_PLAN_IDS.pro.substring(0, 10)}...` : '❌ No configurado',
-        premium: PAYPAL_PLAN_IDS.premium ? `✅ Configurado: ${PAYPAL_PLAN_IDS.premium.substring(0, 10)}...` : '❌ No configurado'
+        pro: PAYPAL_PLAN_IDS.pro ? `✅ ${PAYPAL_PLAN_IDS.pro.substring(0, 10)}...` : '❌ NO',
+        premium: PAYPAL_PLAN_IDS.premium ? `✅ ${PAYPAL_PLAN_IDS.premium.substring(0, 10)}...` : '❌ NO'
       }
     },
     frontend: {
       url: FRONTEND_URL
-    }
+    },
+    action: 'If you see ❌, add the missing variables to Railway'
   };
+
+  // Log para debugging
+  if (!MP_ACCESS_TOKEN || !MP_PLAN_IDS.pro.regular || !MP_PLAN_IDS.pro.withDiscount || 
+      !MP_PLAN_IDS.premium.regular || !MP_PLAN_IDS.premium.withDiscount) {
+    console.error('🔴 MERCADO PAGO NOT FULLY CONFIGURED:', diagnostics);
+  }
 
   console.log('📊 Diagnósticos de configuración:', diagnostics);
   res.json(diagnostics);
+});
+
+/**
+ * 🚨 CANCELAR SUSCRIPCIÓN EN MERCADO PAGO
+ * POST /api/billing/cancel-subscription
+ * Body: { userId: string }
+ * Crítico: Cancela la suscripción en Mercado Pago para evitar cobros futuros
+ */
+router.post('/cancel-subscription', async (req, res) => {
+  try {
+    const { userId } = req.body;
+    
+    if (!userId) {
+      return res.status(400).json({ error: 'userId requerido' });
+    }
+
+    if (!MP_ACCESS_TOKEN) {
+      return res.status(500).json({ error: 'Mercado Pago no está configurado' });
+    }
+
+    // Obtener suscripción del usuario
+    const subscription = await Subscription.findOne({ userId });
+    
+    if (!subscription || !subscription.stripeSubscriptionId) {
+      return res.status(400).json({ error: 'No tienes una suscripción activa' });
+    }
+
+    const preapprovalId = subscription.stripeSubscriptionId;
+
+    // CANCELAR en Mercado Pago
+    console.log(`🚨 Cancelando preapproval ${preapprovalId} para usuario ${userId}`);
+    
+    const response = await fetch(`https://api.mercadopago.com/preapproval/${preapprovalId}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${MP_ACCESS_TOKEN}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        status: 'cancelled'
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error('❌ Error cancelando en Mercado Pago:', data);
+      return res.status(500).json({ 
+        error: 'No se pudo cancelar en Mercado Pago. Por favor intenta más tarde.',
+        details: data.error || data.message
+      });
+    }
+
+    // ACTUALIZAR en Base de Datos
+    subscription.tier = 'free';
+    subscription.status = 'canceled';
+    subscription.stripeSubscriptionId = null;
+    subscription.currentPeriodEnd = null;
+    await subscription.save();
+
+    // Marcar referrals como cancelados si existen
+    await CreatorReferral.findOneAndUpdate(
+      { referredUserId: userId, status: 'active' },
+      { status: 'canceled' }
+    );
+
+    console.log(`✅ Suscripción de ${userId} cancelada exitosamente. Preapproval: ${preapprovalId}`);
+    
+    res.json({
+      success: true,
+      message: 'Suscripción cancelada. No te cobraremos más.',
+      subscription: {
+        userId: subscription.userId,
+        tier: subscription.tier,
+        status: subscription.status
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Error en cancel-subscription:', error);
+    res.status(500).json({ error: 'Error al cancelar suscripción: ' + error.message });
+  }
+});
+
+/**
+ * ℹ️ INFORMACIÓN PARA UPGRADE MANUAL
+ * GET /api/billing/upgrade-info?userId=XXX
+ * Retorna información para que el usuario haga upgrade
+ */
+router.get('/upgrade-info', async (req, res) => {
+  try {
+    const { userId } = req.query;
+    
+    if (!userId) {
+      return res.status(400).json({ error: 'userId requerido' });
+    }
+
+    const subscription = await Subscription.findOne({ userId });
+    const currentTier = subscription?.tier || 'free';
+    const currentPeriodEnd = subscription?.currentPeriodEnd;
+
+    // Calcular días restantes en el período actual
+    const daysRemaining = currentPeriodEnd
+      ? Math.ceil((new Date(currentPeriodEnd) - new Date()) / (1000 * 60 * 60 * 24))
+      : 0;
+
+    res.json({
+      currentTier,
+      currentPeriodEnd,
+      daysRemaining,
+      message: daysRemaining > 0 
+        ? `Para hacer upgrade, dirígete a /pricing. Tu período actual termina en ${daysRemaining} días.`
+        : 'Tu período actual ha terminado. Puedes convertirte a cualquier plan.',
+      upgradeUrl: '/pricing'
+    });
+
+  } catch (error) {
+    console.error('❌ Error en upgrade-info:', error);
+    res.status(500).json({ error: 'Error al obtener información de upgrade' });
+  }
 });
 
 export default router;
