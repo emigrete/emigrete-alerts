@@ -206,7 +206,7 @@ router.post('/create-reward', async (req, res) => {
         }
       });
 
-      console.log(`✅ Trigger TTS creado: ${trigger._id} para recompensa ${newReward.id}`);
+      console.log(`Trigger TTS creado: ${trigger._id} para recompensa ${newReward.id}`);
     }
 
     // ✅ INCREMENTAR CONTADOR
@@ -267,7 +267,7 @@ router.delete('/triggers/:id', async (req, res) => {
         const status = error.response?.status;
         // Si ya no existe en Twitch, seguimos con el borrado local
         if (status !== 404) {
-          console.error('❌ Error al borrar recompensa en Twitch:', error.response?.data || error.message);
+          console.error('Error al borrar recompensa en Twitch:', error.response?.data || error.message);
           return res.status(502).json({ error: 'No se pudo borrar la recompensa en Twitch' });
         }
       }
@@ -286,7 +286,7 @@ router.delete('/triggers/:id', async (req, res) => {
         }
         await bucket.file(trigger.fileName).delete({ ignoreNotFound: true });
       } catch (e) {
-        console.error('⚠️ No se pudo borrar archivo legacy:', e.message);
+        console.error('No se pudo borrar archivo legacy:', e.message);
       }
     }
 
@@ -301,7 +301,7 @@ router.delete('/triggers/:id', async (req, res) => {
             }
             await bucket.file(media.fileName).delete({ ignoreNotFound: true });
           } catch (e) {
-            console.error(`⚠️ No se pudo borrar media ${media.fileName}:`, e.message);
+            console.error(`No se pudo borrar media ${media.fileName}:`, e.message);
           }
         }
       }
@@ -329,7 +329,7 @@ router.delete('/triggers/:id', async (req, res) => {
 
     return res.json({ success: true });
   } catch (e) {
-    console.error('❌ Error al borrar alerta:', e.message);
+    console.error('Error al borrar alerta:', e.message);
     return res.status(500).json({ error: 'Error al borrar alerta' });
   }
 });
@@ -361,7 +361,7 @@ router.get('/tts/usage/:userId', async (req, res) => {
       nextResetDate: status.nextResetDate
     });
   } catch (error) {
-    console.error('❌ Error obteniendo TTS usage:', error);
+    console.error('Error obteniendo TTS usage:', error);
     res.status(500).json({ error: 'Error al obtener uso de TTS' });
   }
 });
@@ -405,7 +405,7 @@ router.post('/tts', async (req, res) => {
 
     const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
     if (!ELEVENLABS_API_KEY) {
-      console.error('❌ Falta ELEVENLABS_API_KEY en variables de entorno');
+      console.error('Falta ELEVENLABS_API_KEY en variables de entorno');
       return res.status(500).json({ error: 'TTS no configurado' });
     }
 
@@ -437,7 +437,7 @@ router.post('/tts', async (req, res) => {
     // Devolver audio como base64
     const audioBase64 = Buffer.from(response.data, 'binary').toString('base64');
     
-    console.log(`✅ TTS generado (${text.length} chars)`);
+    console.log(`TTS generado (${text.length} chars)`);
     
     res.json({ 
       success: true, 
@@ -446,7 +446,7 @@ router.post('/tts', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Error generando TTS:', error.response?.data || error.message);
+    console.error('Error generando TTS:', error.response?.data || error.message);
 
     if (error.response) {
       const statusCode = error.response.status || 500;
@@ -494,7 +494,7 @@ router.put('/triggers/:id/tts', async (req, res) => {
 
     res.json({ success: true, trigger });
   } catch (error) {
-    console.error('❌ Error actualizando TTS config:', error);
+    console.error('Error actualizando TTS config:', error);
     res.status(500).json({ error: 'Error al actualizar configuración TTS' });
   }
 });
@@ -517,7 +517,7 @@ router.get('/admin/check', async (req, res) => {
 
     res.json({ isAdmin });
   } catch (error) {
-    console.error('❌ Error verificando admin:', error);
+    console.error('Error verificando admin:', error);
     res.json({ isAdmin: false });
   }
 });
@@ -555,6 +555,7 @@ router.get('/admin/users', async (req, res) => {
           username: userToken.username || 'Unknown',
           tier: status.subscription?.tier || 'free',
           isCreator: creatorProfile?.isAssigned || false,
+          creatorCode: creatorProfile?.code || null,
           triggers: triggerCount || 0,
           alerts: {
             current: status.usage?.alerts?.current || 0,
@@ -583,7 +584,7 @@ router.get('/admin/users', async (req, res) => {
           nextResetDate: status.nextResetDate,
         });
       } catch (error) {
-        console.error(`⚠️ Error obteniendo status para ${userToken.userId}:`, error.message);
+        console.error(`Error obteniendo status para ${userToken.userId}:`, error.message);
       }
     }
 
@@ -598,7 +599,7 @@ router.get('/admin/users', async (req, res) => {
       users: usersData,
     });
   } catch (error) {
-    console.error('❌ Error obteniendo usuarios admin:', error);
+    console.error('Error obteniendo usuarios admin:', error);
     res.status(500).json({ error: 'Error al obtener usuarios' });
   }
 });
@@ -636,7 +637,7 @@ router.put('/admin/users/:userId/tier', async (req, res) => {
       { upsert: true, new: true }
     );
 
-    console.log(`✅ Admin cambió tier de ${userId} a ${tier}`);
+    console.log(`Admin cambió tier de ${userId} a ${tier}`);
 
     res.json({
       success: true,
@@ -647,7 +648,7 @@ router.put('/admin/users/:userId/tier', async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('❌ Error cambiando tier:', error);
+    console.error('Error cambiando tier:', error);
     res.status(500).json({ error: 'Error al cambiar tier' });
   }
 });
@@ -723,7 +724,7 @@ router.post('/subscription/change-plan', async (req, res) => {
       { upsert: true, new: true }
     );
 
-    console.log(`✅ Usuario ${userId} cambió plan de ${currentSubscription?.tier || 'free'} a ${newTier}`);
+    console.log(`Usuario ${userId} cambió plan de ${currentSubscription?.tier || 'free'} a ${newTier}`);
 
     res.json({
       success: true,
@@ -738,7 +739,7 @@ router.post('/subscription/change-plan', async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('❌ Error cambiando plan:', error);
+    console.error('Error cambiando plan:', error);
     res.status(500).json({ error: 'Error al cambiar plan' });
   }
 });
@@ -787,14 +788,14 @@ router.post('/admin/users/:userId/reset', async (req, res) => {
 
     await metrics.save();
 
-    console.log(`✅ Admin reseteó ${type} de usuario ${userId}`);
+    console.log(`Admin reseteó ${type} de usuario ${userId}`);
 
     res.json({
       success: true,
       message: `${type} reseteado correctamente`
     });
   } catch (error) {
-    console.error('❌ Error reseteando límites:', error);
+    console.error('Error reseteando límites:', error);
     res.status(500).json({ error: 'Error al resetear límites' });
   }
 });
@@ -839,56 +840,33 @@ router.post('/admin/users/:userId/creator-role', async (req, res) => {
       let profile = await CreatorProfile.findOne({ userId });
       
       if (profile) {
-        // Si existe, solo actualizar flags
+        // Si existe, actualizar flags y opcionalmente el código
         profile.isAssigned = true;
         profile.isActive = true;
-        await profile.save();
-        console.log(`✅ [ADMIN] Asignó rol creador a ${userId}. Perfil existente:`, { code: profile.code, isAssigned: profile.isAssigned });
-      } else {
-        // Si no existe, crear con código personalizado o generado
-        const sanitizeCode = (value) =>
-          String(value || '')
-            .toUpperCase()
-            .replace(/[^A-Z0-9]/g, '')
-            .slice(0, 16);
-        
-        const generateCode = (username) => {
-          const base = sanitizeCode(username || 'CREADOR');
-          const suffix = Math.random().toString(36).substring(2, 6).toUpperCase();
-          return sanitizeCode(`${base}${suffix}`);
-        };
-        
-        let code;
         if (customCode && customCode.trim()) {
-          // Usar código personalizado
-          code = sanitizeCode(customCode);
-          // Verificar que no exista
-          const existingCode = await CreatorProfile.findOne({ code });
-          if (existingCode) {
-            return res.status(409).json({ error: `El código "${code}" ya está en uso` });
+          const sanitizeCode = (value) =>
+            String(value || '')
+              .toUpperCase()
+              .replace(/[^A-Z0-9]/g, '')
+              .slice(0, 16);
+          const newCode = sanitizeCode(customCode);
+          const existingCode = await CreatorProfile.findOne({ code: newCode });
+          if (existingCode && existingCode.userId !== userId) {
+            return res.status(409).json({ error: `El código "${newCode}" ya está en uso` });
           }
-        } else {
-          // Generar código automáticamente con retry
-          let attempts = 0;
-          const maxAttempts = 10;
-          while (attempts < maxAttempts) {
-            code = generateCode(user.username);
-            const existingCode = await CreatorProfile.findOne({ code });
-            if (!existingCode) break;
-            attempts++;
-          }
-          if (attempts >= maxAttempts) {
-            return res.status(500).json({ error: 'No se pudo generar un código único. Intenta con un código personalizado.' });
-          }
+          profile.code = newCode;
         }
-        
+        await profile.save();
+        console.log(`[ADMIN] Asignó rol creador a ${userId}. Perfil existente:`, { code: profile.code, isAssigned: profile.isAssigned });
+      } else {
+        // Si no existe, crear sin código (puede agregarse después)
         profile = await CreatorProfile.create({
           userId,
-          code,
+          code: null, // Sin código inicialmente
           isAssigned: true,
           isActive: true
         });
-        console.log(`✅ [ADMIN] Asignó rol creador a ${userId}. Nuevo perfil creado:`, { code: profile.code, isAssigned: profile.isAssigned });
+        console.log(`[ADMIN] Creó rol creador a ${userId} sin código (puede agregarse después)`);
       }
 
       return res.json({
@@ -896,13 +874,13 @@ router.post('/admin/users/:userId/creator-role', async (req, res) => {
         message: 'Rol creador asignado',
         profile: {
           userId: profile.userId,
-          code: profile.code,
+          code: profile.code || null,
           isAssigned: profile.isAssigned
         }
       });
     } else {
       // Remover rol creador
-      console.log(`🔍 [REMOVE CREATOR] Intentando remover rol para usuario ${userId}`);
+      console.log(`[REMOVE CREATOR] Intentando remover rol para usuario ${userId}`);
       
       // Usar findOneAndUpdate para evitar problemas de validación
       const updatedProfile = await CreatorProfile.findOneAndUpdate(
@@ -915,11 +893,11 @@ router.post('/admin/users/:userId/creator-role', async (req, res) => {
       );
       
       if (!updatedProfile) {
-        console.warn(`⚠️ [REMOVE CREATOR] Perfil no encontrado para ${userId}`);
+        console.warn(`[REMOVE CREATOR] Perfil no encontrado para ${userId}`);
         return res.status(404).json({ error: 'Perfil de creador no encontrado' });
       }
       
-      console.log(`✅ [REMOVE CREATOR] Perfil actualizado exitosamente:`, { 
+      console.log(`[REMOVE CREATOR] Perfil actualizado exitosamente:`, { 
         userId: updatedProfile.userId,
         code: updatedProfile.code,
         isAssigned: updatedProfile.isAssigned, 
@@ -938,7 +916,7 @@ router.post('/admin/users/:userId/creator-role', async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('❌ Error toggling creator role:', {
+    console.error('Error toggling creator role:', {
       message: error.message,
       code: error.code,
       name: error.name,
@@ -953,6 +931,81 @@ router.post('/admin/users/:userId/creator-role', async (req, res) => {
       errorMsg = `DB error: ${error.message}`;
     }
     
+    res.status(500).json({ error: errorMsg, details: error.message });
+  }
+});
+
+/**
+ * ADMIN: UPDATE CREATOR CODE
+ * PUT /api/admin/users/:userId/creator-code
+ * Body: { adminId: string, code: string }
+ */
+router.put('/admin/users/:userId/creator-code', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { adminId, code } = req.body;
+
+    console.log(`[UPDATE_CREATOR_CODE] Request inicio:`, { userId, adminId, code });
+
+    // Verificar que sea admin
+    const ADMIN_USER_IDS = process.env.ADMIN_USER_IDS?.split(',') || [];
+    if (!adminId || !ADMIN_USER_IDS.includes(adminId)) {
+      return res.status(403).json({ error: 'No autorizado' });
+    }
+
+    if (!code || !code.trim()) {
+      return res.status(400).json({ error: 'Código requerido' });
+    }
+
+    const sanitizeCode = (value) =>
+      String(value || '')
+        .toUpperCase()
+        .replace(/[^A-Z0-9]/g, '')
+        .slice(0, 16);
+
+    const newCode = sanitizeCode(code);
+
+    // Verificar que el código no exista en otro perfil
+    const existingCode = await CreatorProfile.findOne({ code: newCode });
+    if (existingCode && existingCode.userId !== userId) {
+      return res.status(409).json({ error: `El código "${newCode}" ya está en uso por otro creador` });
+    }
+
+    // Actualizar el código del perfil
+    const updatedProfile = await CreatorProfile.findOneAndUpdate(
+      { userId },
+      { code: newCode },
+      { new: true }
+    );
+
+    if (!updatedProfile) {
+      return res.status(404).json({ error: 'Perfil de creador no encontrado. Primero asigna el rol creador.' });
+    }
+
+    console.log(`[UPDATE_CREATOR_CODE] Código actualizado:`, { userId, code: newCode });
+
+    return res.json({
+      success: true,
+      message: 'Código de creador actualizado',
+      profile: {
+        userId: updatedProfile.userId,
+        code: updatedProfile.code,
+        isAssigned: updatedProfile.isAssigned,
+        isActive: updatedProfile.isActive
+      }
+    });
+  } catch (error) {
+    console.error('Error actualizando código creador:', {
+      message: error.message,
+      name: error.name,
+      stack: error.stack
+    });
+
+    let errorMsg = 'Error al actualizar código';
+    if (error.name === 'ValidationError') {
+      errorMsg = `Validación: ${Object.values(error.errors).map(e => e.message).join(', ')}`;
+    }
+
     res.status(500).json({ error: errorMsg, details: error.message });
   }
 });

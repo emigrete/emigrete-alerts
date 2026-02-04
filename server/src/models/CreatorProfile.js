@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 const creatorProfileSchema = new mongoose.Schema(
   {
     userId: { type: String, required: true, unique: true, index: true },
-    code: { type: String, required: true, unique: true, uppercase: true, trim: true },
+    code: { type: String, unique: true, uppercase: true, trim: true, sparse: true }, // sparse: true permite null/undefined
     discountRate: { type: Number, default: 0.1 },
     commissionRate: { type: Number, default: 0.2 },
     totalEstimatedEarningsCents: { type: Number, default: 0 },

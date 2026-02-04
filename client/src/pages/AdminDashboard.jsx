@@ -120,7 +120,7 @@ export const AdminDashboard = () => {
       await fetchUsers();
       
       // Notificación de éxito
-      setSuccessMessage(`✅ Plan de @${username} cambiado a ${newTier.toUpperCase()} exitosamente`);
+      setSuccessMessage(`Plan de @${username} cambiado a ${newTier.toUpperCase()} exitosamente`);
       setTimeout(() => setSuccessMessage(null), 5000);
     } catch (error) {
       console.error('Error cambiando tier:', error);
@@ -157,7 +157,7 @@ export const AdminDashboard = () => {
       await fetchUsers();
       
       // Notificación de éxito
-      setSuccessMessage(`✅ Límites de @${username} reseteados exitosamente`);
+      setSuccessMessage(`Límites de @${username} reseteados exitosamente`);
       setTimeout(() => setSuccessMessage(null), 5000);
     } catch (error) {
       console.error('Error reseteando límites:', error);
@@ -166,37 +166,59 @@ export const AdminDashboard = () => {
   };
 
   const handleToggleCreator = async (targetUserId, isCurrentlyCreator, username) => {
-    const action = isCurrentlyCreator ? 'remover' : 'asignar';
-    
-    let creatorCode = null;
-    if (!isCurrentlyCreator) {
-      // Si está asignando el rol, pedir código personalizado (opcional)
-      creatorCode = prompt(`Código de creador para @${username} (opcional, se generará uno si lo dejas vacío):`);
-      if (creatorCode === null) return; // Usuario canceló
-      creatorCode = creatorCode.trim().toUpperCase() || null;
-    } else {
+    if (isCurrentlyCreator) {
+      // Remover: pedir confirmación
       if (!window.confirm(`¿Remover rol de creador de @${username}?`)) {
         return;
       }
     }
 
     try {
-      console.log(`🎬 [Creator Toggle] Toggling creator role for ${targetUserId}, current: ${isCurrentlyCreator}, new: ${!isCurrentlyCreator}, code: ${creatorCode}`);
+      console.log(`[Creator Toggle] Toggling creator role for ${targetUserId}, current: ${isCurrentlyCreator}, new: ${!isCurrentlyCreator}`);
       await axios.post(`${API_URL}/api/admin/users/${targetUserId}/creator-role`, {
         adminId: userId,
-        isCreator: !isCurrentlyCreator,
-        code: creatorCode
+        isCreator: !isCurrentlyCreator
       });
 
       // Recargar usuarios
       await fetchUsers();
       
       // Notificación de éxito
-      setSuccessMessage(`✅ Rol de creador ${action}do a @${username} exitosamente`);
+      const action = isCurrentlyCreator ? 'removido' : 'asignado';
+      setSuccessMessage(`Rol de creador ${action} a @${username} exitosamente`);
       setTimeout(() => setSuccessMessage(null), 5000);
     } catch (error) {
       console.error('Error toggling creator role:', error);
       alert(error.response?.data?.error || 'Error al cambiar rol de creador');
+    }
+  };
+
+  const handleSetCreatorCode = async (targetUserId, currentCode, username) => {
+    const newCode = prompt(`Código de creador para @${username}:\n(Actual: ${currentCode || 'Sin código'})`, currentCode || '');
+    if (newCode === null) return; // Usuario canceló
+
+    const trimmedCode = newCode.trim();
+    if (!trimmedCode) {
+      alert('El código no puede estar vacío');
+      return;
+    }
+
+    try {
+      console.log(`[Set Creator Code] Actualizando código para ${targetUserId}`);
+      await axios.put(`${API_URL}/api/admin/users/${targetUserId}/creator-code`, {
+        adminId: userId,
+        code: trimmedCode
+      });
+
+      // Recargar usuarios
+      await fetchUsers();
+      
+      // Notificación de éxito
+      setSuccessMessage(`Código de creador actualizado a "${trimmedCode.toUpperCase()}" para @${username}`);
+      setTimeout(() => setSuccessMessage(null), 5000);
+    } catch (error) {
+      console.error('Error setting creator code:', error);
+      alert(error.response?.data?.error || 'Error al actualizar código de creador');
     }
   };
 
@@ -349,16 +371,27 @@ export const AdminDashboard = () => {
                         )}
                       </td>
                       <td className="px-6 py-4">
-                        <button
-                          onClick={() => handleToggleCreator(user.userId, user.isCreator, user.username)}
-                          className={`px-3 py-1.5 rounded-full text-xs font-bold text-white transition-all ${
-                            user.isCreator
-                              ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50'
-                              : 'bg-dark-secondary border border-dark-border hover:border-yellow-500/50'
-                          }`}
-                        >
-                          {user.isCreator ? '✨ Creador' : 'Sin rol'}
-                        </button>
+                        <div className="flex gap-2 flex-wrap">
+                          <button
+                            onClick={() => handleToggleCreator(user.userId, user.isCreator, user.username)}
+                            className={`px-3 py-1.5 rounded-full text-xs font-bold text-white transition-all ${
+                              user.isCreator
+                                ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50'
+                                : 'bg-dark-secondary border border-dark-border hover:border-yellow-500/50'
+                            }`}
+                          >
+                            {user.isCreator ? 'Creador' : 'Sin rol'}
+                          </button>
+                          {user.isCreator && (
+                            <button
+                              onClick={() => handleSetCreatorCode(user.userId, user.creatorCode, user.username)}
+                              className="px-2 py-1.5 rounded-full text-xs font-bold text-white bg-dark-secondary border border-cyan-500/50 hover:border-cyan-500 transition-all"
+                              title="Editar código de creador"
+                            >
+                              {user.creatorCode ? user.creatorCode : 'Agregar código'}
+                            </button>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm">

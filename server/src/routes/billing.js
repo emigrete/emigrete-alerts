@@ -159,7 +159,7 @@ router.post('/checkout', async (req, res) => {
 
     if (provider === 'mercadopago') {
       if (!MP_ACCESS_TOKEN) {
-        console.error('❌ MP_ACCESS_TOKEN no está configurado en variables de entorno');
+        console.error('MP_ACCESS_TOKEN no está configurado en variables de entorno');
         return res.status(500).json({ error: 'Mercado Pago no está configurado. Por favor configura MP_ACCESS_TOKEN en el servidor.' });
       }
 
@@ -168,13 +168,13 @@ router.post('/checkout', async (req, res) => {
       const planConfig = MP_PLAN_IDS[planTier];
       
       if (!planConfig) {
-        console.error(`❌ Configuración de plane no encontrada para tier: ${planTier}. MP_PLAN_IDS:`, MP_PLAN_IDS);
+        console.error(`Configuración de plane no encontrada para tier: ${planTier}. MP_PLAN_IDS:`, MP_PLAN_IDS);
         return res.status(400).json({ error: `Plan ${planTier} no está configurado en Mercado Pago` });
       }
 
       const planId = planConfig[planVariant];
       if (!planId) {
-        console.error(`❌ Plan ID no encontrado para tier: ${planTier}, variant: ${planVariant}. Config:`, planConfig);
+        console.error(`Plan ID no encontrado para tier: ${planTier}, variant: ${planVariant}. Config:`, planConfig);
         return res.status(500).json({ 
           error: `❌ CONFIGURACIÓN INCOMPLETA: Plan ${planTier} (${planVariant}) sin ID. Por favor configura en Railway:
           - MP_PREAPPROVAL_PLAN_PRO_ID
@@ -186,18 +186,20 @@ router.post('/checkout', async (req, res) => {
         });
       }
 
-      console.log(`📍 MP checkout - Plan: ${planTier} | Variant: ${planVariant} | ID: ${planId} | CreatorCode: ${creatorCodeResult.code || 'ninguno'}`);
+      console.log(`MP checkout - Plan: ${planTier} | Variant: ${planVariant} | ID: ${planId} | CreatorCode: ${creatorCodeResult.code || 'ninguno'}`);
       
       if (!planId || planId.length < 10) {
-        console.error(`❌ Plan ID sospechosamente corto para ${planTier} (${planVariant}): "${planId}"`);
+        console.error(`Plan ID sospechosamente corto para ${planTier} (${planVariant}): "${planId}"`);
         return res.status(400).json({ error: `El ID del plan ${planTier} no parece ser válido. Por favor verifica la configuración de Mercado Pago.` });
       }
 
       try {
-        // Mercado Pago suscripciones usa /checkout/preferences para crear una URL de checkout con preapproval
+        // Mercado Pago suscripciones: usar /checkout/preferences con items
         const reason = creatorCodeResult.valid 
           ? `TriggerApp Plan ${planTier.toUpperCase()} - Descuento Creador`
           : `TriggerApp Plan ${planTier.toUpperCase()}`;
+        
+        const planPriceUSD = planTier === 'pro' ? 5.17 : 10.34; // Conversión aproximada
         
         const response = await fetch('https://api.mercadopago.com/checkout/preferences', {
           method: 'POST',
@@ -208,11 +210,20 @@ router.post('/checkout', async (req, res) => {
           body: JSON.stringify({
             reason,
             external_reference: externalRef,
+            items: [
+              {
+                title: reason,
+                description: `Suscripción al plan ${planTier.toUpperCase()} de TriggerApp`,
+                quantity: 1,
+                currency_id: 'USD',
+                unit_price: planPriceUSD
+              }
+            ],
             auto_recurring: {
               frequency: 1,
               frequency_type: 'months',
-              transaction_amount: 0.01, // Dummy amount, MP usará el del plan
-              preapproval_plan_id: planId
+              transaction_amount: planPriceUSD,
+              debit_type: 'debit'
             },
             back_urls: {
               success: `${FRONTEND_URL}/pricing?success=1`,
@@ -225,12 +236,12 @@ router.post('/checkout', async (req, res) => {
 
         const data = await response.json();
         if (!response.ok || !data.init_point) {
-          console.error('❌ Mercado Pago error:', {
+          console.error('Mercado Pago error:', {
             status: response.status,
             planId,
             planTier,
             variant: planVariant,
-            error: data
+            responseBody: data
           });
           
           // Errores comunes
@@ -243,23 +254,23 @@ router.post('/checkout', async (req, res) => {
           return res.status(500).json({ error: 'Error en Mercado Pago: ' + (data.message || JSON.stringify(data)) });
         }
 
-        console.log('✅ Mercado Pago checkout creado:', data.init_point);
+        console.log('Mercado Pago checkout creado:', data.init_point);
         return res.json({ url: data.init_point });
       } catch (fetchError) {
-        console.error('❌ Error fetching Mercado Pago:', fetchError);
+        console.error('Error fetching Mercado Pago:', fetchError);
         return res.status(500).json({ error: 'Error conectando con Mercado Pago: ' + fetchError.message });
       }
     }
 
     if (provider === 'paypal') {
       if (!PAYPAL_CLIENT_ID || !PAYPAL_CLIENT_SECRET) {
-        console.error('❌ PayPal credentials no están configurados');
+        console.error('PayPal credentials no están configurados');
         return res.status(500).json({ error: 'PayPal no está configurado. Por favor configura PAYPAL_CLIENT_ID y PAYPAL_CLIENT_SECRET en el servidor.' });
       }
 
       const planId = PAYPAL_PLAN_IDS[planTier];
       if (!planId) {
-        console.error(`❌ Plan ID no encontrado para tier: ${planTier}. PAYPAL_PLAN_IDS:`, PAYPAL_PLAN_IDS);
+        console.error(`Plan ID no encontrado para tier: ${planTier}. PAYPAL_PLAN_IDS:`, PAYPAL_PLAN_IDS);
         return res.status(400).json({ error: `Plan ${planTier} no está configurado en PayPal` });
       }
 
@@ -286,27 +297,27 @@ router.post('/checkout', async (req, res) => {
 
         const data = await response.json();
         if (!response.ok) {
-          console.error('❌ PayPal error:', data);
+          console.error('PayPal error:', data);
           return res.status(500).json({ error: 'Error en PayPal: ' + (data.message || data.error || 'Error desconocido') });
         }
 
         const approval = data.links?.find((link) => link.rel === 'approve');
         if (!approval?.href) {
-          console.error('❌ No approval link encontrado en PayPal response:', data);
+          console.error('No approval link encontrado en PayPal response:', data);
           return res.status(500).json({ error: 'No se pudo obtener URL de checkout de PayPal' });
         }
 
-        console.log('✅ PayPal checkout creado:', approval.href);
+        console.log('PayPal checkout creado:', approval.href);
         return res.json({ url: approval.href });
       } catch (fetchError) {
-        console.error('❌ Error fetching PayPal:', fetchError);
+        console.error('Error fetching PayPal:', fetchError);
         return res.status(500).json({ error: 'Error conectando con PayPal: ' + fetchError.message });
       }
     }
 
     return res.status(400).json({ error: 'Proveedor inválido' });
   } catch (error) {
-    console.error('❌ Error en /billing/checkout:', error);
+    console.error('Error en /billing/checkout:', error);
     return res.status(500).json({ error: 'No se pudo crear el checkout: ' + error.message });
   }
 });
@@ -322,7 +333,7 @@ router.post('/webhook/mercadopago', async (req, res) => {
       return res.status(500).json({ error: 'Mercado Pago no configurado' });
     }
 
-    console.log(`🔔 [MP WEBHOOK] Recibido: type=${type}, id=${id}`);
+    console.log(`[MP WEBHOOK] Recibido: type=${type}, id=${id}`);
 
     // Determinar qué endpoint consultar
     let endpoint;
@@ -344,7 +355,7 @@ router.post('/webhook/mercadopago', async (req, res) => {
 
     const data = await response.json();
     if (!response.ok) {
-      console.error(`❌ Error consultando ${resourceType}:`, data);
+      console.error(`Error consultando ${resourceType}:`, data);
       return res.status(200).json({ received: true }); // Retornar 200 para que MP no reintente
     }
 
@@ -356,7 +367,7 @@ router.post('/webhook/mercadopago', async (req, res) => {
       status = data.status === 'authorized' || data.status === 'active' ? 'active' : 'canceled';
       subscriberId = data.payer_id;
       subscriptionId = data.id;
-      console.log(`✅ [MP WEBHOOK] Preapproval: ${status}`, { externalRef, subscriberId, subscriptionId });
+      console.log(`[MP WEBHOOK] Preapproval: ${status}`, { externalRef, subscriberId, subscriptionId });
     } else {
       // Payment
       externalRef = data.external_reference;
@@ -364,7 +375,7 @@ router.post('/webhook/mercadopago', async (req, res) => {
       status = (data.status === 'approved' || data.status === 'authorized') ? 'active' : 'canceled';
       subscriberId = data.payer?.id;
       subscriptionId = data.id;
-      console.log(`✅ [MP WEBHOOK] Payment: ${status}`, { externalRef, subscriberId, subscriptionId });
+      console.log(`[MP WEBHOOK] Payment: ${status}`, { externalRef, subscriberId, subscriptionId });
     }
 
     const { userId, planTier, creatorCode } = parseExternalRef(externalRef);
@@ -378,12 +389,12 @@ router.post('/webhook/mercadopago', async (req, res) => {
         status,
         creatorCode
       });
-      console.log(`✅ [MP WEBHOOK] Suscripción actualizada: ${userId} -> ${planTier} (${status})`);
+      console.log(`[MP WEBHOOK] Suscripción actualizada: ${userId} -> ${planTier} (${status})`);
     }
 
     return res.status(200).json({ received: true });
   } catch (error) {
-    console.error('❌ Error en webhook Mercado Pago:', error.message);
+    console.error('Error en webhook Mercado Pago:', error.message);
     return res.status(200).json({ received: true }); // Siempre retornar 200 para que MP no reintente
   }
 });
@@ -531,7 +542,7 @@ router.post('/cancel-subscription', async (req, res) => {
     const data = await response.json();
 
     if (!response.ok) {
-      console.error('❌ Error cancelando en Mercado Pago:', data);
+      console.error('Error cancelando en Mercado Pago:', data);
       return res.status(500).json({ 
         error: 'No se pudo cancelar en Mercado Pago. Por favor intenta más tarde.',
         details: data.error || data.message
@@ -551,7 +562,7 @@ router.post('/cancel-subscription', async (req, res) => {
       { status: 'canceled' }
     );
 
-    console.log(`✅ Suscripción de ${userId} cancelada exitosamente. Preapproval: ${preapprovalId}`);
+    console.log(`Suscripción de ${userId} cancelada exitosamente. Preapproval: ${preapprovalId}`);
     
     res.json({
       success: true,
@@ -564,7 +575,7 @@ router.post('/cancel-subscription', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Error en cancel-subscription:', error);
+    console.error('Error en cancel-subscription:', error);
     res.status(500).json({ error: 'Error al cancelar suscripción: ' + error.message });
   }
 });
@@ -602,7 +613,7 @@ router.get('/upgrade-info', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Error en upgrade-info:', error);
+    console.error('Error en upgrade-info:', error);
     res.status(500).json({ error: 'Error al obtener información de upgrade' });
   }
 });
