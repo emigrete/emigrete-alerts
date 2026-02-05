@@ -205,17 +205,14 @@ export default function Dashboard() {
           try {
             // Validar que userId exista
             if (!userId) {
-              console.error('userId no está definido');
               toast.error('Error: Debes estar autenticado', { id: toastId });
               return;
             }
             
-            // Enviar userId en header personalizado
-            console.log(`Eliminando alerta ${id} con userId: ${userId}`);
+            console.log(`Eliminando alerta ${id} - userId: ${userId}`);
+            // Usar query string simple
             await axios.delete(`${API_URL}/api/triggers/${id}`, {
-              headers: {
-                'X-User-Id': userId
-              }
+              params: { userId }
             });
             await fetchTriggers();
             toast.success('Alerta borrada', { id: toastId });
