@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { Toaster, toast } from 'sonner';
 import { API_URL } from '../constants/config';
+import { useSessionTimeout } from '../hooks/useSessionTimeout';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 
 import { LoginCard } from '../components/LoginCard';
 import { Header } from '../components/Header';
@@ -16,11 +18,13 @@ export default function TTSPage() {
   const isDevelopment = import.meta.env.DEV;
   const isDemo = isDevelopment && new URLSearchParams(window.location.search).get('demo') === 'true';
 
-  const [userId, setUserId] = useState(
-    isDemo ? 'demo_user_123' : localStorage.getItem('twitchUserId')
+  const [userId, setUserId] = useLocalStorage(
+    'twitchUserId',
+    isDemo ? 'demo_user_123' : null
   );
-  const [username, setUsername] = useState(
-    isDemo ? 'Demo User' : localStorage.getItem('twitchUsername')
+  const [username, setUsername] = useLocalStorage(
+    'twitchUsername',
+    isDemo ? 'Demo User' : null
   );
   const [rewards, setRewards] = useState(isDemo ? [
     { id: 'reward_1', title: 'Alert Personalizado', backgroundColor: '#9146FF' },
@@ -95,7 +99,11 @@ export default function TTSPage() {
     localStorage.removeItem('twitchUsername');
     setUserId(null);
     setUsername(null);
+    toast.info('Sesión expirada por inactividad');
   };
+
+  // Auto logout después de 30 minutos de inactividad
+  useSessionTimeout(userId, handleLogout);
 
   if (!userId) {
     return <LoginCard loginUrl={loginUrl} />;

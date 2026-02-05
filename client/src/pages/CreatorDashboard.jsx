@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import { Toaster, toast } from 'sonner';
 import { API_URL } from '../constants/config';
+import { useSessionTimeout } from '../hooks/useSessionTimeout';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 
 import { LoginCard } from '../components/LoginCard';
 import { Header } from '../components/Header';
@@ -9,8 +11,8 @@ import { Navigation } from '../components/Navigation';
 import { AppFooter } from '../components/AppFooter';
 
 export default function CreatorDashboard() {
-  const [userId, setUserId] = useState(localStorage.getItem('twitchUserId'));
-  const [username, setUsername] = useState(localStorage.getItem('twitchUsername'));
+  const [userId, setUserId] = useLocalStorage('twitchUserId', null);
+  const [username, setUsername] = useLocalStorage('twitchUsername', null);
 
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState(null);
@@ -71,7 +73,11 @@ export default function CreatorDashboard() {
     localStorage.removeItem('twitchUsername');
     setUserId(null);
     setUsername(null);
+    toast.info('Sesión expirada por inactividad');
   };
+
+  // Auto logout después de 30 minutos de inactividad
+  useSessionTimeout(userId, handleLogout);
 
   if (!userId) {
     return <LoginCard loginUrl={loginUrl} />;

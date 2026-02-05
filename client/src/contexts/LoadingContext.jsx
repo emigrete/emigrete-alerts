@@ -11,10 +11,10 @@ export function LoadingProvider({ children }) {
     // Mostrar loading cuando cambia la ruta
     setIsLoading(true);
     
-    // Esconder loading después de un pequeño delay
+    // Esconder loading después de que la página cargue completamente
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 500);
+    }, 1500);
 
     return () => clearTimeout(timer);
   }, [location.pathname]);
