@@ -10,17 +10,16 @@ export default function CreatorOverlay() {
 
   return (
     <div className="creator-overlay-root">
-      <div className="creator-overlay-bg" aria-hidden="true" />
       <div className="creator-overlay-card" role="presentation">
         <div className="creator-overlay-brand">WelyAlerts</div>
         <div className="creator-overlay-line">
-          <span className="creator-overlay-text">Code:</span>
+          <span className="creator-overlay-text">Code</span>
+          <span className="creator-overlay-sep">•</span>
           <span className="creator-overlay-code">{code}</span>
+          <span className="creator-overlay-sep">•</span>
           <span className="creator-overlay-text">welyalerts.com</span>
         </div>
-        <div className="creator-overlay-tagline">Alertas pro para tu stream</div>
       </div>
-      <div className="creator-overlay-scan" aria-hidden="true" />
     </div>
   );
 }
