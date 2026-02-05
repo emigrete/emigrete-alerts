@@ -203,13 +203,21 @@ export default function Dashboard() {
         onClick: async () => {
           const toastId = toast.loading('Eliminando...');
           try {
-            await axios.delete(`${API_URL}/api/triggers/${id}`, {
-              params: { userId }
-            });
+            // Debug: Verificar que userId exista
+            if (!userId) {
+              console.error('userId no está definido');
+              toast.error('Error: userId no está definido', { id: toastId });
+              return;
+            }
+            
+            // Enviar userId en query params para la validación
+            console.log(`Eliminando alerta ${id} con userId: ${userId}`);
+            await axios.delete(`${API_URL}/api/triggers/${id}?userId=${userId}`);
             await fetchTriggers();
             toast.success('Alerta borrada', { id: toastId });
-          } catch {
-            toast.error('Error al eliminar', { id: toastId });
+          } catch (error) {
+            console.error('Error al eliminar:', error);
+            toast.error('Error al eliminar: ' + (error.response?.data?.error || error.message), { id: toastId });
           }
         }
       },
