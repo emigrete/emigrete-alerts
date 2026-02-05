@@ -14,6 +14,7 @@ import { LoadingScreen } from './components/LoadingScreen';
 function AppContent() {
   const { isLoading } = useContext(LoadingContext);
   const location = useLocation();
+  const isOverlayRoute = location.pathname === '/overlay' || location.pathname === '/creator-overlay';
 
   // Agregar clase al root, html y body cuando está en overlay para que sean transparentes
   useEffect(() => {
@@ -21,7 +22,7 @@ function AppContent() {
     const html = document.documentElement;
     const body = document.body;
     
-    if (location.pathname === '/overlay' || location.pathname === '/creator-overlay') {
+    if (isOverlayRoute) {
       root?.classList.add('overlay-route');
       html.classList.add('overlay-route');
       body.classList.add('overlay-route');
@@ -30,11 +31,11 @@ function AppContent() {
       html.classList.remove('overlay-route');
       body.classList.remove('overlay-route');
     }
-  }, [location.pathname]);
+  }, [isOverlayRoute, location.pathname]);
 
   return (
     <>
-      {isLoading && (
+      {isLoading && !isOverlayRoute && (
         <div className="fixed inset-0 bg-dark-bg z-50 flex items-center justify-center">
           <LoadingScreen fullPage={false} />
         </div>
