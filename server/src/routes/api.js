@@ -257,16 +257,15 @@ router.delete('/triggers/:id', async (req, res) => {
     const trigger = await Trigger.findById(req.params.id);
     if (!trigger) return res.status(404).json({ error: 'Alerta no encontrada' });
 
-    // ✅ VALIDACIÓN DE PERMISOS: Solo el propietario o admin puede eliminar
-    const ADMIN_USER_IDS = (process.env.ADMIN_USER_IDS || '').split(',').filter(id => id.trim());
+    // ✅ VALIDACIÓN DE PERMISOS: Solo el propietario puede eliminar
+    // Razón: Solo el propietario del reward en Twitch puede eliminarlo
     const isOwner = String(trigger.userId) === String(userId);
-    const isAdmin = ADMIN_USER_IDS.includes(userId);
 
-    console.log(`[DELETE TRIGGER] userId=${userId}, propietario=${trigger.userId}, isOwner=${isOwner}, isAdmin=${isAdmin}`);
+    console.log(`[DELETE TRIGGER] userId=${userId}, propietario=${trigger.userId}, isOwner=${isOwner}`);
 
-    if (!isOwner && !isAdmin) {
+    if (!isOwner) {
       console.warn(`[PERMISSION DENIED] Usuario ${userId} intentó eliminar alerta de ${trigger.userId}`);
-      return res.status(403).json({ error: 'No tienes permiso para eliminar esta alerta' });
+      return res.status(403).json({ error: 'Solo el propietario puede eliminar su alerta' });
     }
 
     // Borrar recompensa en Twitch si existe
