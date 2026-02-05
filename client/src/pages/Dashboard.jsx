@@ -203,16 +203,20 @@ export default function Dashboard() {
         onClick: async () => {
           const toastId = toast.loading('Eliminando...');
           try {
-            // Debug: Verificar que userId exista
+            // Validar que userId exista
             if (!userId) {
               console.error('userId no está definido');
-              toast.error('Error: userId no está definido', { id: toastId });
+              toast.error('Error: Debes estar autenticado', { id: toastId });
               return;
             }
             
-            // Enviar userId en query params para la validación
+            // Enviar userId en header personalizado
             console.log(`Eliminando alerta ${id} con userId: ${userId}`);
-            await axios.delete(`${API_URL}/api/triggers/${id}?userId=${userId}`);
+            await axios.delete(`${API_URL}/api/triggers/${id}`, {
+              headers: {
+                'X-User-Id': userId
+              }
+            });
             await fetchTriggers();
             toast.success('Alerta borrada', { id: toastId });
           } catch (error) {

@@ -245,12 +245,12 @@ router.get('/triggers', async (req, res) => {
 
 router.delete('/triggers/:id', async (req, res) => {
   try {
-    // Obtener userId desde query, body o params
-    let userId = req.query.userId || req.body?.userId;
+    // Obtener userId desde header, query, o body
+    const userId = req.headers['x-user-id'] || req.query.userId || req.body?.userId;
     
     // Validar que se pase userId
-    if (!userId) {
-      console.warn('[DELETE TRIGGER] Falta userId en la solicitud');
+    if (!userId || userId === 'undefined') {
+      console.warn('[DELETE TRIGGER] Falta userId en la solicitud. Headers:', Object.keys(req.headers));
       return res.status(400).json({ error: 'Falta userId en la solicitud' });
     }
 
@@ -258,11 +258,11 @@ router.delete('/triggers/:id', async (req, res) => {
     if (!trigger) return res.status(404).json({ error: 'Alerta no encontrada' });
 
     // ✅ VALIDACIÓN DE PERMISOS: Solo el propietario o admin puede eliminar
-    const ADMIN_USER_IDS = process.env.ADMIN_USER_IDS?.split(',') || [];
-    const isOwner = trigger.userId === userId;
+    const ADMIN_USER_IDS = (process.env.ADMIN_USER_IDS || '').split(',').filter(id => id.trim());
+    const isOwner = String(trigger.userId) === String(userId);
     const isAdmin = ADMIN_USER_IDS.includes(userId);
 
-    console.log(`[DELETE TRIGGER] Intento: userId=${userId}, propietario=${trigger.userId}, isOwner=${isOwner}, isAdmin=${isAdmin}`);
+    console.log(`[DELETE TRIGGER] userId=${userId}, propietario=${trigger.userId}, isOwner=${isOwner}, isAdmin=${isAdmin}, admins=${ADMIN_USER_IDS}`);
 
     if (!isOwner && !isAdmin) {
       console.warn(`[PERMISSION DENIED] Usuario ${userId} intentó eliminar alerta de ${trigger.userId}`);
