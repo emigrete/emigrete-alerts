@@ -269,27 +269,31 @@ router.delete('/triggers/:id', async (req, res) => {
     }
 
     // Borrar recompensa en Twitch si existe
+    let twitchDeleteWarning = null;
     if (trigger.twitchRewardId) {
       const user = await UserToken.findOne({ userId: trigger.userId });
-      if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
+      if (!user) {
+        twitchDeleteWarning = 'Usuario no encontrado para borrar recompensa en Twitch';
+      } else {
 
-      try {
-        await axios.delete('https://api.twitch.tv/helix/channel_points/custom_rewards', {
-          headers: {
-            'Client-ID': process.env.TWITCH_CLIENT_ID,
-            'Authorization': `Bearer ${user.accessToken}`
-          },
-          params: {
-            broadcaster_id: trigger.userId,
-            id: trigger.twitchRewardId
+        try {
+          await axios.delete('https://api.twitch.tv/helix/channel_points/custom_rewards', {
+            headers: {
+              'Client-ID': process.env.TWITCH_CLIENT_ID,
+              'Authorization': `Bearer ${user.accessToken}`
+            },
+            params: {
+              broadcaster_id: trigger.userId,
+              id: trigger.twitchRewardId
+            }
+          });
+        } catch (error) {
+          const status = error.response?.status;
+          // Si ya no existe en Twitch, seguimos con el borrado local
+          if (status !== 404) {
+            console.error('Error al borrar recompensa en Twitch:', error.response?.data || error.message);
+            twitchDeleteWarning = 'No se pudo borrar la recompensa en Twitch';
           }
-        });
-      } catch (error) {
-        const status = error.response?.status;
-        // Si ya no existe en Twitch, seguimos con el borrado local
-        if (status !== 404) {
-          console.error('Error al borrar recompensa en Twitch:', error.response?.data || error.message);
-          return res.status(502).json({ error: 'No se pudo borrar la recompensa en Twitch' });
         }
       }
     }
@@ -348,7 +352,7 @@ router.delete('/triggers/:id', async (req, res) => {
     // Borrar el trigger en Mongo
     await Trigger.findByIdAndDelete(req.params.id);
 
-    return res.json({ success: true });
+    return res.json({ success: true, warning: twitchDeleteWarning });
   } catch (e) {
     console.error('Error al borrar alerta:', e.message);
     return res.status(500).json({ error: 'Error al borrar alerta' });
