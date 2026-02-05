@@ -106,25 +106,24 @@ export const Header = ({
                 {username ? `${username} (${userId?.substring(0, 8)}...)` : userId}
               </span>
             </div>
-            {!loadingSubscription && subscription && (
-              <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg border-2 ${getTierColor(subscription.subscription.tier)} text-white text-sm font-black uppercase tracking-wide shadow-lg w-fit`}>
-                {getTierLabel(subscription.subscription.tier)}
-              </div>
-            )}
+            <div className="flex gap-2 flex-wrap">
+              {isCreator && (
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border-2 bg-gradient-to-r from-yellow-500 to-orange-500 border-yellow-400/50 shadow-yellow-500/40 text-dark-bg text-sm font-black uppercase tracking-wide shadow-lg w-fit">
+                  Plan Creador
+                </div>
+              )}
+              {!loadingSubscription && subscription && (
+                <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg border-2 ${getTierColor(subscription.subscription.tier)} text-white text-sm font-black uppercase tracking-wide shadow-lg w-fit`}>
+                  {getTierLabel(subscription.subscription.tier)}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
 
       <div className="flex flex-wrap gap-3 items-center">
         {rightSlot}
-        {isCreator && (
-          <button
-            onClick={() => navigate('/creator')}
-            className="bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 px-4 py-2 rounded-lg hover:bg-yellow-500/20 hover:border-yellow-500 transition-all font-semibold text-sm"
-          >
-            Creador
-          </button>
-        )}
         {isAdmin && (
           <button
             onClick={() => navigate('/admin')}
