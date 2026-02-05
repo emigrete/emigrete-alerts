@@ -211,11 +211,14 @@ export default function Dashboard() {
             
             console.log(`Eliminando alerta ${id} - userId: ${userId}`);
             // Usar query string simple
-            await axios.delete(`${API_URL}/api/triggers/${id}`, {
+            const response = await axios.delete(`${API_URL}/api/triggers/${id}`, {
               params: { userId }
             });
             await fetchTriggers();
             toast.success('Alerta borrada', { id: toastId });
+            if (response.data?.warning) {
+              toast.warning('Alerta borrada, pero no se pudo borrar la recompensa en Twitch. Eliminá esa recompensa en Twitch antes de volver a crearla o asociarle un video.');
+            }
           } catch (error) {
             console.error('Error al eliminar:', error);
             toast.error('Error al eliminar: ' + (error.response?.data?.error || error.message), { id: toastId });
