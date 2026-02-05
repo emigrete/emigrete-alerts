@@ -7,6 +7,7 @@ import TTSPage from './pages/TTS';
 import Pricing from './pages/Pricing';
 import { AdminDashboard } from './pages/AdminDashboard';
 import CreatorDashboard from './pages/CreatorDashboard';
+import CreatorOverlay from './pages/CreatorOverlay';
 import { LoadingProvider, LoadingContext } from './contexts/LoadingContext';
 import { LoadingScreen } from './components/LoadingScreen';
 
@@ -20,7 +21,7 @@ function AppContent() {
     const html = document.documentElement;
     const body = document.body;
     
-    if (location.pathname === '/overlay') {
+    if (location.pathname === '/overlay' || location.pathname === '/creator-overlay') {
       root?.classList.add('overlay-route');
       html.classList.add('overlay-route');
       body.classList.add('overlay-route');
@@ -40,6 +41,7 @@ function AppContent() {
       )}
       <Routes>
         <Route path="/overlay" element={<Overlay />} />
+        <Route path="/creator-overlay" element={<CreatorOverlay />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/tts" element={<TTSPage />} />
         <Route path="/pricing" element={<Pricing />} />

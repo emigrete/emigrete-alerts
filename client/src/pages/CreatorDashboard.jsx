@@ -27,9 +27,16 @@ export default function CreatorDashboard() {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format((cents || 0) / 100);
   };
 
+  const siteUrl = 'https://welyalerts.com';
+
   const shareLink = useMemo(() => {
     if (!profile?.code) return '';
-    return `${window.location.origin}/pricing?ref=${profile.code}`;
+    return `${siteUrl}/pricing?ref=${profile.code}`;
+  }, [profile]);
+
+  const overlayLink = useMemo(() => {
+    if (!profile?.code) return '';
+    return `${siteUrl}/creator-overlay?code=${profile.code}`;
   }, [profile]);
 
   const loadDashboard = async () => {
@@ -190,6 +197,26 @@ export default function CreatorDashboard() {
             )}
           </div>
         </div>
+
+        {overlayLink && (
+          <div className="bg-dark-card/70 border border-dark-border rounded-2xl p-6 mb-10">
+            <h3 className="text-lg font-bold text-white mb-2">Overlay para OBS</h3>
+            <p className="text-sm text-dark-muted mb-4">
+              Pegá este link como fuente de navegador en tu escena.
+            </p>
+            <div className="relative">
+              <input
+                readOnly
+                value={overlayLink}
+                onClick={(e) => e.target.select()}
+                className="w-full bg-dark-bg/80 backdrop-blur-sm border border-dark-border px-4 py-3 rounded-xl text-blue-200 text-sm font-mono focus:outline-none focus:border-primary/60 transition-all cursor-pointer"
+              />
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 text-dark-muted text-xs font-semibold">
+                Copiá y usalo en OBS
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* CÓMO FUNCIONAN LAS COMISIONES */}
         <div className="bg-gradient-to-br from-yellow-500/10 via-orange-500/10 to-yellow-500/10 border-2 border-yellow-500/30 rounded-3xl p-8 mb-8 relative overflow-hidden">
