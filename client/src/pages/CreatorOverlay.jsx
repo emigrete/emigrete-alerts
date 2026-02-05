@@ -14,6 +14,8 @@ export default function CreatorOverlay() {
         <span className="creator-overlay-dot" aria-hidden="true" />
         <div className="creator-overlay-brand">WelyAlerts</div>
         <div className="creator-overlay-line">
+          <span className="creator-overlay-text">Code</span>
+          <span className="creator-overlay-sep">•</span>
           <span className="creator-overlay-code">{code}</span>
         </div>
       </div>
