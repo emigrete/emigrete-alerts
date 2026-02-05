@@ -290,13 +290,15 @@ app.post('/upload', upload.single('video'), validateStorageLimit, async (req, re
 
         if (trigger) {
           console.log('📝 Actualizando trigger existente:', trigger._id);
-          // Actualizar trigger existente: agregar nueva media
-          trigger.medias.push({
+          // Actualizar trigger existente: REEMPLAZAR media (solo 1 por alerta)
+          const newMedia = {
             type: mediaType,
             url: publicUrl,
             fileName,
-            volume: 1.0
-          });
+            volume: 1.0,
+            fileSize: req.file.size // Guardar tamaño para bandwidth tracking
+          };
+          trigger.medias = [newMedia]; // Reemplazar, no agregar
           // Mantener compatibilidad con videoUrl si es video
           if (mediaType === 'video') {
             trigger.videoUrl = publicUrl;
@@ -332,7 +334,8 @@ app.post('/upload', upload.single('video'), validateStorageLimit, async (req, re
               type: mediaType,
               url: publicUrl,
               fileName,
-              volume: 1.0
+              volume: 1.0,
+              fileSize: req.file.size // Guardar tamaño para bandwidth tracking
             }],
             videoUrl: mediaType === 'video' ? publicUrl : undefined,
             fileName: mediaType === 'video' ? fileName : undefined,

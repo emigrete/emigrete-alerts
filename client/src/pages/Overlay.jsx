@@ -82,6 +82,21 @@ export default function Overlay() {
   const playMedia = async (mediaData) => {
     setCurrentMedia(mediaData);
 
+    // Registrar ancho de banda cuando comienza a reproducir
+    if (mediaData.fileSize && mediaData.triggerId && userId) {
+      try {
+        await axios.post(`${API_URL}/api/triggers/track-playback`, {
+          userId,
+          triggerId: mediaData.triggerId,
+          fileSize: mediaData.fileSize
+        });
+        console.log(`✅ [Overlay] Bandwidth registrado: ${mediaData.fileSize} bytes`);
+      } catch (error) {
+        console.error('⚠️ [Overlay] Error registrando bandwidth:', error.message);
+        // No bloquear si falla el tracking
+      }
+    }
+
     // Si tiene TTS habilitado, generar y reproducir primero
     if (mediaData.ttsConfig?.enabled) {
       await playTTS(mediaData);

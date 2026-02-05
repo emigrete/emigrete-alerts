@@ -203,7 +203,7 @@ export const FileUploadSection = ({
               <div className="p-4 bg-primary/10 border border-primary/25 rounded-xl">
                 <p className="text-sm text-primary font-semibold mb-2">Nota:</p>
                 <p className="text-sm text-dark-muted">
-                  Tenés <strong>{triggers.length} alerta{triggers.length > 1 ? 's' : ''}</strong>. Podés sumar media o crear otra.
+                  Tenés <strong>{triggers.length} alerta{triggers.length > 1 ? 's' : ''}</strong>. Cada alerta solo puede tener 1 media. Si subís a una existente, se reemplazará.
                 </p>
               </div>
             )}

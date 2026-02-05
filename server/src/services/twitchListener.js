@@ -77,8 +77,9 @@ export async function startTwitchListener(userId) {
 
       const type = lastMedia?.type || (trigger.videoUrl ? 'video' : 'tts');
       const url = lastMedia?.url || trigger.videoUrl;
+      const fileSize = lastMedia?.fileSize || 0;
 
-      console.log(`Disparando alerta (${type}): ${trigger.fileName || 'TTS'}`);
+      console.log(`Disparando alerta (${type}): ${trigger.fileName || 'TTS'}, tamaño: ${fileSize} bytes`);
 
       // Mandamos todo al overlay, incluyendo TTS y datos del viewer
       io.to(`overlay-${userId}`).emit('media-trigger', {
@@ -86,6 +87,8 @@ export async function startTwitchListener(userId) {
         type,
         volume: lastMedia?.volume ?? 1.0,
         rewardId: event.rewardId,
+        triggerId: trigger._id.toString(), // Para track-playback
+        fileSize: fileSize, // Para track-playback
         ttsConfig: trigger.ttsConfig,
         viewerMessage: event.input || event.userInput || '',
         viewerUsername: event.userDisplayName || event.userName || event.userId

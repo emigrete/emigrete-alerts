@@ -18,6 +18,7 @@ import {
   decrementStorageUsage,
   decrementAlertCount,
   decrementTTSUsage,
+  incrementBandwidthUsage,
 } from '../services/subscriptionService.js';
 
 const router = express.Router();
@@ -331,6 +332,40 @@ router.delete('/triggers/:id', async (req, res) => {
   } catch (e) {
     console.error('Error al borrar alerta:', e.message);
     return res.status(500).json({ error: 'Error al borrar alerta' });
+  }
+});
+
+/**
+ * POST /api/triggers/track-playback
+ * Registra el ancho de banda usado cuando se reproduce una media
+ * Se llama desde el overlay cuando comienza a reproducir
+ */
+router.post('/triggers/track-playback', async (req, res) => {
+  const { userId, triggerId, fileSize } = req.body;
+
+  if (!userId || !triggerId || !fileSize) {
+    return res.status(400).json({ error: 'Faltan userId, triggerId o fileSize' });
+  }
+
+  try {
+    // Validar que el trigger pertenece al usuario
+    const trigger = await Trigger.findOne({ _id: triggerId, userId });
+    if (!trigger) {
+      return res.status(404).json({ error: 'Alerta no encontrada o no autorizado' });
+    }
+
+    // Registrar el bandwidth usado
+    console.log(`📊 [Playback] Incrementando bandwidth: ${fileSize} bytes para usuario ${userId}`);
+    await incrementBandwidthUsage(userId, fileSize);
+
+    return res.json({ 
+      success: true, 
+      bandwidthUsed: fileSize,
+      message: 'Ancho de banda registrado'
+    });
+  } catch (error) {
+    console.error('Error registrando playback:', error.message);
+    return res.status(500).json({ error: 'Error al registrar reproducción' });
   }
 });
 
