@@ -174,13 +174,17 @@ export default function Overlay() {
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
-      overflow: 'hidden'
+      overflow: 'hidden',
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      zIndex: 9999
     }}>
       {currentMedia.type === 'video' && (
         <video
           ref={videoRef}
           src={currentMedia.url}
-          style={{ maxWidth: '100%', maxHeight: '100%' }}
+          style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
           muted={false}
           autoPlay
           onEnded={handleEnded}
@@ -201,7 +205,7 @@ export default function Overlay() {
         <img
           src={currentMedia.url}
           alt="GIF"
-          style={{ maxWidth: '100%', maxHeight: '100%' }}
+          style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
         />
       )}
       {currentMedia.type === 'tts' && (

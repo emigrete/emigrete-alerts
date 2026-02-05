@@ -1,5 +1,5 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { useContext } from 'react';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { useContext, useEffect } from 'react';
 import Overlay from './pages/Overlay';
 import Dashboard from './pages/Dashboard';
 import AuthCallback from './pages/AuthCallback';
@@ -12,6 +12,24 @@ import { LoadingScreen } from './components/LoadingScreen';
 
 function AppContent() {
   const { isLoading } = useContext(LoadingContext);
+  const location = useLocation();
+
+  // Agregar clase al root, html y body cuando está en overlay para que sean transparentes
+  useEffect(() => {
+    const root = document.getElementById('root');
+    const html = document.documentElement;
+    const body = document.body;
+    
+    if (location.pathname === '/overlay') {
+      root?.classList.add('overlay-route');
+      html.classList.add('overlay-route');
+      body.classList.add('overlay-route');
+    } else {
+      root?.classList.remove('overlay-route');
+      html.classList.remove('overlay-route');
+      body.classList.remove('overlay-route');
+    }
+  }, [location.pathname]);
 
   return (
     <>

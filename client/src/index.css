@@ -12,12 +12,33 @@
   --color-paypal: #0070ba;
 }
 
-html, body, #root {
+html, body {
   height: 100%;
   width: 100%;
   margin: 0;
   padding: 0;
   background-color: var(--color-dark-bg);
+}
+
+/* Overlay: fondo completamente transparente */
+html.overlay-route,
+body.overlay-route {
+  background-color: transparent !important;
+  background: transparent !important;
+}
+
+#root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: var(--color-dark-bg);
+}
+
+#root.overlay-route {
+  background-color: transparent !important;
+  background: transparent !important;
+  overflow: hidden;
 }
 
 * {
