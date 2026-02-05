@@ -245,8 +245,25 @@ router.get('/triggers', async (req, res) => {
 
 router.delete('/triggers/:id', async (req, res) => {
   try {
+    const { userId } = req.query;
+    
+    // Validar que se pase userId
+    if (!userId) {
+      return res.status(400).json({ error: 'Falta userId en la solicitud' });
+    }
+
     const trigger = await Trigger.findById(req.params.id);
     if (!trigger) return res.status(404).json({ error: 'Alerta no encontrada' });
+
+    // ✅ VALIDACIÓN DE PERMISOS: Solo el propietario o admin puede eliminar
+    const ADMIN_USER_IDS = process.env.ADMIN_USER_IDS?.split(',') || [];
+    const isOwner = trigger.userId === userId;
+    const isAdmin = ADMIN_USER_IDS.includes(userId);
+
+    if (!isOwner && !isAdmin) {
+      console.warn(`[PERMISSION DENIED] Usuario ${userId} intentó eliminar alerta de ${trigger.userId}`);
+      return res.status(403).json({ error: 'No tienes permiso para eliminar esta alerta' });
+    }
 
     // Borrar recompensa en Twitch si existe
     if (trigger.twitchRewardId) {

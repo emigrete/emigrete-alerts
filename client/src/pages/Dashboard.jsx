@@ -203,7 +203,9 @@ export default function Dashboard() {
         onClick: async () => {
           const toastId = toast.loading('Eliminando...');
           try {
-            await axios.delete(`${API_URL}/api/triggers/${id}`);
+            await axios.delete(`${API_URL}/api/triggers/${id}`, {
+              params: { userId }
+            });
             await fetchTriggers();
             toast.success('Alerta borrada', { id: toastId });
           } catch {
