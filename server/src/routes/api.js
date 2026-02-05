@@ -70,7 +70,7 @@ router.post('/feedback', async (req, res) => {
 
   try {
     await transporter.sendMail({
-      from: `Trigger App <${fromAddress}>`,
+      from: `WelyAlerts <${fromAddress}>`,
       to: recipient,
       replyTo: email || undefined,
       subject: `Feedback - ${label}`,

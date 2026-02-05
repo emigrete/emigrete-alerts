@@ -109,7 +109,7 @@ export const Header = ({
             <div className="flex gap-2 flex-wrap">
               {isCreator && (
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border-2 bg-gradient-to-r from-yellow-500 to-orange-500 border-yellow-400/50 shadow-yellow-500/40 text-dark-bg text-sm font-black uppercase tracking-wide shadow-lg w-fit">
-                  Plan Creador
+                  Creador
                 </div>
               )}
               {!loadingSubscription && subscription && (

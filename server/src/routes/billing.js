@@ -253,7 +253,7 @@ router.post('/checkout', async (req, res) => {
             plan_id: planId,
             custom_id: externalRef,
             application_context: {
-              brand_name: 'TriggerApp',
+              brand_name: 'WelyAlerts',
               locale: 'es-AR',
               user_action: 'SUBSCRIBE_NOW',
               return_url: `${FRONTEND_URL}/pricing?success=1`,

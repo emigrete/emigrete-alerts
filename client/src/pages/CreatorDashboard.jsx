@@ -7,7 +7,6 @@ import { LoginCard } from '../components/LoginCard';
 import { Header } from '../components/Header';
 import { Navigation } from '../components/Navigation';
 import { AppFooter } from '../components/AppFooter';
-import { LoadingScreen } from '../components/LoadingScreen';
 
 export default function CreatorDashboard() {
   const [userId, setUserId] = useState(localStorage.getItem('twitchUserId'));
@@ -79,32 +78,7 @@ export default function CreatorDashboard() {
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen text-dark-text p-5 lg:p-12 relative overflow-hidden">
-        <div className="fixed inset-0 z-0 pointer-events-none opacity-5">
-          <svg className="w-full h-full" viewBox="0 0 1440 800" preserveAspectRatio="xMidYMid slice">
-            <defs>
-              <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#9146FF" />
-                <stop offset="100%" stopColor="#FF6B9D" />
-              </linearGradient>
-            </defs>
-            <circle cx="200" cy="200" r="150" stroke="url(#grad1)" strokeWidth="2" fill="none" />
-            <circle cx="1200" cy="600" r="200" stroke="url(#grad1)" strokeWidth="2" fill="none" />
-            <path d="M 100 400 Q 300 200 500 400" stroke="url(#grad1)" strokeWidth="2" fill="none" />
-          </svg>
-        </div>
-
-        <div className="max-w-7xl mx-auto relative z-10">
-          <Header username={username} userId={userId} onLogout={handleLogout} title="Mi Código" />
-          <Navigation />
-          <div className="py-12">
-            <LoadingScreen fullPage={false} />
-          </div>
-        </div>
-        <AppFooter />
-      </div>
-    );
+    return null;
   }
 
   if (!profile) {
@@ -182,7 +156,7 @@ export default function CreatorDashboard() {
             
             <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-6">
               <div className="flex-1">
-                <div className="text-7xl md:text-8xl font-black bg-gradient-to-r from-yellow-300 via-orange-300 to-yellow-200 bg-clip-text text-transparent tracking-wider drop-shadow-2xl">
+                <div className="text-7xl md:text-8xl font-mono font-extrabold bg-gradient-to-r from-yellow-200 via-yellow-100 to-orange-200 bg-clip-text text-transparent tracking-widest drop-shadow-2xl" style={{letterSpacing: '0.15em'}}>
                   {profile.code}
                 </div>
                 <p className="text-yellow-400/70 text-sm mt-2 font-semibold">Compartí tu código y comenzá a generar ingresos</p>
@@ -448,7 +422,7 @@ export default function CreatorDashboard() {
             </div>
             <div className="mt-8 pt-6 border-t border-dark-border/30">
               <p className="text-dark-muted/70 text-xs md:text-sm font-semibold">
-                El equipo de My Trigger App
+                El equipo de WelyAlerts
               </p>
             </div>
           </div>
