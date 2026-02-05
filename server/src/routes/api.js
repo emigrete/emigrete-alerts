@@ -25,6 +25,55 @@ const router = express.Router();
 
 let cachedTransporter = null;
 
+const toStoragePath = (value, bucketName) => {
+  if (!value) return null;
+  if (value.startsWith('http')) {
+    try {
+      const url = new URL(value);
+      const prefix = `/${bucketName}/`;
+      if (url.pathname.startsWith(prefix)) {
+        return url.pathname.slice(prefix.length);
+      }
+      return url.pathname.replace(/^\//, '');
+    } catch {
+      return value;
+    }
+  }
+  return value.replace(/^\//, '');
+};
+
+const buildPathCandidates = (value, mediaType, bucketName) => {
+  const normalized = toStoragePath(value, bucketName);
+  if (!normalized) return [];
+
+  const candidates = [normalized];
+  const baseName = normalized.split('/').pop();
+  const hasTypeFolder = normalized.includes('triggers/video/')
+    || normalized.includes('triggers/audio/')
+    || normalized.includes('triggers/gif/');
+
+  if (normalized.startsWith('triggers/') && hasTypeFolder) {
+    candidates.push(`triggers/${baseName}`);
+  } else if (normalized.startsWith('triggers/') && !hasTypeFolder && mediaType) {
+    candidates.push(`triggers/${mediaType}/${baseName}`);
+  }
+
+  return [...new Set(candidates)];
+};
+
+const resolveExistingPath = async (bucket, value, mediaType) => {
+  const candidates = buildPathCandidates(value, mediaType, bucket.name);
+  for (const path of candidates) {
+    try {
+      const [exists] = await bucket.file(path).exists();
+      if (exists) return path;
+    } catch {
+      // Ignore and try next candidate
+    }
+  }
+  return null;
+};
+
 function getFeedbackTransporter() {
   if (cachedTransporter) return cachedTransporter;
 
@@ -237,6 +286,36 @@ router.get('/triggers', async (req, res) => {
 
   try {
     const triggers = await Trigger.find({ userId });
+    const bucket = getStorage().bucket();
+
+    await Promise.all(triggers.map(async (trigger) => {
+      let updated = false;
+
+      if (trigger.fileName) {
+        const normalized = await resolveExistingPath(bucket, trigger.fileName, 'video');
+        if (normalized && normalized !== trigger.fileName) {
+          trigger.fileName = normalized;
+          updated = true;
+        }
+      }
+
+      if (trigger.medias && trigger.medias.length > 0) {
+        for (const media of trigger.medias) {
+          if (media.fileName) {
+            const normalized = await resolveExistingPath(bucket, media.fileName, media.type);
+            if (normalized && normalized !== media.fileName) {
+              media.fileName = normalized;
+              updated = true;
+            }
+          }
+        }
+      }
+
+      if (updated) {
+        await trigger.save();
+      }
+    }));
+
     res.json(triggers);
   } catch {
     res.status(500).json({ error: 'Error al obtener alertas' });
@@ -301,17 +380,33 @@ router.delete('/triggers/:id', async (req, res) => {
     // Calcular tamaño total de los archivos a borrar
     let totalSizeToDelete = 0;
     const bucket = getStorage().bucket();
+
+    const deleteFromBucket = async (name, mediaType, label) => {
+      const candidates = buildPathCandidates(name, mediaType, bucket.name);
+      for (const path of candidates) {
+        try {
+          const [exists] = await bucket.file(path).exists();
+          if (!exists) continue;
+
+          const [metadata] = await bucket.file(path).getMetadata().catch(() => [null]);
+          if (metadata?.size) {
+            totalSizeToDelete += parseInt(metadata.size);
+          }
+
+          await bucket.file(path).delete({ ignoreNotFound: true });
+          return true;
+        } catch (e) {
+          console.error(`No se pudo borrar ${label} ${path}:`, e.message);
+        }
+      }
+      return false;
+    };
     
     // Borrar archivo legacy si existe
     if (trigger.fileName) {
-      try {
-        const [metadata] = await bucket.file(trigger.fileName).getMetadata().catch(() => [null]);
-        if (metadata?.size) {
-          totalSizeToDelete += parseInt(metadata.size);
-        }
-        await bucket.file(trigger.fileName).delete({ ignoreNotFound: true });
-      } catch (e) {
-        console.error('No se pudo borrar archivo legacy:', e.message);
+      const deleted = await deleteFromBucket(trigger.fileName, 'video', 'archivo legacy');
+      if (!deleted) {
+        console.warn('Archivo legacy no encontrado para borrar:', trigger.fileName);
       }
     }
 
@@ -319,14 +414,9 @@ router.delete('/triggers/:id', async (req, res) => {
     if (trigger.medias && trigger.medias.length > 0) {
       for (const media of trigger.medias) {
         if (media.fileName) {
-          try {
-            const [metadata] = await bucket.file(media.fileName).getMetadata().catch(() => [null]);
-            if (metadata?.size) {
-              totalSizeToDelete += parseInt(metadata.size);
-            }
-            await bucket.file(media.fileName).delete({ ignoreNotFound: true });
-          } catch (e) {
-            console.error(`No se pudo borrar media ${media.fileName}:`, e.message);
+          const deleted = await deleteFromBucket(media.fileName, media.type, 'media');
+          if (!deleted) {
+            console.warn('Media no encontrada para borrar:', media.fileName);
           }
         }
       }
