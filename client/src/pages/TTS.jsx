@@ -46,6 +46,7 @@ export default function TTSPage() {
       ]
     },
   ] : []);
+  const [isCreator, setIsCreator] = useState(false);
 
   const loginUrl = `${API_URL}/auth/twitch`;
 
@@ -53,8 +54,21 @@ export default function TTSPage() {
     if (userId) {
       fetchRewards();
       fetchTriggers();
+      checkCreatorStatus();
     }
   }, [userId]);
+
+  const checkCreatorStatus = async () => {
+    if (!userId) return;
+    try {
+      const res = await axios.get(`${API_URL}/api/creator/profile?userId=${userId}`);
+      if (res.data?.exists && res.data?.isAssigned) {
+        setIsCreator(true);
+      }
+    } catch (error) {
+      console.error('Error checking creator status:', error);
+    }
+  };
 
   const fetchRewards = async () => {
     try {
@@ -121,7 +135,7 @@ export default function TTSPage() {
         />
 
         {/* Navigation */}
-        <Navigation />
+        <Navigation isCreator={isCreator} />
 
         <TTSManager
           triggers={triggers}

@@ -79,10 +79,25 @@ export default function CreatorDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen text-dark-text p-5 lg:p-12">
-        <Header username={username} userId={userId} onLogout={handleLogout} title="Mi Código" />
-        <Navigation />
-        <div className="max-w-7xl mx-auto">
+      <div className="min-h-screen text-dark-text p-5 lg:p-12 relative overflow-hidden">
+        {/* Líneas decorativas sutiles */}
+        <div className="fixed inset-0 z-0 pointer-events-none opacity-5">
+          <svg className="w-full h-full" viewBox="0 0 1440 800" preserveAspectRatio="xMidYMid slice">
+            <defs>
+              <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#9146FF" />
+                <stop offset="100%" stopColor="#FF6B9D" />
+              </linearGradient>
+            </defs>
+            <circle cx="200" cy="200" r="150" stroke="url(#grad1)" strokeWidth="2" fill="none" />
+            <circle cx="1200" cy="600" r="200" stroke="url(#grad1)" strokeWidth="2" fill="none" />
+            <path d="M 100 400 Q 300 200 500 400" stroke="url(#grad1)" strokeWidth="2" fill="none" />
+          </svg>
+        </div>
+
+        <div className="max-w-7xl mx-auto relative z-10">
+          <Header username={username} userId={userId} onLogout={handleLogout} title="Mi Código" />
+          <Navigation />
           <div className="bg-dark-card/60 border border-dark-border rounded-2xl p-8 text-center text-dark-muted">
             Cargando...
           </div>
@@ -94,10 +109,25 @@ export default function CreatorDashboard() {
 
   if (!profile) {
     return (
-      <div className="min-h-screen text-dark-text p-5 lg:p-12">
-        <Header username={username} userId={userId} onLogout={handleLogout} title="Mi Código" />
-        <Navigation />
-        <div className="max-w-7xl mx-auto">
+      <div className="min-h-screen text-dark-text p-5 lg:p-12 relative overflow-hidden">
+        {/* Líneas decorativas sutiles */}
+        <div className="fixed inset-0 z-0 pointer-events-none opacity-5">
+          <svg className="w-full h-full" viewBox="0 0 1440 800" preserveAspectRatio="xMidYMid slice">
+            <defs>
+              <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#9146FF" />
+                <stop offset="100%" stopColor="#FF6B9D" />
+              </linearGradient>
+            </defs>
+            <circle cx="200" cy="200" r="150" stroke="url(#grad1)" strokeWidth="2" fill="none" />
+            <circle cx="1200" cy="600" r="200" stroke="url(#grad1)" strokeWidth="2" fill="none" />
+            <path d="M 100 400 Q 300 200 500 400" stroke="url(#grad1)" strokeWidth="2" fill="none" />
+          </svg>
+        </div>
+
+        <div className="max-w-7xl mx-auto relative z-10">
+          <Header username={username} userId={userId} onLogout={handleLogout} title="Mi Código" />
+          <Navigation />
           <div className="bg-dark-card/70 border border-dark-border rounded-2xl p-8 text-center">
             <p className="text-dark-muted text-lg">No tenés rol de creador</p>
             <p className="text-dark-muted text-sm mt-2">Contactá a un administrador</p>
@@ -118,8 +148,23 @@ export default function CreatorDashboard() {
     .reduce((sum, ref) => sum + (ref.estimatedEarningsCents || 0), 0);
 
   return (
-    <div className="min-h-screen text-dark-text p-5 lg:p-12">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen text-dark-text p-5 lg:p-12 relative overflow-hidden">
+      {/* Líneas decorativas sutiles */}
+      <div className="fixed inset-0 z-0 pointer-events-none opacity-5">
+        <svg className="w-full h-full" viewBox="0 0 1440 800" preserveAspectRatio="xMidYMid slice">
+          <defs>
+            <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#9146FF" />
+              <stop offset="100%" stopColor="#FF6B9D" />
+            </linearGradient>
+          </defs>
+          <circle cx="200" cy="200" r="150" stroke="url(#grad1)" strokeWidth="2" fill="none" />
+          <circle cx="1200" cy="600" r="200" stroke="url(#grad1)" strokeWidth="2" fill="none" />
+          <path d="M 100 400 Q 300 200 500 400" stroke="url(#grad1)" strokeWidth="2" fill="none" />
+        </svg>
+      </div>
+
+      <div className="max-w-7xl mx-auto relative z-10">
         <Header username={username} userId={userId} onLogout={handleLogout} title="Mi Código de Creador" />
         <Navigation isCreator={true} />
 
@@ -186,27 +231,27 @@ export default function CreatorDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {/* Card 1 */}
             <div className="bg-dark-card/80 backdrop-blur-sm rounded-2xl p-6 border-2 border-yellow-500/20 hover:border-yellow-500/40 transition-all group relative overflow-hidden">
-              <div className="absolute -top-3 -left-3 w-8 h-8 bg-gradient-to-br from-yellow-500 to-orange-500 text-dark-bg rounded-full flex items-center justify-center font-black text-sm border-4 border-dark-bg shadow-lg group-hover:scale-110 transition-transform z-10">
+              <div className="absolute -top-3 -left-3 w-8 h-8 bg-gradient-to-br from-yellow-500 to-orange-500 text-dark-bg rounded-full flex items-center justify-center font-black text-sm border-4 border-dark-bg shadow-lg group-hover:scale-110 transition-transform z-20">
                 1
               </div>
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-yellow-500/10 to-transparent rounded-full blur-2xl" />
-              <h4 className="text-yellow-400 font-black mb-3 text-xl mt-2">Descuento para Usuarios</h4>
-              <p className="text-dark-muted text-sm leading-relaxed">
-                Quien use tu código recibe automáticamente <span className="text-yellow-400 font-bold">10% de descuento</span> en su primera suscripción.
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-yellow-500/10 to-transparent rounded-full blur-2xl -z-10" />
+              <h4 className="text-yellow-400 font-black mb-3 text-xl mt-2 relative z-10">Descuento para Usuarios</h4>
+              <p className="text-dark-muted text-sm leading-relaxed relative z-10">
+                Quien use tu código recibe automáticamente <span className="text-yellow-400 font-bold">10% de descuento permanente</span> en todas sus suscripciones.
               </p>
             </div>
             
             {/* Card 2 */}
             <div className="bg-dark-card/80 backdrop-blur-sm rounded-2xl p-6 border-2 border-orange-500/20 hover:border-orange-500/40 transition-all group relative overflow-hidden">
-              <div className="absolute -top-3 -left-3 w-8 h-8 bg-gradient-to-br from-orange-500 to-yellow-500 text-dark-bg rounded-full flex items-center justify-center font-black text-sm border-4 border-dark-bg shadow-lg group-hover:scale-110 transition-transform z-10">
+              <div className="absolute -top-3 -left-3 w-8 h-8 bg-gradient-to-br from-orange-500 to-yellow-500 text-dark-bg rounded-full flex items-center justify-center font-black text-sm border-4 border-dark-bg shadow-lg group-hover:scale-110 transition-transform z-20">
                 2
               </div>
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-500/10 to-transparent rounded-full blur-2xl" />
-              <h4 className="text-orange-400 font-black mb-3 text-xl mt-2">Tu Comisión Mensual</h4>
-              <p className="text-dark-muted text-sm leading-relaxed mb-3">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-500/10 to-transparent rounded-full blur-2xl -z-10" />
+              <h4 className="text-orange-400 font-black mb-3 text-xl mt-2 relative z-10">Tu Comisión Mensual</h4>
+              <p className="text-dark-muted text-sm leading-relaxed mb-3 relative z-10">
                 Por cada suscriptor activo, <span className="text-orange-400 font-bold">ganás el 20%</span> de su pago mensual:
               </p>
-              <div className="space-y-2">
+              <div className="space-y-2 relative z-10">
                 <div className="flex items-center gap-2 bg-dark-secondary/50 rounded-lg px-3 py-2 border border-orange-500/10">
                   <span className="text-blue-400 font-mono text-xs">PRO</span>
                   <span className="text-dark-muted text-xs">$7.500</span>
@@ -224,24 +269,24 @@ export default function CreatorDashboard() {
             
             {/* Card 3 */}
             <div className="bg-dark-card/80 backdrop-blur-sm rounded-2xl p-6 border-2 border-yellow-500/20 hover:border-yellow-500/40 transition-all group relative overflow-hidden">
-              <div className="absolute -top-3 -left-3 w-8 h-8 bg-gradient-to-br from-yellow-500 to-orange-500 text-dark-bg rounded-full flex items-center justify-center font-black text-sm border-4 border-dark-bg shadow-lg group-hover:scale-110 transition-transform z-10">
+              <div className="absolute -top-3 -left-3 w-8 h-8 bg-gradient-to-br from-yellow-500 to-orange-500 text-dark-bg rounded-full flex items-center justify-center font-black text-sm border-4 border-dark-bg shadow-lg group-hover:scale-110 transition-transform z-20">
                 3
               </div>
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-yellow-500/10 to-transparent rounded-full blur-2xl" />
-              <h4 className="text-yellow-400 font-black mb-3 text-xl mt-2">Ganancias Recurrentes</h4>
-              <p className="text-dark-muted text-sm leading-relaxed">
-                Mientras tu referido mantenga su suscripción activa, <span className="text-yellow-400 font-bold">tú seguís ganando cada mes</span>. Si cancela, se pausa automáticamente.
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-yellow-500/10 to-transparent rounded-full blur-2xl -z-10" />
+              <h4 className="text-yellow-400 font-black mb-3 text-xl mt-2 relative z-10">Ganancias Recurrentes</h4>
+              <p className="text-dark-muted text-sm leading-relaxed relative z-10">
+                Mientras tu referido mantenga su suscripción activa, <span className="text-yellow-400 font-bold">vos seguís ganando cada mes</span>. Si cancela, se pausa automáticamente.
               </p>
             </div>
             
             {/* Card 4 */}
             <div className="bg-dark-card/80 backdrop-blur-sm rounded-2xl p-6 border-2 border-orange-500/20 hover:border-orange-500/40 transition-all group relative overflow-hidden">
-              <div className="absolute -top-3 -left-3 w-8 h-8 bg-gradient-to-br from-orange-500 to-yellow-500 text-dark-bg rounded-full flex items-center justify-center font-black text-sm border-4 border-dark-bg shadow-lg group-hover:scale-110 transition-transform z-10">
+              <div className="absolute -top-3 -left-3 w-8 h-8 bg-gradient-to-br from-orange-500 to-yellow-500 text-dark-bg rounded-full flex items-center justify-center font-black text-sm border-4 border-dark-bg shadow-lg group-hover:scale-110 transition-transform z-20">
                 4
               </div>
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-500/10 to-transparent rounded-full blur-2xl" />
-              <h4 className="text-orange-400 font-black mb-3 text-xl mt-2">Cómo Compartir</h4>
-              <p className="text-dark-muted text-sm leading-relaxed">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-500/10 to-transparent rounded-full blur-2xl -z-10" />
+              <h4 className="text-orange-400 font-black mb-3 text-xl mt-2 relative z-10">Cómo Compartir</h4>
+              <p className="text-dark-muted text-sm leading-relaxed relative z-10">
                 Usá tu enlace en <span className="text-orange-400 font-bold">redes sociales, Discord, Twitch</span> o donde prefieras. El código se aplica automáticamente al hacer clic.
               </p>
             </div>
