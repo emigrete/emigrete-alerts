@@ -8,6 +8,12 @@ export function LoadingProvider({ children }) {
   const location = useLocation();
 
   useEffect(() => {
+    // No mostrar loading en la ruta del overlay (es una página transparente)
+    if (location.pathname === '/overlay') {
+      setIsLoading(false);
+      return;
+    }
+
     // Mostrar loading cuando cambia la ruta
     setIsLoading(true);
     

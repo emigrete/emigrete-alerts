@@ -23,11 +23,16 @@ export const FileUploadSection = ({
   const [showRewardCreator, setShowRewardCreator] = useState(false);
   // Tipo de media para vista previa
   const [mediaType, setMediaType] = useState(null);
-  // Datos de suscripción con fecha de reset
-  const [subscriptionData, setSubscriptionData] = useState(null);
+  // Datos de suscripción con fecha de reset (fallback si no viene desde Dashboard)
+  const [subscriptionData, setSubscriptionData] = useState(subscription);
 
-  // Obtener datos de suscripción con fecha de reset
+  // Obtener datos de suscripción solo si no vienen desde Dashboard
   useEffect(() => {
+    if (subscription) {
+      setSubscriptionData(subscription);
+      return;
+    }
+
     const fetchSubscription = async () => {
       try {
         if (!userId) return;
@@ -41,7 +46,7 @@ export const FileUploadSection = ({
     };
 
     fetchSubscription();
-  }, [userId]);
+  }, [userId, subscription]);
 
   // Helper para formatear fecha
   const formatDate = (dateString) => {

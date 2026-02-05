@@ -1,14 +1,20 @@
 import { toast } from 'sonner';
 import { FILE_CONFIG } from '../constants/config';
 
-export const validateFile = (file) => {
+/**
+ * Valida un archivo con límite de tamaño dinámico
+ * @param {File} file - Archivo a validar
+ * @param {number} maxSizeBytes - Tamaño máximo en bytes (opcional, por defecto 5MB)
+ */
+export const validateFile = (file, maxSizeBytes = FILE_CONFIG.MAX_SIZE) => {
   if (!file) return { valid: false, error: 'No file selected' };
   
-  if (file.size > FILE_CONFIG.MAX_SIZE) {
+  if (file.size > maxSizeBytes) {
     const sizeMB = (file.size / 1024 / 1024).toFixed(2);
+    const maxMB = (maxSizeBytes / 1024 / 1024).toFixed(0);
     return {
       valid: false,
-      error: `Muy pesado (${sizeMB} MB). Máximo 5MB.`
+      error: `Muy pesado (${sizeMB} MB). Máximo ${maxMB}MB según tu plan.`
     };
   }
 

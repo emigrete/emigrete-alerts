@@ -62,6 +62,7 @@ export default function Dashboard() {
   const [uploading, setUploading] = useState(false);
   const [fileError, setFileError] = useState('');
   const [isCreator, setIsCreator] = useState(false);
+  const [subscriptionData, setSubscriptionData] = useState(null);
   const loginUrl = `${API_URL}/auth/twitch`;
 
   // Cargar datos al iniciar
@@ -70,8 +71,21 @@ export default function Dashboard() {
       fetchRewards();
       fetchTriggers();
       checkCreatorStatus();
+      fetchSubscriptionData();
     }
   }, [userId]);
+
+  const fetchSubscriptionData = async () => {
+    if (!userId) return;
+    try {
+      const res = await axios.get(`${API_URL}/api/subscription/status`, {
+        params: { userId }
+      });
+      setSubscriptionData(res.data);
+    } catch (error) {
+      console.error('Error fetching subscription:', error);
+    }
+  };
 
   const checkCreatorStatus = async () => {
     if (!userId) return;
@@ -111,7 +125,9 @@ export default function Dashboard() {
     setPreviewUrl(null);
 
     if (selected) {
-      const validation = validateFile(selected);
+      // Usar maxFileBytes del servidor, o fallback a 5MB si no está disponible
+      const maxFileBytes = subscriptionData?.subscription?.maxFileSizeBytes || (5 * 1024 * 1024);
+      const validation = validateFile(selected, maxFileBytes);
       
       if (!validation.valid) {
         setFileError(validation.error);
@@ -317,7 +333,7 @@ export default function Dashboard() {
               userId={userId}
               isDemo={isDemo}
               triggers={triggers}
-              subscription={{ maxFileSize: '5MB' }}
+              subscription={subscriptionData || { subscription: { maxFileSize: '5MB' } }}
               onRewardCreated={(newReward) => {
                 setRewards([...rewards, newReward]);
                 setSelectedReward(newReward.id);

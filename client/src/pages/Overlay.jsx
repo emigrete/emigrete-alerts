@@ -25,18 +25,45 @@ export default function Overlay() {
     if (!userId) return;
 
     // Nos conectamos al socket y escuchamos eventos
-    const socketConnection = io(SOCKET_URL);
+    const socketConnection = io(SOCKET_URL, {
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      reconnectionAttempts: 5
+    });
+
+    // Función para unirse a la sala del overlay
+    const joinOverlayRoom = () => {
+      console.log(`[Overlay] Uniéndose a sala overlay-${userId}`);
+      socketConnection.emit('join-overlay', userId);
+    };
 
     socketConnection.on('connect', () => {
-      console.log(`Conectado a sala overlay-${userId} en ${SOCKET_URL}`);
-      socketConnection.emit('join-overlay', userId);
+      console.log(`✅ [Overlay] Conectado al socket en ${SOCKET_URL}`);
+      joinOverlayRoom();
+    });
+
+    socketConnection.on('reconnect', () => {
+      console.log(`🔄 [Overlay] Reconectado al socket`);
+      joinOverlayRoom();
+    });
+
+    socketConnection.on('disconnect', (reason) => {
+      console.warn(`❌ [Overlay] Desconectado: ${reason}`);
     });
 
     socketConnection.on('media-trigger', (data) => {
-      console.log('Evento recibido:', data);
+      console.log('📢 [Overlay] Evento media-trigger recibido:', data);
 
-      if (filterId && data.rewardId !== filterId) return;
+      if (filterId && data.rewardId !== filterId) {
+        console.log(`⏭️ [Overlay] Ignorando reward diferente: esperado ${filterId}, recibido ${data.rewardId}`);
+        return;
+      }
       setQueue((prevQueue) => [...prevQueue, data]);
+    });
+
+    socketConnection.on('error', (error) => {
+      console.error('🚨 [Overlay] Error de socket:', error);
     });
 
     return () => socketConnection.disconnect();
