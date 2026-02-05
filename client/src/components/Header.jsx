@@ -90,9 +90,12 @@ export const Header = ({
   return (
     <header className="flex flex-col gap-4 md:flex-row md:justify-between md:items-center mb-8 pb-6 border-b-2 border-primary/20">
       <div>
-        <h1 className="text-4xl font-black bg-gradient-to-r from-primary to-pink-500 bg-clip-text text-transparent mb-2">
-          {title || (username ? `Dashboard de ${username}` : 'Tu Dashboard')}
-        </h1>
+        <div className="flex items-center gap-3 mb-4">
+          <img src="/assets/Buho Logo Alertas.png" alt="Welyczko Alerts Logo" className="w-28 h-28 object-contain" />
+          <h1 className="text-4xl font-black bg-gradient-to-r from-primary to-pink-500 bg-clip-text text-transparent">
+            {title || (username ? `Dashboard de ${username}` : 'Tu Dashboard')}
+          </h1>
+        </div>
         {subtitle && (
           <p className="text-dark-muted text-sm mb-2">
             {subtitle}

@@ -12,7 +12,7 @@ import { LoadingProvider, LoadingContext } from './contexts/LoadingContext';
 import { LoadingScreen } from './components/LoadingScreen';
 
 function AppContent() {
-  const { isLoading } = useContext(LoadingContext);
+  const { isLoading, isComplete } = useContext(LoadingContext);
   const location = useLocation();
   const isOverlayRoute = location.pathname === '/overlay' || location.pathname === '/creator-overlay';
 
@@ -37,7 +37,7 @@ function AppContent() {
     <>
       {isLoading && !isOverlayRoute && (
         <div className="fixed inset-0 bg-dark-bg z-50 flex items-center justify-center">
-          <LoadingScreen fullPage={false} />
+          <LoadingScreen fullPage={false} isComplete={isComplete} />
         </div>
       )}
       <Routes>

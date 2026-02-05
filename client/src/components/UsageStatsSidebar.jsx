@@ -97,15 +97,15 @@ export default function UsageStatsSidebar({ userId }) {
       <button
         id="usage-stats-button"
         onClick={toggleExpand}
-        className={`fixed bottom-6 right-6 z-40 rounded-full shadow-xl transition-all ${
+        className={`fixed bottom-6 right-6 z-40 rounded-full shadow-2xl transition-all ${
           expanded
-            ? 'bg-gradient-to-r from-primary to-pink-500 hover:shadow-2xl text-white'
-            : 'bg-gradient-to-br from-dark-card to-dark-secondary border-2 border-primary/30 hover:border-primary text-primary hover:bg-dark-card'
-        } w-16 h-16 flex items-center justify-center font-bold text-sm flex-col gap-0.5`}
+            ? 'bg-gradient-to-r from-primary to-pink-500 hover:shadow-2xl text-white scale-110'
+            : 'bg-gradient-to-br from-primary via-blue-500 to-pink-500 border-2 border-white/50 text-white hover:scale-110'
+        } w-20 h-20 flex items-center justify-center font-bold text-sm flex-col gap-0.5 overflow-hidden`}
+        style={{ boxShadow: '0 0 25px 4px rgba(59, 130, 246, 0.3)' }}
         title={expanded ? 'Cerrar' : 'Ver consumos'}
       >
-        <span className="text-lg">∞</span>
-        <span className="text-xs">Uso</span>
+        <img src="/assets/Buho Logo Alertas.png" alt="Consumo" className="w-14 h-14 object-contain" />
       </button>
 
       {/* Panel lateral expandible */}

@@ -28,6 +28,7 @@ export const LoginCard = ({ loginUrl, username }) => (
 
     {/* Card */}
     <div className="relative z-10 bg-dark-card/40 backdrop-blur-xl p-12 rounded-3xl border border-primary/30 shadow-2xl max-w-md w-full text-center">
+      <img src="/assets/Buho Logo Alertas.png" alt="Welyczko" className="w-24 h-24 mx-auto mb-4 object-contain" />
       <h1 className="text-5xl font-black bg-gradient-to-r from-primary via-pink-500 to-cyan-500 bg-clip-text text-transparent mb-3">
         Welyczko Alerts
       </h1>

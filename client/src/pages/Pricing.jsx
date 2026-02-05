@@ -161,8 +161,9 @@ export default function PricingPage() {
       </div>
 
       <div className="max-w-7xl mx-auto relative z-10">
-        {/* Header */}
+        {/* Header con Logo */}
         <div className="text-center mb-16">
+          <img src="/assets/Buho Logo Alertas.png" alt="Welyczko" className="w-16 h-16 mx-auto mb-4 object-contain" />
           <h1 className="text-5xl font-black bg-gradient-to-r from-primary via-pink-500 to-cyan-500 bg-clip-text text-transparent mb-4">
             Planes de Suscripción
           </h1>
