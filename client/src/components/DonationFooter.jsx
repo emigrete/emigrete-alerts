@@ -14,7 +14,7 @@ export const DonationFooter = () => {
               Hecho con amor
             </h4>
             <p className="text-dark-muted text-base leading-relaxed m-0">
-              <strong className="text-dark-text">Welyczko Alerts</strong> es una plataforma pensada para streamers que quieren que sus alertas sean inolvidables.
+              <strong className="text-dark-text">Welyczko Alerts</strong> es una plataforma pensada para streamers que quieren alertas personalizadas y profesionales.
               Es totalmente gratis. Si te sirve, tu apoyo nos ayuda a mejorar cada vez más.
             </p>
           </div>

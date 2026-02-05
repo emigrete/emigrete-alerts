@@ -104,7 +104,7 @@ export const SubscriptionStatus = ({ userId }) => {
             Cambios de plan protegidos
           </p>
           <p className="text-xs text-dark-muted mt-1">
-            Puedes cambiar a un plan superior ahora. Para bajar de plan, espera {daysRemaining} días.
+            Podés cambiar a un plan superior ahora. Para bajar de plan, esperá {daysRemaining} días.
           </p>
         </div>
       )}

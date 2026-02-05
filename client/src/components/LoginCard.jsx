@@ -34,7 +34,7 @@ export const LoginCard = ({ loginUrl, username }) => (
       <p className="text-dark-muted text-sm mb-6">Alertas profesionales para tu stream</p>
 
       <p className="text-dark-muted leading-relaxed text-base mb-8">
-        Transforma tus canjeadores en momentos épicos. Videos, audios, GIFs y voces IA para alertas inolvidables.
+        Transformá tus canjeadores en momentos especiales. Videos, audios, GIFs y voces IA para alertas personalizadas.
       </p>
 
       {/* Features */}
@@ -61,7 +61,7 @@ export const LoginCard = ({ loginUrl, username }) => (
       {/* Footer */}
       <div className="border-t border-dark-border pt-6 text-xs text-dark-muted space-y-2">
         <p>Próximamente: Integración con Kick</p>
-        <p>Crea alertas dinámicas para tu streaming</p>
+        <p>Creá alertas dinámicas para tu streaming</p>
       </div>
     </div>
 

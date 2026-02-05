@@ -97,7 +97,7 @@ export default function PricingPage() {
     {
       name: 'FREE',
       price: 0,
-      description: 'Perfecto para empezar',
+      description: 'Ideal para comenzar',
       color: 'from-gray-500 to-gray-600',
       limits: [
         { label: 'Alertas/mes', value: '20' },
@@ -339,14 +339,14 @@ export default function PricingPage() {
             <div>
               <h3 className="font-bold text-primary mb-2">¿Qué es el Bandwidth?</h3>
               <p className="text-dark-muted text-sm">
-                Es el ancho de banda que usas cuando la gente descarga/reproduce tus archivos. Se resetea cada mes. Ejemplo: PRO tiene 5GB/mes, si tus videos se reproducen muchas veces, consumirán ese ancho de banda.
+                Es el ancho de banda que usás cuando la gente descarga/reproduce tus archivos. Se resetea cada mes. Ejemplo: PRO tiene 5GB/mes, si tus videos se reproducen muchas veces, consumirán ese ancho de banda.
               </p>
             </div>
 
             <div>
               <h3 className="font-bold text-primary mb-2">¿Qué pasa si excedo el límite?</h3>
               <p className="text-dark-muted text-sm">
-                Si alcanzas el límite de archivo, no podrás subir ese video. Si alcanzas el storage total, deberás borrar alertas o upgraar tu plan.
+                Si alcanás el límite de archivo, no podrás subir ese video. Si alcanás el storage total, deberás eliminar alertas o actualizar tu plan.
               </p>
             </div>
 

@@ -57,7 +57,7 @@ export const AdminDashboard = () => {
     } catch (err) {
       console.error('Error fetching users:', err);
       if (err.response?.status === 403) {
-        setError('No tienes permisos para acceder a este dashboard');
+        setError('No tenés permisos para acceder a este panel de administración');
       } else {
         setError(err.response?.data?.error || 'Error al cargar usuarios');
       }
