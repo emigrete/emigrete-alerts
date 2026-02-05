@@ -7,6 +7,7 @@ import { LoginCard } from '../components/LoginCard';
 import { Header } from '../components/Header';
 import { Navigation } from '../components/Navigation';
 import { AppFooter } from '../components/AppFooter';
+import { LoadingScreen } from '../components/LoadingScreen';
 
 export default function CreatorDashboard() {
   const [userId, setUserId] = useState(localStorage.getItem('twitchUserId'));
@@ -80,7 +81,6 @@ export default function CreatorDashboard() {
   if (loading) {
     return (
       <div className="min-h-screen text-dark-text p-5 lg:p-12 relative overflow-hidden">
-        {/* Líneas decorativas sutiles */}
         <div className="fixed inset-0 z-0 pointer-events-none opacity-5">
           <svg className="w-full h-full" viewBox="0 0 1440 800" preserveAspectRatio="xMidYMid slice">
             <defs>
@@ -98,8 +98,8 @@ export default function CreatorDashboard() {
         <div className="max-w-7xl mx-auto relative z-10">
           <Header username={username} userId={userId} onLogout={handleLogout} title="Mi Código" />
           <Navigation />
-          <div className="bg-dark-card/60 border border-dark-border rounded-2xl p-8 text-center text-dark-muted">
-            Cargando...
+          <div className="py-12">
+            <LoadingScreen fullPage={false} />
           </div>
         </div>
         <AppFooter />
@@ -231,11 +231,11 @@ export default function CreatorDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {/* Card 1 */}
             <div className="bg-dark-card/80 backdrop-blur-sm rounded-2xl p-6 border-2 border-yellow-500/20 hover:border-yellow-500/40 transition-all group relative overflow-hidden">
-              <div className="absolute -top-3 -left-3 w-8 h-8 bg-gradient-to-br from-yellow-500 to-orange-500 text-dark-bg rounded-full flex items-center justify-center font-black text-sm border-4 border-dark-bg shadow-lg group-hover:scale-110 transition-transform z-20">
+              <div className="absolute top-4 left-4 w-14 h-14 bg-gradient-to-br from-yellow-500 to-orange-500 text-dark-bg rounded-full flex items-center justify-center font-black text-xl shadow-lg shadow-yellow-500/50 group-hover:scale-125 transition-transform z-20 border-2 border-yellow-400">
                 1
               </div>
               <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-yellow-500/10 to-transparent rounded-full blur-2xl -z-10" />
-              <h4 className="text-yellow-400 font-black mb-3 text-xl mt-2 relative z-10">Descuento para Usuarios</h4>
+              <h4 className="text-yellow-400 font-black mb-3 text-xl mt-14 relative z-10">Descuento para Usuarios</h4>
               <p className="text-dark-muted text-sm leading-relaxed relative z-10">
                 Quien use tu código recibe automáticamente <span className="text-yellow-400 font-bold">10% de descuento permanente</span> en todas sus suscripciones.
               </p>
@@ -243,11 +243,11 @@ export default function CreatorDashboard() {
             
             {/* Card 2 */}
             <div className="bg-dark-card/80 backdrop-blur-sm rounded-2xl p-6 border-2 border-orange-500/20 hover:border-orange-500/40 transition-all group relative overflow-hidden">
-              <div className="absolute -top-3 -left-3 w-8 h-8 bg-gradient-to-br from-orange-500 to-yellow-500 text-dark-bg rounded-full flex items-center justify-center font-black text-sm border-4 border-dark-bg shadow-lg group-hover:scale-110 transition-transform z-20">
+              <div className="absolute top-4 left-4 w-14 h-14 bg-gradient-to-br from-orange-500 to-yellow-500 text-dark-bg rounded-full flex items-center justify-center font-black text-xl shadow-lg shadow-orange-500/50 group-hover:scale-125 transition-transform z-20 border-2 border-orange-400">
                 2
               </div>
               <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-500/10 to-transparent rounded-full blur-2xl -z-10" />
-              <h4 className="text-orange-400 font-black mb-3 text-xl mt-2 relative z-10">Tu Comisión Mensual</h4>
+              <h4 className="text-orange-400 font-black mb-3 text-xl mt-14 relative z-10">Tu Comisión Mensual</h4>
               <p className="text-dark-muted text-sm leading-relaxed mb-3 relative z-10">
                 Por cada suscriptor activo, <span className="text-orange-400 font-bold">ganás el 20%</span> de su pago mensual:
               </p>
@@ -269,11 +269,11 @@ export default function CreatorDashboard() {
             
             {/* Card 3 */}
             <div className="bg-dark-card/80 backdrop-blur-sm rounded-2xl p-6 border-2 border-yellow-500/20 hover:border-yellow-500/40 transition-all group relative overflow-hidden">
-              <div className="absolute -top-3 -left-3 w-8 h-8 bg-gradient-to-br from-yellow-500 to-orange-500 text-dark-bg rounded-full flex items-center justify-center font-black text-sm border-4 border-dark-bg shadow-lg group-hover:scale-110 transition-transform z-20">
+              <div className="absolute top-4 left-4 w-14 h-14 bg-gradient-to-br from-yellow-500 to-orange-500 text-dark-bg rounded-full flex items-center justify-center font-black text-xl shadow-lg shadow-yellow-500/50 group-hover:scale-125 transition-transform z-20 border-2 border-yellow-400">
                 3
               </div>
               <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-yellow-500/10 to-transparent rounded-full blur-2xl -z-10" />
-              <h4 className="text-yellow-400 font-black mb-3 text-xl mt-2 relative z-10">Ganancias Recurrentes</h4>
+              <h4 className="text-yellow-400 font-black mb-3 text-xl mt-14 relative z-10">Ganancias Recurrentes</h4>
               <p className="text-dark-muted text-sm leading-relaxed relative z-10">
                 Mientras tu referido mantenga su suscripción activa, <span className="text-yellow-400 font-bold">vos seguís ganando cada mes</span>. Si cancela, se pausa automáticamente.
               </p>
@@ -281,11 +281,11 @@ export default function CreatorDashboard() {
             
             {/* Card 4 */}
             <div className="bg-dark-card/80 backdrop-blur-sm rounded-2xl p-6 border-2 border-orange-500/20 hover:border-orange-500/40 transition-all group relative overflow-hidden">
-              <div className="absolute -top-3 -left-3 w-8 h-8 bg-gradient-to-br from-orange-500 to-yellow-500 text-dark-bg rounded-full flex items-center justify-center font-black text-sm border-4 border-dark-bg shadow-lg group-hover:scale-110 transition-transform z-20">
+              <div className="absolute top-4 left-4 w-14 h-14 bg-gradient-to-br from-orange-500 to-yellow-500 text-dark-bg rounded-full flex items-center justify-center font-black text-xl shadow-lg shadow-orange-500/50 group-hover:scale-125 transition-transform z-20 border-2 border-orange-400">
                 4
               </div>
               <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-500/10 to-transparent rounded-full blur-2xl -z-10" />
-              <h4 className="text-orange-400 font-black mb-3 text-xl mt-2 relative z-10">Cómo Compartir</h4>
+              <h4 className="text-orange-400 font-black mb-3 text-xl mt-14 relative z-10">Cómo Compartir</h4>
               <p className="text-dark-muted text-sm leading-relaxed relative z-10">
                 Usá tu enlace en <span className="text-orange-400 font-bold">redes sociales, Discord, Twitch</span> o donde prefieras. El código se aplica automáticamente al hacer clic.
               </p>
@@ -428,9 +428,35 @@ export default function CreatorDashboard() {
             </div>
           </div>
         )}
+
+        {/* AGRADECIMIENTO */}
+        <div className="bg-gradient-to-br from-dark-card/80 via-dark-secondary/60 to-dark-card/80 border-2 border-primary/20 rounded-3xl p-10 md:p-14 relative overflow-hidden mt-12">
+          <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-br from-primary/5 to-pink-500/5 rounded-full blur-3xl -z-0" />
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-pink-500/5 to-primary/5 rounded-full blur-3xl -z-0" />
+          
+          <div className="relative z-10 text-center max-w-3xl mx-auto">
+            <h3 className="text-3xl md:text-4xl font-black mb-6 bg-gradient-to-r from-primary via-pink-500 to-primary bg-clip-text text-transparent">
+              Gracias por ser parte de esto
+            </h3>
+            <div className="space-y-4 text-dark-muted leading-relaxed">
+              <p className="text-lg">
+                Tu compromiso como creador es lo que hace posible que cada día más streamers descubran nuevas formas de monetizar su contenido. Valoramos tu dedicación y la confianza que depositás en nosotros.
+              </p>
+              <p className="text-sm md:text-base">
+                Cada referido que compartís, cada comisión generada, es un paso más en la construcción de una comunidad de creadores de contenido que creen en potenciar sus propios proyectos. Seguiremos innovando para brindarte las mejores herramientas y oportunidades.
+              </p>
+            </div>
+            <div className="mt-8 pt-6 border-t border-dark-border/30">
+              <p className="text-dark-muted/70 text-xs md:text-sm font-semibold">
+                El equipo de My Trigger App
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
       <AppFooter />
     </div>
   );
 }
+

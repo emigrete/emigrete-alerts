@@ -14,6 +14,7 @@ import { TriggersTable } from '../components/TriggersTable';
 import { AlertsBadge } from '../components/AlertsBadge';
 import { SubscriptionStatus } from '../components/SubscriptionStatus';
 import { AppFooter } from '../components/AppFooter';
+import { LoadingScreen } from '../components/LoadingScreen';
 import UsageStatsSidebar from '../components/UsageStatsSidebar';
 
 export default function Dashboard() {

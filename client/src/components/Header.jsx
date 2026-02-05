@@ -16,6 +16,7 @@ export const Header = ({
   const [subscription, setSubscription] = useState(null);
   const [loadingSubscription, setLoadingSubscription] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isCreator, setIsCreator] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -47,8 +48,25 @@ export const Header = ({
       }
     };
 
+    const checkCreator = async () => {
+      if (!userId) return;
+      
+      try {
+        const res = await axios.get(`${API_URL}/api/creator/profile?userId=${userId}`);
+        if (res.data?.exists && res.data?.isAssigned) {
+          setIsCreator(true);
+        } else {
+          setIsCreator(false);
+        }
+      } catch (error) {
+        console.error('Error checking creator:', error);
+        setIsCreator(false);
+      }
+    };
+
     fetchSubscription();
     checkAdmin();
+    checkCreator();
   }, [userId]);
 
   const getTierColor = (tier) => {
@@ -99,6 +117,14 @@ export const Header = ({
 
       <div className="flex flex-wrap gap-3 items-center">
         {rightSlot}
+        {isCreator && (
+          <button
+            onClick={() => navigate('/creator')}
+            className="bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 px-4 py-2 rounded-lg hover:bg-yellow-500/20 hover:border-yellow-500 transition-all font-semibold text-sm"
+          >
+            Creador
+          </button>
+        )}
         {isAdmin && (
           <button
             onClick={() => navigate('/admin')}
