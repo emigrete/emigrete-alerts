@@ -9,6 +9,7 @@ import Subscription from '../models/Subscription.js';
 import UsageMetrics from '../models/UsageMetrics.js';
 import CreatorProfile from '../models/CreatorProfile.js';
 import CreatorReferral from '../models/CreatorReferral.js';
+import { getValidAccessToken } from '../services/twitchAuthService.js';
 import {
   canCreateAlert,
   incrementAlertCount,
@@ -148,11 +149,19 @@ router.get('/twitch/rewards', async (req, res) => {
     const user = await UserToken.findOne({ userId });
     if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
 
+    let accessToken = user.accessToken;
+    try {
+      accessToken = await getValidAccessToken(userId);
+    } catch (error) {
+      console.error('Error refrescando token de Twitch:', error.message);
+      return res.status(401).json({ error: 'No se pudo refrescar la sesion de Twitch' });
+    }
+
     const response = await axios.get('https://api.twitch.tv/helix/channel_points/custom_rewards', {
       params: { broadcaster_id: userId },
       headers: {
         'Client-ID': process.env.TWITCH_CLIENT_ID,
-        'Authorization': `Bearer ${user.accessToken}`
+        'Authorization': `Bearer ${accessToken}`
       }
     });
 
@@ -207,6 +216,14 @@ router.post('/create-reward', async (req, res) => {
     const user = await UserToken.findOne({ userId });
     if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
 
+    let accessToken = user.accessToken;
+    try {
+      accessToken = await getValidAccessToken(userId);
+    } catch (error) {
+      console.error('Error refrescando token de Twitch:', error.message);
+      return res.status(401).json({ error: 'No se pudo refrescar la sesion de Twitch' });
+    }
+
     // Crear recompensa en Twitch
     const response = await axios.post(
       'https://api.twitch.tv/helix/channel_points/custom_rewards',
@@ -223,7 +240,7 @@ router.post('/create-reward', async (req, res) => {
       {
         headers: {
           'Client-ID': process.env.TWITCH_CLIENT_ID,
-          'Authorization': `Bearer ${user.accessToken}`,
+          'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json'
         },
         params: { broadcaster_id: userId }
@@ -354,12 +371,19 @@ router.delete('/triggers/:id', async (req, res) => {
       if (!user) {
         twitchDeleteWarning = 'Usuario no encontrado para borrar recompensa en Twitch';
       } else {
+        let accessToken = user.accessToken;
+        try {
+          accessToken = await getValidAccessToken(trigger.userId);
+        } catch (error) {
+          console.error('Error refrescando token de Twitch:', error.message);
+          twitchDeleteWarning = 'No se pudo refrescar la sesion de Twitch';
+        }
 
         try {
           await axios.delete('https://api.twitch.tv/helix/channel_points/custom_rewards', {
             headers: {
               'Client-ID': process.env.TWITCH_CLIENT_ID,
-              'Authorization': `Bearer ${user.accessToken}`
+              'Authorization': `Bearer ${accessToken}`
             },
             params: {
               broadcaster_id: trigger.userId,
