@@ -81,8 +81,9 @@ export default function PricingPage() {
     checkCreatorStatus();
   }, [userId]);
 
-  const handleApplyCode = async () => {
-    if (!creatorCode.trim()) {
+  const handleApplyCode = async (codeValue, tierValue) => {
+    const trimmedCode = String(codeValue || '').trim();
+    if (!trimmedCode) {
       toast.warning('Ingresá un código');
       return;
     }
@@ -96,13 +97,13 @@ export default function PricingPage() {
     try {
       const res = await axios.post(`${API_URL}/api/creator/apply`, {
         userId,
-        code: creatorCode,
-        planTier
+        code: trimmedCode,
+        planTier: tierValue || planTier
       });
       setAppliedDiscount({
-        code: res.data.normalizedCode || creatorCode.toUpperCase(),
+        code: res.data.normalizedCode || trimmedCode.toUpperCase(),
         discountRate: res.data.discountRate,
-        planTier
+        planTier: tierValue || planTier
       });
       toast.success('Código aplicado', { id: toastId });
     } catch (error) {
@@ -432,6 +433,11 @@ export default function PricingPage() {
           planTier={showCodeModal}
           onClose={() => setShowCodeModal(null)}
           userId={userId}
+          creatorCode={creatorCode}
+          onCreatorCodeChange={setCreatorCode}
+          appliedDiscount={appliedDiscount}
+          onApplyDiscount={handleApplyCode}
+          applyingDiscount={applying}
         />
 
         <AppFooter />

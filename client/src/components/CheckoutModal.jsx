@@ -3,8 +3,17 @@ import axios from 'axios';
 import { toast } from 'sonner';
 import { API_URL } from '../constants/config';
 
-export function CheckoutModal({ isOpen, planTier, onClose, userId }) {
-  const [creatorCode, setCreatorCode] = useState('');
+export function CheckoutModal({
+  isOpen,
+  planTier,
+  onClose,
+  userId,
+  creatorCode,
+  onCreatorCodeChange,
+  appliedDiscount,
+  onApplyDiscount,
+  applyingDiscount,
+}) {
   const [payerEmail, setPayerEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState('mercadopago');
@@ -15,11 +24,11 @@ export function CheckoutModal({ isOpen, planTier, onClose, userId }) {
       const params = new URLSearchParams(window.location.search);
       const refCode = params.get('ref');
       if (refCode) {
-        setCreatorCode(refCode.toUpperCase());
+        onCreatorCodeChange?.(refCode.toUpperCase());
         toast.success(`Código de creador aplicado: ${refCode.toUpperCase()}`);
       }
     }
-  }, [isOpen]);
+  }, [isOpen, creatorCode, onCreatorCodeChange]);
 
   const handleConfirmCheckout = async () => {
     if (!userId) {
@@ -42,7 +51,7 @@ export function CheckoutModal({ isOpen, planTier, onClose, userId }) {
       const res = await axios.post(`${API_URL}/api/billing/checkout`, {
         userId,
         planTier,
-        creatorCode: creatorCode.trim(),
+        creatorCode: String(creatorCode || '').trim(),
         provider: selectedProvider,
         payerEmail: payerEmail.trim()
       });
@@ -67,14 +76,27 @@ export function CheckoutModal({ isOpen, planTier, onClose, userId }) {
   if (!isOpen) return null;
 
   const planName = planTier === 'pro' ? 'Plan PRO' : 'Plan PREMIUM';
-  const planPrice = planTier === 'pro' ? '7.500' : '15.000'; // ARS
+  const basePrice = planTier === 'pro' ? 7500 : 15000;
+  const discountForPlan = appliedDiscount && appliedDiscount.planTier === planTier;
+  const discountedPrice = discountForPlan
+    ? Math.round(basePrice * (1 - appliedDiscount.discountRate))
+    : basePrice;
 
   return (
     <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
       <div className="bg-dark-card border border-dark-border rounded-2xl p-8 max-w-md w-full">
         <h2 className="text-2xl font-black text-white mb-1">{planName}</h2>
         <p className="text-dark-muted text-sm mb-2">Selecciona tu método de pago</p>
-        <p className="text-cyan-400 text-sm font-semibold mb-6">Suscripción: ${planPrice} ARS/mes</p>
+        <div className="mb-6">
+          <p className="text-cyan-400 text-sm font-semibold">
+            Suscripción: ${discountedPrice.toLocaleString()} ARS/mes
+          </p>
+          {discountForPlan && (
+            <p className="text-xs text-green-400 mt-1">
+              Antes <span className="line-through text-dark-muted">${basePrice.toLocaleString()}</span>
+            </p>
+          )}
+        </div>
 
         {/* Payment Provider Selection */}
         <div className="grid grid-cols-2 gap-3 mb-6">
@@ -118,12 +140,21 @@ export function CheckoutModal({ isOpen, planTier, onClose, userId }) {
         />
 
         {/* Creator Code Input */}
-        <input
-          value={creatorCode}
-          onChange={(e) => setCreatorCode(e.target.value)}
-          placeholder="Código de creador (opcional)"
-          className="w-full p-3 rounded-lg border-2 border-dark-border bg-dark-secondary text-white outline-none focus:border-cyan-500 mb-6"
-        />
+        <div className="flex gap-2 mb-6">
+          <input
+            value={creatorCode || ''}
+            onChange={(e) => onCreatorCodeChange?.(e.target.value)}
+            placeholder="Código de creador (opcional)"
+            className="flex-1 p-3 rounded-lg border-2 border-dark-border bg-dark-secondary text-white outline-none focus:border-cyan-500"
+          />
+          <button
+            onClick={() => onApplyDiscount?.(creatorCode, planTier)}
+            disabled={applyingDiscount}
+            className="px-4 py-3 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold disabled:opacity-60"
+          >
+            {applyingDiscount ? 'Aplicando...' : 'Aplicar'}
+          </button>
+        </div>
 
         {/* Buttons */}
         <div className="flex gap-3">
