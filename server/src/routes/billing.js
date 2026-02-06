@@ -134,7 +134,12 @@ const updateSubscriptionAndReferral = async ({
   status,
   creatorCode
 }) => {
-  if (!userId || !planTier) return;
+  if (!userId || !planTier) {
+    console.error('[SUBSCRIPTION] Faltan userId o planTier:', { userId, planTier });
+    return;
+  }
+
+  console.log(`[SUBSCRIPTION] Actualizando: userId=${userId}, tier=${planTier}, status=${status}, code=${creatorCode || 'ninguno'}`);
 
   const existingSubscription = await Subscription.findOne({ userId });
   const now = new Date();
@@ -187,29 +192,43 @@ const updateSubscriptionAndReferral = async ({
   }
 
   if (creatorCode) {
+    console.log(`[REFERRAL] Buscando creador con código: ${creatorCode}`);
     const creator = await CreatorProfile.findOne({ code: creatorCode, isActive: true });
-    const existingReferral = await CreatorReferral.findOne({ referredUserId: userId, status: 'active' });
+    
+    if (!creator) {
+      console.warn(`[REFERRAL] ⚠️ Creador no encontrado con código: ${creatorCode}`);
+    } else {
+      console.log(`[REFERRAL] Creador encontrado: ${creator.userId}`);
+      
+      const existingReferral = await CreatorReferral.findOne({ referredUserId: userId, status: 'active' });
+      
+      if (existingReferral) {
+        console.warn(`[REFERRAL] ⚠️ Ya existe referral activo para usuario ${userId}`);
+      } else {
+        const priceCents = PLAN_PRICES_CENTS[planTier] || 0;
+        const estimatedEarningsCents = Math.round(priceCents * (creator.commissionRate || 0.2));
 
-    if (creator && !existingReferral) {
-      const priceCents = PLAN_PRICES_CENTS[planTier] || 0;
-      const estimatedEarningsCents = Math.round(priceCents * (creator.commissionRate || 0.2));
+        await CreatorReferral.create({
+          creatorUserId: creator.userId,
+          referredUserId: userId,
+          code: creatorCode,
+          planTier,
+          priceCents,
+          discountRate: creator.discountRate || 0.1,
+          commissionRate: creator.commissionRate || 0.2,
+          estimatedEarningsCents,
+          status: 'active'
+        });
 
-      await CreatorReferral.create({
-        creatorUserId: creator.userId,
-        referredUserId: userId,
-        code: creatorCode,
-        planTier,
-        priceCents,
-        discountRate: creator.discountRate || 0.1,
-        commissionRate: creator.commissionRate || 0.2,
-        estimatedEarningsCents,
-        status: 'active'
-      });
-
-      creator.totalEstimatedEarningsCents += estimatedEarningsCents;
-      creator.totalReferred += 1;
-      await creator.save();
+        creator.totalEstimatedEarningsCents += estimatedEarningsCents;
+        creator.totalReferred += 1;
+        await creator.save();
+        
+        console.log(`[REFERRAL] ✅ Referral creado: ${userId} -> ${creator.userId} (${planTier}, $${(priceCents / 100).toFixed(2)} ARS)`);
+      }
     }
+  } else {
+    console.log('[REFERRAL] Sin código de creador');
   }
 };
 
@@ -283,11 +302,11 @@ router.post('/checkout', async (req, res) => {
       }
 
       try {
-        // Construir URL de checkout con back_url que incluye userId y código
+        // Construir URL de checkout con external_reference para vincular dato de usuario en webhook
         const backUrl = `${FRONTEND_URL}/pricing?mp=1&userId=${userId}&planTier=${planTier}&creatorCode=${creatorCodeResult.code || ''}`;
-        const initPoint = `https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=${planId}&back_url=${encodeURIComponent(backUrl)}`;
+        const initPoint = `https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=${planId}&external_reference=${encodeURIComponent(externalRef)}&back_url=${encodeURIComponent(backUrl)}`;
 
-        console.log(`MP checkout - Plan: ${planTier} | Variant: ${planVariant} | ID: ${planId}`);
+        console.log(`MP checkout - Plan: ${planTier} | Variant: ${planVariant} | ID: ${planId} | ExternalRef: ${externalRef}`);
         console.log('Redirigiendo a:', initPoint);
         
         return res.json({ url: initPoint });
@@ -414,18 +433,23 @@ router.post('/webhook/mercadopago', async (req, res) => {
     }
 
     const { userId, planTier, creatorCode } = parseExternalRef(externalRef);
+    console.log(`[MP WEBHOOK] Datos parseados: userId=${userId}, planTier=${planTier}, code=${creatorCode || 'ninguno'}`);
 
     if (userId && planTier) {
+      console.log(`[MP WEBHOOK] Procesando: userId=${userId}, planTier=${planTier}, status=${status}`);
+      
       if (status === 'active') {
         const currentSubscription = await Subscription.findOne({ userId });
         if (currentSubscription?.stripeSubscriptionId && currentSubscription.stripeSubscriptionId !== subscriptionId && currentSubscription.tier !== planTier) {
           try {
+            console.log(`[MP WEBHOOK] Cancelando suscripción anterior: ${currentSubscription.stripeSubscriptionId}`);
             await cancelMercadoPagoPreapproval(currentSubscription.stripeSubscriptionId);
           } catch (error) {
             console.error('Error cancelando suscripción anterior en Mercado Pago:', error.message);
           }
         }
       }
+      
       await updateSubscriptionAndReferral({
         userId,
         planTier,
@@ -434,7 +458,9 @@ router.post('/webhook/mercadopago', async (req, res) => {
         status,
         creatorCode
       });
-      console.log(`[MP WEBHOOK] Suscripción actualizada: ${userId} -> ${planTier} (${status})`);
+      console.log(`[MP WEBHOOK] ✅ Completado: ${userId} -> ${planTier}`);
+    } else {
+      console.error(`[MP WEBHOOK] ❌ Faltan datos clave: userId=${userId}, planTier=${planTier}`);
     }
 
     return res.status(200).json({ received: true });
