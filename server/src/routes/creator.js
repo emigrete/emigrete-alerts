@@ -120,7 +120,8 @@ router.get('/dashboard', async (req, res) => {
     const profile = await CreatorProfile.findOne({ userId });
     if (!profile) return res.status(404).json({ error: 'Perfil no encontrado' });
 
-    const referrals = await CreatorReferral.find({ creatorUserId: userId })
+    // Buscar referrals por CODE (inmune a cambios de userId)
+    const referrals = await CreatorReferral.find({ code: profile.code })
       .sort({ createdAt: -1 })
       .lean();
 
