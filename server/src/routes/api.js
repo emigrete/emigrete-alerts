@@ -727,6 +727,18 @@ router.get('/admin/users', async (req, res) => {
           userId: userToken.userId,
           username: userToken.username || 'Unknown',
           tier: status.subscription?.tier || 'free',
+          // Información completa de suscripción
+          subscription: {
+            tier: status.subscription?.tier || 'free',
+            status: status.subscription?.status || 'active',
+            currentPeriodStart: status.subscription?.currentPeriodStart || null,
+            currentPeriodEnd: status.subscription?.currentPeriodEnd || null,
+            cancelAtPeriodEnd: status.subscription?.cancelAtPeriodEnd || false,
+            requiresManualMpCancellation: status.subscription?.requiresManualMpCancellation || false,
+            stripeSubscriptionId: status.subscription?.stripeSubscriptionId || null,
+            createdAt: status.subscription?.createdAt || null,
+            updatedAt: status.subscription?.updatedAt || null,
+          },
           isCreator: creatorProfile?.isAssigned || false,
           creatorCode: creatorProfile?.code || null,
           triggers: triggerCount || 0,

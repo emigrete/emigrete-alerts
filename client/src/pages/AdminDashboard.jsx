@@ -75,6 +75,27 @@ export const AdminDashboard = () => {
     return Math.round(bytes / Math.pow(k, i) * 10) / 10 + ' ' + sizes[i];
   };
 
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', { 
+      day: '2-digit', 
+      month: 'short', 
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const formatDateShort = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', { 
+      day: '2-digit', 
+      month: 'short'
+    });
+  };
+
   const getTierColor = (tier) => {
     switch (tier) {
       case 'premium':
@@ -337,6 +358,7 @@ export const AdminDashboard = () => {
                   <tr>
                     <th className="px-6 py-4 text-left font-bold text-white uppercase tracking-wider text-xs">Usuario</th>
                     <th className="px-6 py-4 text-left font-bold text-white uppercase tracking-wider text-xs">Plan</th>
+                    <th className="px-6 py-4 text-left font-bold text-white uppercase tracking-wider text-xs">Suscripción</th>
                     <th className="px-6 py-4 text-left font-bold text-white uppercase tracking-wider text-xs">Rol</th>
                     <th className="px-6 py-4 text-left font-bold text-white uppercase tracking-wider text-xs">Alertas</th>
                     <th className="px-6 py-4 text-left font-bold text-white uppercase tracking-wider text-xs">TTS</th>
@@ -369,6 +391,51 @@ export const AdminDashboard = () => {
                             <option value="premium" className="bg-gray-800">Premium</option>
                           </select>
                         )}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-xs space-y-1">
+                          {user.subscription?.currentPeriodStart && (
+                            <>
+                              <div className="flex items-center gap-2">
+                                <span className="text-dark-muted font-semibold">Período:</span>
+                                <span className="text-white font-mono">
+                                  {formatDateShort(user.subscription.currentPeriodStart)} → {formatDateShort(user.subscription.currentPeriodEnd)}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-dark-muted font-semibold">Status:</span>
+                                <span className={`px-2 py-0.5 rounded-full font-bold ${
+                                  user.subscription.status === 'active' ? 'bg-green-500/20 text-green-400' :
+                                  user.subscription.status === 'canceled' ? 'bg-red-500/20 text-red-400' :
+                                  'bg-gray-500/20 text-gray-400'
+                                }`}>
+                                  {user.subscription.status}
+                                </span>
+                              </div>
+                            </>
+                          )}
+                          {user.subscription?.cancelAtPeriodEnd && (
+                            <div className="px-2 py-1 bg-amber-500/20 border border-amber-500/40 rounded text-amber-300 font-bold">
+                              ⚠️ Cancelado al fin del período
+                            </div>
+                          )}
+                          {user.subscription?.requiresManualMpCancellation && (
+                            <div className="px-2 py-1 bg-red-500/20 border border-red-500/40 rounded text-red-300 font-bold">
+                              🔴 Requiere cancelación en MP
+                            </div>
+                          )}
+                          {user.subscription?.stripeSubscriptionId && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-dark-muted font-semibold">MP ID:</span>
+                              <span className="text-white font-mono text-[10px]">
+                                {user.subscription.stripeSubscriptionId.slice(0, 12)}...
+                              </span>
+                            </div>
+                          )}
+                          {!user.subscription?.currentPeriodStart && user.tier === 'free' && (
+                            <span className="text-dark-muted italic">Plan gratuito</span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex gap-2 flex-wrap">
