@@ -49,9 +49,21 @@ export const SubscriptionStatus = ({ userId }) => {
         }
       }));
 
-      toast.success('Suscripción cancelada', {
-        description: 'Tu plan seguirá activo hasta fin del período'
-      });
+      if (response.data.manualCancellationRequired) {
+        toast.warning('Cancelado en nuestro sistema', {
+          description: 'Por favor cancela también en Mercado Pago',
+          action: {
+            label: 'Ir a Mercado Pago',
+            onClick: () => window.open(response.data.mpLink, '_blank')
+          },
+          duration: 10000
+        });
+      } else {
+        toast.success('Suscripción cancelada', {
+          description: 'Tu plan seguirá activo hasta fin del período'
+        });
+      }
+      
       setShowCancelModal(false);
     } catch (err) {
       console.error('Error cancelando suscripción:', err);

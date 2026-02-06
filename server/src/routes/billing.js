@@ -644,30 +644,28 @@ router.post('/cancel-subscription', async (req, res) => {
       return res.status(400).json({ error: 'userId requerido' });
     }
 
-    if (!MP_ACCESS_TOKEN) {
-      return res.status(500).json({ error: 'Mercado Pago no está configurado' });
-    }
-
     // Obtener suscripción del usuario
     const subscription = await Subscription.findOne({ userId });
     
-    if (!subscription || !subscription.stripeSubscriptionId) {
+    if (!subscription || subscription.tier === 'free') {
       return res.status(400).json({ error: 'No tienes una suscripción activa' });
     }
 
     const preapprovalId = subscription.stripeSubscriptionId;
+    let mpCanceled = false;
 
-    // CANCELAR en Mercado Pago
-    console.log(`🚨 Cancelando preapproval ${preapprovalId} para usuario ${userId}`);
-    
-    try {
-      await cancelMercadoPagoPreapproval(preapprovalId);
-    } catch (error) {
-      console.error('Error cancelando en Mercado Pago:', error.message);
-      return res.status(500).json({
-        error: 'No se pudo cancelar en Mercado Pago. Por favor intenta más tarde.',
-        details: error.message
-      });
+    // CASO 1: Tiene preapprovalId → cancelar en Mercado Pago
+    if (preapprovalId && MP_ACCESS_TOKEN) {
+      console.log(`🚨 Cancelando preapproval ${preapprovalId} para usuario ${userId}`);
+      
+      try {
+        await cancelMercadoPagoPreapproval(preapprovalId);
+        mpCanceled = true;
+        console.log(`✅ Preapproval ${preapprovalId} cancelado en MP`);
+      } catch (error) {
+        console.error('Error cancelando en Mercado Pago:', error.message);
+        // Continuar para cancelar en BD al menos
+      }
     }
 
     // ACTUALIZAR en Base de Datos: cancelar al fin del período
@@ -675,17 +673,33 @@ router.post('/cancel-subscription', async (req, res) => {
     subscription.status = 'active';
     await subscription.save();
 
-    console.log(`Suscripción de ${userId} cancelada exitosamente. Preapproval: ${preapprovalId}`);
+    console.log(`Suscripción de ${userId} cancelada en BD. MP cancelado: ${mpCanceled}`);
     
-    res.json({
-      success: true,
-      message: 'Cancelación programada. Tu plan sigue activo hasta fin del período.',
-      subscription: {
-        userId: subscription.userId,
-        tier: subscription.tier,
-        status: subscription.status
-      }
-    });
+    // Respuesta diferente según si se canceló en MP o no
+    if (mpCanceled) {
+      res.json({
+        success: true,
+        message: 'Cancelación programada. Tu plan sigue activo hasta fin del período.',
+        manualCancellationRequired: false,
+        subscription: {
+          userId: subscription.userId,
+          tier: subscription.tier,
+          status: subscription.status
+        }
+      });
+    } else {
+      res.json({
+        success: true,
+        message: 'Cancelado en nuestro sistema. Por favor verifica en Mercado Pago.',
+        manualCancellationRequired: true,
+        mpLink: 'https://www.mercadopago.com.ar/subscriptions',
+        subscription: {
+          userId: subscription.userId,
+          tier: subscription.tier,
+          status: subscription.status
+        }
+      });
+    }
 
   } catch (error) {
     console.error('Error en cancel-subscription:', error);
