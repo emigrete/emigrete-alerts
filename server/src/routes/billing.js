@@ -302,47 +302,16 @@ router.post('/checkout', async (req, res) => {
       }
 
       try {
-        // Crear preapproval via API para usar external_reference sin romper el checkout
+        // Checkout directo sin external_reference (MP lo rechaza en la URL)
         const backUrl = `${FRONTEND_URL}/pricing?mp=1&userId=${userId}&planTier=${planTier}&creatorCode=${creatorCodeResult.code || ''}`;
-        const preapprovalPayload = {
-          preapproval_plan_id: planId,
-          reason: `WelyAlerts ${planTier.toUpperCase()}`,
-          external_reference: externalRef,
-          back_url: backUrl,
-          payer_email: payerEmail,
-        };
+        const initPoint = `https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=${planId}&back_url=${encodeURIComponent(backUrl)}`;
 
-        const response = await fetch('https://api.mercadopago.com/preapproval', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${MP_ACCESS_TOKEN}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(preapprovalPayload),
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          console.error('MP preapproval error:', data);
-          return res.status(500).json({
-            error: 'Error creando suscripción en Mercado Pago',
-            details: data,
-          });
-        }
-
-        const initPoint = data.init_point;
-        if (!initPoint) {
-          console.error('MP preapproval sin init_point:', data);
-          return res.status(500).json({ error: 'Mercado Pago no devolvió init_point' });
-        }
-
-        console.log(`MP preapproval creado - Plan: ${planTier} | Variant: ${planVariant} | ID: ${planId} | ExternalRef: ${externalRef}`);
+        console.log(`MP checkout - Plan: ${planTier} | Variant: ${planVariant} | ID: ${planId}`);
         console.log('Redirigiendo a:', initPoint);
 
         return res.json({ url: initPoint });
       } catch (fetchError) {
-        console.error('Error creando preapproval en MP:', fetchError);
+        console.error('Error creando checkout MP:', fetchError);
         return res.status(500).json({ error: 'Error conectando con Mercado Pago: ' + fetchError.message });
       }
     }
@@ -407,6 +376,57 @@ router.post('/checkout', async (req, res) => {
   }
 });
 
+/**
+ * CONFIRMAR SUSCRIPCION MP DESDE EL back_url
+ * POST /api/billing/mercadopago/confirm
+ */
+router.post('/mercadopago/confirm', async (req, res) => {
+  try {
+    const { userId, planTier, creatorCode, preapprovalId } = req.body;
+
+    if (!userId || !planTier || !preapprovalId) {
+      return res.status(400).json({ error: 'userId, planTier y preapprovalId son requeridos' });
+    }
+
+    if (!MP_ACCESS_TOKEN) {
+      return res.status(500).json({ error: 'Mercado Pago no está configurado' });
+    }
+
+    const response = await fetch(`https://api.mercadopago.com/preapproval/${preapprovalId}`, {
+      headers: {
+        Authorization: `Bearer ${MP_ACCESS_TOKEN}`,
+      },
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      console.error('MP confirm error:', data);
+      return res.status(500).json({ error: 'No se pudo verificar la suscripción en MP', details: data });
+    }
+
+    const status = data.status === 'authorized' || data.status === 'active' ? 'active' : 'canceled';
+    const subscriberId = data.payer_id || data.payer?.id || null;
+
+    if (status !== 'active') {
+      return res.status(400).json({ error: 'La suscripción no está activa en Mercado Pago', status: data.status });
+    }
+
+    await updateSubscriptionAndReferral({
+      userId,
+      planTier,
+      providerCustomerId: subscriberId,
+      providerSubscriptionId: preapprovalId,
+      status,
+      creatorCode: creatorCode || null,
+    });
+
+    return res.json({ success: true });
+  } catch (error) {
+    console.error('Error en mercadopago/confirm:', error);
+    return res.status(500).json({ error: 'Error confirmando suscripción: ' + error.message });
+  }
+});
+
 router.post('/webhook/mercadopago', async (req, res) => {
   try {
     const type = req.query.type || req.body?.type;
@@ -463,8 +483,18 @@ router.post('/webhook/mercadopago', async (req, res) => {
       console.log(`[MP WEBHOOK] Payment: ${status}`, { externalRef, subscriberId, subscriptionId });
     }
 
-    const { userId, planTier, creatorCode } = parseExternalRef(externalRef);
+    let { userId, planTier, creatorCode } = parseExternalRef(externalRef);
     console.log(`[MP WEBHOOK] Datos parseados: userId=${userId}, planTier=${planTier}, code=${creatorCode || 'ninguno'}`);
+
+    if ((!userId || !planTier) && subscriptionId) {
+      const existing = await Subscription.findOne({ stripeSubscriptionId: subscriptionId });
+      if (existing) {
+        userId = existing.userId;
+        planTier = existing.tier;
+        creatorCode = null;
+        console.log(`[MP WEBHOOK] Fallback por preapprovalId: userId=${userId}, planTier=${planTier}`);
+      }
+    }
 
     if (userId && planTier) {
       console.log(`[MP WEBHOOK] Procesando: userId=${userId}, planTier=${planTier}, status=${status}`);

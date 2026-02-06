@@ -30,6 +30,35 @@ export default function PricingPage() {
       toast.warning('Pago cancelado.');
     }
 
+    const mpFlag = params.get('mp');
+    const preapprovalId = params.get('preapproval_id') || params.get('preapprovalId');
+    const planTierParam = params.get('planTier');
+    const creatorCodeParam = params.get('creatorCode');
+
+    const confirmMpSubscription = async () => {
+      if (!userId || !preapprovalId || mpFlag !== '1') return;
+
+      const confirmKey = `mp_confirm_${preapprovalId}`;
+      if (sessionStorage.getItem(confirmKey)) return;
+      sessionStorage.setItem(confirmKey, '1');
+
+      try {
+        await axios.post(`${API_URL}/api/billing/mercadopago/confirm`, {
+          userId,
+          planTier: planTierParam || planTier,
+          creatorCode: creatorCodeParam || null,
+          preapprovalId,
+        });
+        toast.success('Suscripción activada. ¡Gracias por tu compra!');
+      } catch (error) {
+        sessionStorage.removeItem(confirmKey);
+        toast.error('No se pudo confirmar la suscripción. Intentá recargar.');
+        console.error('Error confirmando MP:', error.response?.data || error.message);
+      }
+    };
+
+    confirmMpSubscription();
+
     // Verificar si el usuario es creador y el plan actual
     const checkCreatorStatus = async () => {
       if (!userId) {
