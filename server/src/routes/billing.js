@@ -654,29 +654,35 @@ router.post('/cancel-subscription', async (req, res) => {
     const preapprovalId = subscription.stripeSubscriptionId;
     let mpCanceled = false;
 
+    console.log(`[CANCEL] Usuario ${userId}, tier: ${subscription.tier}, preapprovalId: ${preapprovalId || 'NO EXISTE'}, MP_TOKEN: ${MP_ACCESS_TOKEN ? 'OK' : 'MISSING'}`);
+
     // CASO 1: Tiene preapprovalId → cancelar en Mercado Pago
     if (preapprovalId && MP_ACCESS_TOKEN) {
-      console.log(`🚨 Cancelando preapproval ${preapprovalId} para usuario ${userId}`);
+      console.log(`🚨 Cancelando preapproval ${preapprovalId} en Mercado Pago`);
       
       try {
         await cancelMercadoPagoPreapproval(preapprovalId);
         mpCanceled = true;
-        console.log(`✅ Preapproval ${preapprovalId} cancelado en MP`);
+        console.log(`✅ Preapproval ${preapprovalId} cancelado en MP correctamente`);
       } catch (error) {
-        console.error('Error cancelando en Mercado Pago:', error.message);
+        console.error(`❌ Error cancelando en Mercado Pago:`, error.message);
         // Continuar para cancelar en BD al menos
       }
+    } else {
+      console.log(`⚠️ NO se puede cancelar en MP. Razón: ${!preapprovalId ? 'No hay preapprovalId' : 'No hay MP_ACCESS_TOKEN'}`);
     }
 
     // ACTUALIZAR en Base de Datos: cancelar al fin del período
     subscription.cancelAtPeriodEnd = true;
     subscription.status = 'active';
+    subscription.requiresManualMpCancellation = !mpCanceled; // Guardar el flag en BD
     await subscription.save();
 
-    console.log(`Suscripción de ${userId} cancelada en BD. MP cancelado: ${mpCanceled}`);
+    console.log(`[CANCEL] Suscripción de ${userId} cancelada en BD. MP cancelado: ${mpCanceled}, requiresManualMpCancellation: ${!mpCanceled}`);
     
     // Respuesta diferente según si se canceló en MP o no
     if (mpCanceled) {
+      console.log(`[CANCEL] Respuesta: Cancelación completa en MP`);
       res.json({
         success: true,
         message: 'Cancelación programada. Tu plan sigue activo hasta fin del período.',
@@ -688,6 +694,7 @@ router.post('/cancel-subscription', async (req, res) => {
         }
       });
     } else {
+      console.log(`[CANCEL] Respuesta: Requiere cancelación manual en MP`);
       res.json({
         success: true,
         message: 'Cancelado en nuestro sistema. Por favor verifica en Mercado Pago.',

@@ -26,6 +26,10 @@ const subscriptionSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    requiresManualMpCancellation: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

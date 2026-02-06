@@ -41,17 +41,21 @@ export const SubscriptionStatus = ({ userId }) => {
         userId
       });
 
+      console.log('[CANCEL] Respuesta del servidor:', response.data);
+
       setStatus(prevStatus => ({
         ...prevStatus,
         subscription: {
           ...prevStatus.subscription,
-          cancelAtPeriodEnd: true
+          cancelAtPeriodEnd: true,
+          requiresManualMpCancellation: response.data.manualCancellationRequired
         }
       }));
 
       if (response.data.manualCancellationRequired) {
-        toast.warning('Cancelado en nuestro sistema', {
-          description: 'Por favor cancela también en Mercado Pago',
+        console.log('[CANCEL] Requiere cancelación manual en MP');
+        toast.warning('⚠️ Acción requerida en Mercado Pago', {
+          description: 'Cancelado aquí, pero debes cancelar en MP también',
           action: {
             label: 'Ir a Mercado Pago',
             onClick: () => window.open(response.data.mpLink, '_blank')
@@ -59,6 +63,7 @@ export const SubscriptionStatus = ({ userId }) => {
           duration: 10000
         });
       } else {
+        console.log('[CANCEL] Cancelado completamente en MP');
         toast.success('Suscripción cancelada', {
           description: 'Tu plan seguirá activo hasta fin del período'
         });
@@ -156,6 +161,35 @@ export const SubscriptionStatus = ({ userId }) => {
           <p className="text-xs text-dark-muted mt-1">
             Tu plan sigue activo hasta {formatDate(currentPeriodEnd)}.
           </p>
+        </div>
+      )}
+
+      {subscription.requiresManualMpCancellation && subscription.tier !== 'free' && (
+        <div className="mt-3 p-4 bg-red-500/10 border-2 border-red-500/40 rounded-lg">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0 w-8 h-8 bg-red-500/20 rounded-full flex items-center justify-center">
+              <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <p className="text-sm text-red-300 font-bold mb-1">⚠️ Acción requerida</p>
+              <p className="text-xs text-dark-muted mb-3">
+                Cancelamos tu plan aquí, pero <strong className="text-red-300">debes cancelar también en Mercado Pago</strong> para evitar cobros futuros.
+              </p>
+              <a
+                href="https://www.mercadopago.com.ar/subscriptions"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg transition"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+                Cancelar en Mercado Pago
+              </a>
+            </div>
+          </div>
         </div>
       )}
 
