@@ -47,11 +47,15 @@ export function CheckoutModal({
 
     try {
       console.log('Iniciando checkout:', { userId, planTier, selectedProvider });
+
+      const codeToSend = discountForPlan
+        ? String(appliedDiscount?.code || '').trim()
+        : String(creatorCode || '').trim();
       
       const res = await axios.post(`${API_URL}/api/billing/checkout`, {
         userId,
         planTier,
-        creatorCode: String(creatorCode || '').trim(),
+        creatorCode: codeToSend,
         provider: selectedProvider,
         payerEmail: payerEmail.trim()
       });
@@ -60,6 +64,8 @@ export function CheckoutModal({
 
       if (res.data?.url) {
         console.log('Redirigiendo a:', res.data.url);
+        localStorage.setItem('lastCheckoutPlanTier', planTier);
+        localStorage.setItem('lastCheckoutCreatorCode', codeToSend || '');
         window.location.href = res.data.url;
       } else {
         toast.error('No se pudo iniciar el checkout - sin URL de redirección', { id: toastId });

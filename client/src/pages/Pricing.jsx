@@ -30,13 +30,12 @@ export default function PricingPage() {
       toast.warning('Pago cancelado.');
     }
 
-    const mpFlag = params.get('mp');
     const preapprovalId = params.get('preapproval_id') || params.get('preapprovalId');
-    const planTierParam = params.get('planTier');
-    const creatorCodeParam = params.get('creatorCode');
+    const planTierParam = params.get('planTier') || localStorage.getItem('lastCheckoutPlanTier');
+    const creatorCodeParam = params.get('creatorCode') || localStorage.getItem('lastCheckoutCreatorCode');
 
     const confirmMpSubscription = async () => {
-      if (!userId || !preapprovalId || mpFlag !== '1') return;
+      if (!userId || !preapprovalId) return;
 
       const confirmKey = `mp_confirm_${preapprovalId}`;
       if (sessionStorage.getItem(confirmKey)) return;
@@ -105,6 +104,8 @@ export default function PricingPage() {
         discountRate: res.data.discountRate,
         planTier: tierValue || planTier
       });
+      localStorage.setItem('lastCheckoutCreatorCode', res.data.normalizedCode || trimmedCode.toUpperCase());
+      localStorage.setItem('lastCheckoutPlanTier', tierValue || planTier);
       toast.success('Código aplicado', { id: toastId });
     } catch (error) {
       toast.error(error.response?.data?.error || 'No se pudo aplicar el código', { id: toastId });

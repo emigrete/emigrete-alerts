@@ -382,10 +382,10 @@ router.post('/checkout', async (req, res) => {
  */
 router.post('/mercadopago/confirm', async (req, res) => {
   try {
-    const { userId, planTier, creatorCode, preapprovalId } = req.body;
+    let { userId, planTier, creatorCode, preapprovalId } = req.body;
 
-    if (!userId || !planTier || !preapprovalId) {
-      return res.status(400).json({ error: 'userId, planTier y preapprovalId son requeridos' });
+    if (!userId || !preapprovalId) {
+      return res.status(400).json({ error: 'userId y preapprovalId son requeridos' });
     }
 
     if (!MP_ACCESS_TOKEN) {
@@ -402,6 +402,19 @@ router.post('/mercadopago/confirm', async (req, res) => {
     if (!response.ok) {
       console.error('MP confirm error:', data);
       return res.status(500).json({ error: 'No se pudo verificar la suscripción en MP', details: data });
+    }
+
+    if (!planTier) {
+      const planId = data.preapproval_plan_id || data.plan_id || null;
+      if (planId === MP_PLAN_IDS.pro.regular || planId === MP_PLAN_IDS.pro.withDiscount) {
+        planTier = 'pro';
+      } else if (planId === MP_PLAN_IDS.premium.regular || planId === MP_PLAN_IDS.premium.withDiscount) {
+        planTier = 'premium';
+      }
+    }
+
+    if (!planTier) {
+      return res.status(400).json({ error: 'No se pudo determinar el plan desde MP' });
     }
 
     const status = data.status === 'authorized' || data.status === 'active' ? 'active' : 'canceled';
