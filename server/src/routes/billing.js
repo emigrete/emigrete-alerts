@@ -590,9 +590,16 @@ router.get('/diagnostics/creators', async (req, res) => {
   }
 });
 
-// 🧪 TESTING: Simular pago exitoso (sin pasar por MP)
+// 🧪 TESTING: Simular pago exitoso (sin pasar por MP) - SOLO CON TOKEN ADMIN
 router.post('/test/simulate-payment', async (req, res) => {
   try {
+    const adminToken = req.headers['x-admin-token'];
+    const expected = process.env.ADMIN_TEST_TOKEN || 'dev-test-token';
+    
+    if (adminToken !== expected) {
+      return res.status(403).json({ error: 'No autorizado' });
+    }
+
     const { userId, planTier, creatorCode } = req.body;
     
     if (!userId || !planTier) {
