@@ -97,6 +97,15 @@ export const SubscriptionStatus = ({ userId }) => {
         </button>
       )}
 
+      {subscription.cancelAtPeriodEnd && currentPeriodEnd && (
+        <div className="mt-3 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+          <p className="text-xs text-amber-300 font-semibold">Cancelación programada</p>
+          <p className="text-xs text-dark-muted mt-1">
+            Tu plan sigue activo hasta {formatDate(currentPeriodEnd)}.
+          </p>
+        </div>
+      )}
+
       {/* Info sobre cambios de plan protegidos */}
       {subscription.tier !== 'free' && daysRemaining !== null && daysRemaining > 0 && (
         <div className="mt-3 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">

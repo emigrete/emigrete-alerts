@@ -1,4 +1,5 @@
 import Subscription from '../models/Subscription.js';
+import CreatorReferral from '../models/CreatorReferral.js';
 import UsageMetrics from '../models/UsageMetrics.js';
 import { TTSUsage } from '../models/TTSUsage.js';
 import { migrateTTSUsage } from './migrationService.js';
@@ -42,9 +43,42 @@ export const getOrCreateSubscription = async (userId) => {
       currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 días
     });
     await subscription.save();
+  } else if (subscription.cancelAtPeriodEnd && subscription.currentPeriodEnd) {
+    await applyScheduledCancellation(subscription);
   }
 
   return subscription;
+};
+
+const applyScheduledCancellation = async (subscription) => {
+  if (!subscription?.cancelAtPeriodEnd || !subscription.currentPeriodEnd) return;
+
+  const now = new Date();
+  if (now < subscription.currentPeriodEnd) return;
+
+  subscription.tier = 'free';
+  subscription.status = 'canceled';
+  subscription.cancelAtPeriodEnd = false;
+  subscription.stripeSubscriptionId = null;
+  subscription.currentPeriodEnd = null;
+  await subscription.save();
+
+  await CreatorReferral.findOneAndUpdate(
+    { referredUserId: subscription.userId, status: 'active' },
+    { status: 'canceled' }
+  );
+};
+
+export const processScheduledCancellations = async () => {
+  const now = new Date();
+  const subscriptions = await Subscription.find({
+    cancelAtPeriodEnd: true,
+    currentPeriodEnd: { $lte: now }
+  });
+
+  for (const subscription of subscriptions) {
+    await applyScheduledCancellation(subscription);
+  }
 };
 
 /**
@@ -303,6 +337,7 @@ export const getUserSubscriptionStatus = async (userId) => {
       tier,
       status: subscription.status,
       currentPeriodEnd: subscription.currentPeriodEnd,
+      cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
       maxFileSize: maxFileSizeFormatted,
       maxFileSizeBytes: limits.maxFileBytes,
     },

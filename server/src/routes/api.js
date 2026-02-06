@@ -867,7 +867,29 @@ router.post('/subscription/change-plan', async (req, res) => {
         const isUpgrade = tierHierarchy[newTier] > tierHierarchy[currentSubscription.tier];
 
         if (!isUpgrade) {
-          // Es DOWNGRADE (pro->free, premium->pro, premium->free): rechazar
+          // Downgrade durante período: permitir solo cancelación a FREE al final del ciclo
+          if (newTier === 'free') {
+            currentSubscription.cancelAtPeriodEnd = true;
+            await currentSubscription.save();
+
+            const daysRemaining = Math.ceil(
+              (periodEnd - now) / (1000 * 60 * 60 * 24)
+            );
+
+            return res.json({
+              success: true,
+              message: 'Cancelación programada. Tu plan sigue activo hasta fin del período.',
+              subscription: {
+                userId: currentSubscription.userId,
+                tier: currentSubscription.tier,
+                status: currentSubscription.status,
+                currentPeriodEnd: currentSubscription.currentPeriodEnd,
+                cancelAtPeriodEnd: true,
+                daysRemaining
+              }
+            });
+          }
+
           const daysRemaining = Math.ceil(
             (periodEnd - now) / (1000 * 60 * 60 * 24)
           );
@@ -891,7 +913,8 @@ router.post('/subscription/change-plan', async (req, res) => {
         ...(newTier === 'free' && { 
           stripeSubscriptionId: null,
           stripeCustomerId: null,
-          currentPeriodEnd: null 
+          currentPeriodEnd: null,
+          cancelAtPeriodEnd: false
         })
       },
       { upsert: true, new: true }

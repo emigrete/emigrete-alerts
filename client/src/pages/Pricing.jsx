@@ -14,7 +14,9 @@ export default function PricingPage() {
   const [checkoutPlan, setCheckoutPlan] = useState(null);
   const [isCreator, setIsCreator] = useState(false);
   const [showCodeModal, setShowCodeModal] = useState(null); // null | 'pro' | 'premium'
+  const [currentTier, setCurrentTier] = useState(null);
   const userId = localStorage.getItem('twitchUserId');
+  const loginUrl = `${API_URL}/auth/twitch`;
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -28,14 +30,21 @@ export default function PricingPage() {
       toast.warning('Pago cancelado.');
     }
 
-    // Verificar si el usuario es creador
+    // Verificar si el usuario es creador y el plan actual
     const checkCreatorStatus = async () => {
-      if (!userId) return;
+      if (!userId) {
+        setCurrentTier(null);
+        return;
+      }
       try {
-        const res = await axios.get(`${API_URL}/api/creator/profile?userId=${userId}`);
-        if (res.data?.exists && res.data?.isAssigned) {
+        const [creatorRes, subscriptionRes] = await Promise.all([
+          axios.get(`${API_URL}/api/creator/profile?userId=${userId}`),
+          axios.get(`${API_URL}/api/subscription/status`, { params: { userId } })
+        ]);
+        if (creatorRes.data?.exists && creatorRes.data?.isAssigned) {
           setIsCreator(true);
         }
+        setCurrentTier(subscriptionRes.data?.subscription?.tier || null);
       } catch (error) {
         console.error('Error checking creator status:', error);
       }
@@ -77,6 +86,7 @@ export default function PricingPage() {
   const handleClickCheckout = (tier) => {
     if (!userId) {
       toast.warning('Iniciá sesión para suscribirte');
+      window.location.href = loginUrl;
       return;
     }
     // Mostrar modal para código
@@ -174,7 +184,20 @@ export default function PricingPage() {
 
         {/* Planes */}
         <div className="grid md:grid-cols-3 gap-8 mb-12">
-          {plans.map((plan, idx) => (
+          {plans.map((plan, idx) => {
+            const planKey = plan.name.toLowerCase();
+            const isCurrentPlan = currentTier && planKey === currentTier;
+            const isFreePlan = plan.name === 'FREE';
+            const isDisabled = isCurrentPlan || isFreePlan;
+            const buttonLabel = isCurrentPlan
+              ? 'Tu plan actual'
+              : isFreePlan
+              ? 'Plan FREE'
+              : checkoutPlan === planKey
+              ? 'Redirigiendo...'
+              : 'Suscribirse';
+
+            return (
             <div
               key={idx}
               className={`relative rounded-3xl border-2 overflow-hidden transition-all hover:shadow-2xl ${
@@ -226,23 +249,20 @@ export default function PricingPage() {
 
                 {/* CTA Button */}
                 <button
-                  disabled={plan.name === 'FREE'}
+                  disabled={isDisabled}
                   className={`w-full text-white font-bold py-3 px-6 rounded-xl transition-all text-sm ${
-                    plan.name === 'FREE' 
-                      ? 'opacity-50 cursor-not-allowed bg-gray-500' 
+                    isDisabled
+                      ? 'opacity-50 cursor-not-allowed bg-gray-500'
                       : plan.ctaColor
                   }`}
-                  onClick={() => plan.name !== 'FREE' && handleClickCheckout(plan.name.toLowerCase())}
+                  onClick={() => !isDisabled && handleClickCheckout(planKey)}
                 >
-                  {plan.name === 'FREE'
-                    ? 'Tu plan actual'
-                    : checkoutPlan === plan.name.toLowerCase()
-                    ? 'Redirigiendo...'
-                    : 'Suscribirse'}
+                  {buttonLabel}
                 </button>
               </div>
             </div>
-          ))}
+          );
+          })}
         </div>
 
         {/* EJEMPLOS PRÁCTICOS */}
@@ -368,10 +388,10 @@ export default function PricingPage() {
         </div>
 
         {/* Back Button */}
-        <div className="text-center">
+        <div className="flex justify-center">
           <Link
             to="/"
-            className="text-primary hover:text-pink-500 font-semibold transition"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-primary via-pink-500 to-cyan-500 shadow-lg shadow-primary/30 hover:shadow-xl hover:scale-[1.02] transition"
           >
             ← Volver al Dashboard
           </Link>

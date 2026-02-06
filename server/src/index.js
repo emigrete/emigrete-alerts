@@ -18,7 +18,7 @@ import billingRoutes from './routes/billing.js';
 import { Trigger } from './models/Trigger.js';
 import { startTwitchListener } from './services/twitchListener.js';
 import { UserToken } from './models/UserToken.js';
-import { incrementStorageUsage, getUserSubscriptionStatus, canUploadFile, canUploadStorage, incrementBandwidthUsage, canUseBandwidth } from './services/subscriptionService.js';
+import { incrementStorageUsage, getUserSubscriptionStatus, canUploadFile, canUploadStorage, incrementBandwidthUsage, canUseBandwidth, processScheduledCancellations } from './services/subscriptionService.js';
 
 dotenv.config();
 
@@ -437,6 +437,16 @@ if (!MONGO_URI) {
     .then(() => {
       console.log('✅ Mongo conectado');
       restoreListeners();
+      const runSubscriptionMaintenance = async () => {
+        try {
+          await processScheduledCancellations();
+        } catch (error) {
+          console.error('Error en mantenimiento de suscripciones:', error.message);
+        }
+      };
+
+      runSubscriptionMaintenance();
+      setInterval(runSubscriptionMaintenance, 60 * 60 * 1000);
     })
     .catch(err => console.error('❌ Error conectando a Mongo:', err));
 }

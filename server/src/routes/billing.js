@@ -44,6 +44,29 @@ const sanitizeCode = (value) =>
     .replace(/[^A-Z0-9]/g, '')
     .slice(0, 16);
 
+const cancelMercadoPagoPreapproval = async (preapprovalId) => {
+  if (!MP_ACCESS_TOKEN) {
+    throw new Error('Mercado Pago no está configurado');
+  }
+
+  const response = await fetch(`https://api.mercadopago.com/preapproval/${preapprovalId}`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${MP_ACCESS_TOKEN}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ status: 'cancelled' })
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    const detail = data.error || data.message || 'Error desconocido';
+    throw new Error(`No se pudo cancelar en Mercado Pago: ${detail}`);
+  }
+
+  return data;
+};
+
 const buildExternalRef = ({ userId, planTier, creatorCode }) => {
   const safeCode = creatorCode ? sanitizeCode(creatorCode) : '';
   return [userId, planTier, safeCode].filter(Boolean).join('|');
@@ -113,19 +136,47 @@ const updateSubscriptionAndReferral = async ({
 }) => {
   if (!userId || !planTier) return;
 
-  await Subscription.findOneAndUpdate(
-    { userId },
-    {
-      userId,
-      tier: planTier,
-      status,
+  const existingSubscription = await Subscription.findOne({ userId });
+  const now = new Date();
+
+  if (status === 'active') {
+    await Subscription.findOneAndUpdate(
+      { userId },
+      {
+        userId,
+        tier: planTier,
+        status,
+        cancelAtPeriodEnd: false,
+        stripeCustomerId: providerCustomerId?.toString() || null,
+        stripeSubscriptionId: providerSubscriptionId?.toString() || null,
+        currentPeriodStart: now,
+        currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+      },
+      { upsert: true, new: true }
+    );
+  } else {
+    if (existingSubscription?.cancelAtPeriodEnd && existingSubscription.currentPeriodEnd > now) {
+      return;
+    }
+    const shouldExpireNow = !existingSubscription?.currentPeriodEnd || existingSubscription.currentPeriodEnd <= now;
+    const updatePayload = {
+      status: 'canceled',
       stripeCustomerId: providerCustomerId?.toString() || null,
-      stripeSubscriptionId: providerSubscriptionId?.toString() || null,
-      currentPeriodStart: new Date(),
-      currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-    },
-    { upsert: true, new: true }
-  );
+      stripeSubscriptionId: providerSubscriptionId?.toString() || existingSubscription?.stripeSubscriptionId || null
+    };
+
+    if (shouldExpireNow) {
+      updatePayload.tier = 'free';
+      updatePayload.currentPeriodEnd = null;
+      updatePayload.cancelAtPeriodEnd = false;
+    }
+
+    await Subscription.findOneAndUpdate(
+      { userId },
+      updatePayload,
+      { upsert: true, new: true }
+    );
+  }
 
   if (status !== 'active') {
     await CreatorReferral.findOneAndUpdate(
@@ -170,11 +221,28 @@ router.post('/checkout', async (req, res) => {
       return res.status(400).json({ error: 'userId, planTier y provider requeridos' });
     }
 
+    const validTiers = ['pro', 'premium'];
+    if (!validTiers.includes(planTier)) {
+      return res.status(400).json({ error: 'Plan inválido' });
+    }
+
     // Validar código de creador
     const creatorCodeResult = await ensureCreatorCode(creatorCode, userId);
     const externalRef = buildExternalRef({ userId, planTier, creatorCode: creatorCodeResult.code });
 
     if (provider === 'mercadopago') {
+      const currentSubscription = await Subscription.findOne({ userId });
+      const tierHierarchy = { free: 0, pro: 1, premium: 2 };
+
+      if (currentSubscription?.status === 'active') {
+        const currentTier = currentSubscription.tier || 'free';
+        if (tierHierarchy[planTier] <= tierHierarchy[currentTier]) {
+          return res.status(400).json({
+            error: 'Ya tenés este plan o uno superior. Para bajar, cancelá y el cambio se aplica al final del ciclo.'
+          });
+        }
+      }
+
       if (!MP_ACCESS_TOKEN) {
         console.error('MP_ACCESS_TOKEN no está configurado en variables de entorno');
         return res.status(500).json({ error: 'Mercado Pago no está configurado. Por favor configura MP_ACCESS_TOKEN en el servidor.' });
@@ -348,6 +416,16 @@ router.post('/webhook/mercadopago', async (req, res) => {
     const { userId, planTier, creatorCode } = parseExternalRef(externalRef);
 
     if (userId && planTier) {
+      if (status === 'active') {
+        const currentSubscription = await Subscription.findOne({ userId });
+        if (currentSubscription?.stripeSubscriptionId && currentSubscription.stripeSubscriptionId !== subscriptionId && currentSubscription.tier !== planTier) {
+          try {
+            await cancelMercadoPagoPreapproval(currentSubscription.stripeSubscriptionId);
+          } catch (error) {
+            console.error('Error cancelando suscripción anterior en Mercado Pago:', error.message);
+          }
+        }
+      }
       await updateSubscriptionAndReferral({
         userId,
         planTier,
@@ -549,45 +627,26 @@ router.post('/cancel-subscription', async (req, res) => {
     // CANCELAR en Mercado Pago
     console.log(`🚨 Cancelando preapproval ${preapprovalId} para usuario ${userId}`);
     
-    const response = await fetch(`https://api.mercadopago.com/preapproval/${preapprovalId}`, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${MP_ACCESS_TOKEN}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        status: 'cancelled'
-      })
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      console.error('Error cancelando en Mercado Pago:', data);
-      return res.status(500).json({ 
+    try {
+      await cancelMercadoPagoPreapproval(preapprovalId);
+    } catch (error) {
+      console.error('Error cancelando en Mercado Pago:', error.message);
+      return res.status(500).json({
         error: 'No se pudo cancelar en Mercado Pago. Por favor intenta más tarde.',
-        details: data.error || data.message
+        details: error.message
       });
     }
 
-    // ACTUALIZAR en Base de Datos
-    subscription.tier = 'free';
-    subscription.status = 'canceled';
-    subscription.stripeSubscriptionId = null;
-    subscription.currentPeriodEnd = null;
+    // ACTUALIZAR en Base de Datos: cancelar al fin del período
+    subscription.cancelAtPeriodEnd = true;
+    subscription.status = 'active';
     await subscription.save();
-
-    // Marcar referrals como cancelados si existen
-    await CreatorReferral.findOneAndUpdate(
-      { referredUserId: userId, status: 'active' },
-      { status: 'canceled' }
-    );
 
     console.log(`Suscripción de ${userId} cancelada exitosamente. Preapproval: ${preapprovalId}`);
     
     res.json({
       success: true,
-      message: 'Suscripción cancelada. No te cobraremos más.',
+      message: 'Cancelación programada. Tu plan sigue activo hasta fin del período.',
       subscription: {
         userId: subscription.userId,
         tier: subscription.tier,
