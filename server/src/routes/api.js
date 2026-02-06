@@ -1206,4 +1206,97 @@ router.put('/admin/users/:userId/creator-code', async (req, res) => {
   }
 });
 
+/**
+ * 🧪 TESTING: Simular pago (requiere token admin)
+ * POST /api/admin/test/simulate-payment
+ */
+router.post('/admin/test/simulate-payment', async (req, res) => {
+  try {
+    const adminToken = req.headers['x-admin-token'];
+    const expected = process.env.ADMIN_TEST_TOKEN || 'dev-test-token';
+    
+    if (adminToken !== expected) {
+      return res.status(403).json({ error: 'No autorizado' });
+    }
+
+    const { userId, planTier, creatorCode } = req.body;
+    
+    if (!userId || !planTier) {
+      return res.status(400).json({ error: 'userId y planTier requeridos' });
+    }
+
+    console.log(`🧪 [TEST] Simulando pago: userId=${userId}, plan=${planTier}, code=${creatorCode || 'ninguno'}`);
+
+    // Simular webhook
+    const { updateSubscriptionAndReferral } = await import('../routes/billing.js');
+    
+    // Importar directamente la función
+    const Subscription = (await import('../models/Subscription.js')).default;
+    const CreatorReferral = (await import('../models/CreatorReferral.js')).default;
+
+    const now = new Date();
+    
+    // Actualizar subscription
+    const PLAN_PRICES_CENTS = {
+      pro: 750000,
+      premium: 1500000
+    };
+
+    await Subscription.findOneAndUpdate(
+      { userId },
+      {
+        userId,
+        tier: planTier,
+        status: 'active',
+        cancelAtPeriodEnd: false,
+        stripeCustomerId: 'TEST_CUSTOMER_' + Date.now(),
+        stripeSubscriptionId: 'TEST_SUB_' + Date.now(),
+        currentPeriodStart: now,
+        currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+      },
+      { upsert: true, new: true }
+    );
+
+    // Crear referral si hay código
+    if (creatorCode) {
+      const CreatorProfile = (await import('../models/CreatorProfile.js')).default;
+      const creator = await CreatorProfile.findOne({ code: creatorCode.toUpperCase(), isActive: true });
+      
+      if (creator) {
+        const priceCents = PLAN_PRICES_CENTS[planTier] || 0;
+        const estimatedEarnings = Math.round(priceCents * (creator.commissionRate || 0.2));
+
+        await CreatorReferral.create({
+          creatorUserId: creator.userId,
+          referredUserId: userId,
+          code: creatorCode.toUpperCase(),
+          planTier,
+          priceCents,
+          discountRate: creator.discountRate || 0.1,
+          commissionRate: creator.commissionRate || 0.2,
+          estimatedEarningsCents: estimatedEarnings,
+          status: 'active'
+        });
+
+        creator.totalEstimatedEarningsCents += estimatedEarnings;
+        creator.totalReferred += 1;
+        await creator.save();
+      }
+    }
+
+    const subscription = await Subscription.findOne({ userId });
+    const referral = await CreatorReferral.findOne({ referredUserId: userId });
+
+    res.json({ 
+      success: true,
+      message: 'Pago simulado exitosamente',
+      subscription,
+      referral
+    });
+  } catch (error) {
+    console.error('Error simulando pago:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 export default router;
