@@ -37,10 +37,13 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-app.use('/api/billing/webhook/mercadopago', express.raw({ type: 'application/json' }));
-app.use('/api/billing/webhook/paypal', express.raw({ type: 'application/json' }));
+// Middleware para parsear body
 app.use((req, res, next) => {
-  if (req.originalUrl.startsWith('/api/billing/webhook/')) return next();
+  // Raw para webhooks
+  if (req.originalUrl.startsWith('/api/billing/webhook/')) {
+    return express.raw({ type: 'application/json' })(req, res, next);
+  }
+  // JSON para todo lo demás
   return express.json()(req, res, next);
 });
 
