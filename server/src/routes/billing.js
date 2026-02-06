@@ -302,16 +302,47 @@ router.post('/checkout', async (req, res) => {
       }
 
       try {
-        // Construir URL de checkout con external_reference para vincular dato de usuario en webhook
+        // Crear preapproval via API para usar external_reference sin romper el checkout
         const backUrl = `${FRONTEND_URL}/pricing?mp=1&userId=${userId}&planTier=${planTier}&creatorCode=${creatorCodeResult.code || ''}`;
-        const initPoint = `https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=${planId}&external_reference=${encodeURIComponent(externalRef)}&back_url=${encodeURIComponent(backUrl)}`;
+        const preapprovalPayload = {
+          preapproval_plan_id: planId,
+          reason: `WelyAlerts ${planTier.toUpperCase()}`,
+          external_reference: externalRef,
+          back_url: backUrl,
+          payer_email: payerEmail,
+        };
 
-        console.log(`MP checkout - Plan: ${planTier} | Variant: ${planVariant} | ID: ${planId} | ExternalRef: ${externalRef}`);
+        const response = await fetch('https://api.mercadopago.com/preapproval', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${MP_ACCESS_TOKEN}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(preapprovalPayload),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          console.error('MP preapproval error:', data);
+          return res.status(500).json({
+            error: 'Error creando suscripción en Mercado Pago',
+            details: data,
+          });
+        }
+
+        const initPoint = data.init_point;
+        if (!initPoint) {
+          console.error('MP preapproval sin init_point:', data);
+          return res.status(500).json({ error: 'Mercado Pago no devolvió init_point' });
+        }
+
+        console.log(`MP preapproval creado - Plan: ${planTier} | Variant: ${planVariant} | ID: ${planId} | ExternalRef: ${externalRef}`);
         console.log('Redirigiendo a:', initPoint);
-        
+
         return res.json({ url: initPoint });
       } catch (fetchError) {
-        console.error('Error fetching Mercado Pago:', fetchError);
+        console.error('Error creando preapproval en MP:', fetchError);
         return res.status(500).json({ error: 'Error conectando con Mercado Pago: ' + fetchError.message });
       }
     }
