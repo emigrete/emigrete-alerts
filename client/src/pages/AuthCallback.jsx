@@ -12,6 +12,16 @@ export default function AuthCallback() {
     const username = searchParams.get('username');
 
     if (userId) {
+      // Verificar si había un userId previo diferente (detección de cambios)
+      const previousUserId = localStorage.getItem('twitchUserId');
+      
+      if (previousUserId && previousUserId !== userId) {
+        console.warn(`⚠️ [AUTH] UserId cambió: ${previousUserId} → ${userId}`);
+        console.warn('Esto NO debería pasar. Reportar este caso.');
+      } else {
+        console.log(`✅ [AUTH] Login consistente: userId=${userId}, username=${username}`);
+      }
+      
       localStorage.setItem('twitchUserId', userId);
       if (username) localStorage.setItem('twitchUsername', username);
       navigate('/');

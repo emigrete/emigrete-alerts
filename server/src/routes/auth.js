@@ -57,6 +57,8 @@ router.get('/twitch/callback', async (req, res) => {
     const userData = userResponse.data.data[0];
     const userId = userData.id;
 
+    console.log(`🔑 [AUTH] Login exitoso: userId=${userId}, username=${userData.login}, display_name=${userData.display_name}`);
+
     // 3) save in mongo
     await UserToken.findOneAndUpdate(
       { userId },
