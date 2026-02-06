@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { toast } from 'sonner';
 import { API_URL } from '../constants/config';
 
 export const SubscriptionStatus = ({ userId }) => {
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [cancelLoading, setCancelLoading] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -30,6 +33,35 @@ export const SubscriptionStatus = ({ userId }) => {
 
     fetchStatus();
   }, [userId]);
+
+  const handleCancelSubscription = async () => {
+    try {
+      setCancelLoading(true);
+      const response = await axios.post(`${API_URL}/api/billing/cancel-subscription`, {
+        userId
+      });
+
+      setStatus(prevStatus => ({
+        ...prevStatus,
+        subscription: {
+          ...prevStatus.subscription,
+          cancelAtPeriodEnd: true
+        }
+      }));
+
+      toast.success('Suscripción cancelada', {
+        description: 'Tu plan seguirá activo hasta fin del período'
+      });
+      setShowCancelModal(false);
+    } catch (err) {
+      console.error('Error cancelando suscripción:', err);
+      toast.error('Error al cancelar', {
+        description: err.response?.data?.error || 'Intenta de nuevo más tarde'
+      });
+    } finally {
+      setCancelLoading(false);
+    }
+  };
 
   if (loading) return <div className="text-dark-muted text-base mb-4">Cargando plan...</div>;
   if (error) return null;
@@ -84,6 +116,15 @@ export const SubscriptionStatus = ({ userId }) => {
           >
             Ver consumos
           </button>
+          {subscription.tier !== 'free' && !subscription.cancelAtPeriodEnd && (
+            <button
+              onClick={() => setShowCancelModal(true)}
+              className="px-3 py-1.5 rounded-lg bg-red-600/80 hover:bg-red-700 text-white text-xs font-bold transition"
+              title="Cancelar suscripción"
+            >
+              Cancelar
+            </button>
+          )}
         </div>
       </div>
 
@@ -115,6 +156,38 @@ export const SubscriptionStatus = ({ userId }) => {
           <p className="text-xs text-dark-muted mt-1">
             Podés cambiar a un plan superior ahora. Para bajar de plan, esperá {daysRemaining} días.
           </p>
+        </div>
+      )}
+
+      {/* Modal de confirmación para cancelar */}
+      {showCancelModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-dark-card border border-dark-border rounded-2xl p-6 max-w-md mx-4">
+            <h3 className="text-lg font-bold text-dark-text mb-2">¿Cancelar suscripción?</h3>
+            <p className="text-sm text-dark-muted mb-4">
+              Tu plan <strong>{subscription.tier.toUpperCase()}</strong> seguirá activo hasta <strong>{formatDate(subscription.currentPeriodEnd)}</strong>. 
+              Después se cambiará a FREE automáticamente.
+            </p>
+            <p className="text-xs text-yellow-400 mb-6 bg-yellow-500/10 p-3 rounded border border-yellow-500/20">
+              ⚠️ No perderás tus datos, solo los límites de uso cambiarán.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowCancelModal(false)}
+                className="flex-1 px-4 py-2 rounded-lg bg-dark-secondary text-dark-text font-semibold hover:bg-dark-border transition"
+                disabled={cancelLoading}
+              >
+                Seguir con mi plan
+              </button>
+              <button
+                onClick={handleCancelSubscription}
+                className="flex-1 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold transition disabled:opacity-50"
+                disabled={cancelLoading}
+              >
+                {cancelLoading ? 'Cancelando...' : 'Sí, cancelar'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
