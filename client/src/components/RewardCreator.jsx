@@ -47,7 +47,7 @@ export const RewardCreator = ({ userId, onRewardCreated, onCancel, isDemo }) => 
         setPrompt('');
       } else {
         // En producción, crear en Twitch
-        const response = await axios.post(`${API_URL}/api/create-reward`, {
+        const response = await axios.post(`${API_URL}/api/twitch/create-reward`, {
           userId,
           title,
           cost: parseInt(cost),
