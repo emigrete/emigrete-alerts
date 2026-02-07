@@ -61,10 +61,11 @@ router.get('/feedback', requireAdmin, async (req, res) => {
 });
 
 // PUT /api/admin/feedback/:id/response
-router.put('/feedback/:id/response', requireAdmin, async (req, res) => {
+async function respondFeedback(req, res) {
   try {
     const { id } = req.params;
     const responseText = String(req.body?.response || '').trim();
+
     if (!responseText) {
       return res.status(400).json({ error: 'Response is required' });
     }
@@ -76,12 +77,15 @@ router.put('/feedback/:id/response', requireAdmin, async (req, res) => {
     ).lean();
 
     if (!updated) return res.status(404).json({ error: 'Feedback not found' });
-    res.json({ ok: true, feedback: updated });
+    return res.json({ ok: true, feedback: updated });
   } catch (e) {
     console.error('[ADMIN] Error responding feedback:', e);
-    res.status(500).json({ error: 'Error responding feedback' });
+    return res.status(500).json({ error: 'Error responding feedback' });
   }
-});
+}
+router.put('/feedback/:id', requireAdmin, respondFeedback);
+
+router.put('/feedback/:id/response', requireAdmin, respondFeedback);
 
 // DELETE /api/admin/feedback/:id (solo si responded)
 router.delete('/feedback/:id', requireAdmin, async (req, res) => {
