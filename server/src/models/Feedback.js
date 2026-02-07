@@ -13,4 +13,3 @@ const FeedbackSchema = new mongoose.Schema({
 
 const Feedback = mongoose.model('Feedback', FeedbackSchema);
 export default Feedback;
-export default Feedback;
