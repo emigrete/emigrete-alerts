@@ -1,18 +1,35 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import { API_URL } from '../constants/config';
 import { useNavigate } from 'react-router-dom';
 import { AppFooter } from '../components/AppFooter';
+import { FeedbackResponseForm } from '../components/FeedbackResponseForm';
 
 export const AdminDashboard = () => {
   const navigate = useNavigate();
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+
+  // Auth
   const [userId] = useState(localStorage.getItem('twitchUserId'));
   const [username] = useState(localStorage.getItem('twitchUsername'));
+
+  // Users
+  const [users, setUsers] = useState([]);
+  const [loadingUsers, setLoadingUsers] = useState(true);
+
+  // Feedbacks
+  const [feedbacks, setFeedbacks] = useState([]);
+  const [loadingFeedbacks, setLoadingFeedbacks] = useState(true);
+
+  // UI states
+  const [error, setError] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [successMessage, setSuccessMessage] = useState(null);
+
+  // Filters
+  const [search, setSearch] = useState('');
+  const [tierFilter, setTierFilter] = useState('all'); // all | free | pro | premium
+
+  // Global stats
   const [stats, setStats] = useState({
     totalAlerts: 0,
     totalTTS: 0,
@@ -20,50 +37,43 @@ export const AdminDashboard = () => {
     totalBandwidth: 0,
     totalTriggers: 0
   });
-  // Feedback
-  const [feedbacks, setFeedbacks] = useState([]);
-  useEffect(() => {
-    fetchFeedbacks();
-  }, []);
-  const fetchFeedbacks = async () => {
-    try {
-      const res = await axios.get(`${API_URL}/api/admin/feedback`);
-      setFeedbacks(res.data.feedbacks || []);
-    } catch (err) {
-      console.error('Error cargando feedback:', err);
-    }
-  };
 
   useEffect(() => {
     if (!userId) {
       setError('No estás autenticado');
-      setLoading(false);
+      setIsAdmin(false);
+      setLoadingUsers(false);
+      setLoadingFeedbacks(false);
       return;
     }
-    
+
     fetchUsers();
+    fetchFeedbacks();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   const fetchUsers = async () => {
     try {
-      setLoading(true);
+      setLoadingUsers(true);
       const response = await axios.get(`${API_URL}/api/admin/users`, {
         params: { adminId: userId }
       });
+
       const usersData = response.data.users || [];
-      console.log(`Admin Dashboard: Recibidos ${usersData.length} usuarios`);
-      console.log('First 3 users:', usersData.slice(0, 3).map(u => ({ id: u.userId, username: u.username, isCreator: u.isCreator })));
       setUsers(usersData);
-      
-      // Calcular estadísticas totales con validaciones
-      const totalStats = usersData.reduce((acc, user) => ({
-        totalAlerts: acc.totalAlerts + (user.alerts?.current || 0),
-        totalTTS: acc.totalTTS + (user.tts?.current || 0),
-        totalStorage: acc.totalStorage + (user.storage?.current || 0),
-        totalBandwidth: acc.totalBandwidth + (user.bandwidth?.current || 0),
-        totalTriggers: acc.totalTriggers + (user.triggers || 0)
-      }), { totalAlerts: 0, totalTTS: 0, totalStorage: 0, totalBandwidth: 0, totalTriggers: 0 });
-      
+
+      // Totals
+      const totalStats = usersData.reduce(
+        (acc, u) => ({
+          totalAlerts: acc.totalAlerts + (u?.alerts?.current || 0),
+          totalTTS: acc.totalTTS + (u?.tts?.current || 0),
+          totalStorage: acc.totalStorage + (u?.storage?.current || 0),
+          totalBandwidth: acc.totalBandwidth + (u?.bandwidth?.current || 0),
+          totalTriggers: acc.totalTriggers + (u?.triggers || 0)
+        }),
+        { totalAlerts: 0, totalTTS: 0, totalStorage: 0, totalBandwidth: 0, totalTriggers: 0 }
+      );
+
       setStats(totalStats);
       setIsAdmin(true);
       setError(null);
@@ -76,24 +86,51 @@ export const AdminDashboard = () => {
       }
       setIsAdmin(false);
     } finally {
-      setLoading(false);
+      setLoadingUsers(false);
     }
   };
 
+  const fetchFeedbacks = async () => {
+    try {
+      setLoadingFeedbacks(true);
+
+      // Si tu backend NO requiere adminId, podés sacar params
+      const res = await axios.get(`${API_URL}/api/admin/feedback`, {
+        params: { adminId: userId }
+      });
+
+      setFeedbacks(res.data.feedbacks || []);
+    } catch (err) {
+      console.error('Error cargando feedback:', err);
+      // No tiramos abajo el admin por feedback
+    } finally {
+      setLoadingFeedbacks(false);
+    }
+  };
+
+  const notifySuccess = (msg) => {
+    setSuccessMessage(msg);
+    window.clearTimeout(notifySuccess._t);
+    notifySuccess._t = window.setTimeout(() => setSuccessMessage(null), 5000);
+  };
+
   const formatBytes = (bytes) => {
-    if (bytes === 0) return '0 B';
+    const b = Number(bytes || 0);
+    if (!b) return '0 B';
     const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round(bytes / Math.pow(k, i) * 10) / 10 + ' ' + sizes[i];
+    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.min(Math.floor(Math.log(b) / Math.log(k)), sizes.length - 1);
+    const value = b / Math.pow(k, i);
+    return `${Math.round(value * 10) / 10} ${sizes[i]}`;
   };
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', { 
-      day: '2-digit', 
-      month: 'short', 
+    if (Number.isNaN(date.getTime())) return 'N/A';
+    return date.toLocaleDateString('es-ES', {
+      day: '2-digit',
+      month: 'short',
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
@@ -103,8 +140,9 @@ export const AdminDashboard = () => {
   const formatDateShort = (dateString) => {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', { 
-      day: '2-digit', 
+    if (Number.isNaN(date.getTime())) return 'N/A';
+    return date.toLocaleDateString('es-ES', {
+      day: '2-digit',
       month: 'short'
     });
   };
@@ -120,28 +158,24 @@ export const AdminDashboard = () => {
     }
   };
 
-  const getTierLabel = (tier) => {
-    return tier.charAt(0).toUpperCase() + tier.slice(1);
-  };
-
   const getUsageColor = (percentage) => {
-    if (percentage > 80) return 'text-red-500';
-    if (percentage > 50) return 'text-yellow-500';
+    const p = Number(percentage || 0);
+    if (p > 80) return 'text-red-500';
+    if (p > 50) return 'text-yellow-500';
     return 'text-green-500';
   };
 
-  const handleChangeTier = async (targetUserId, newTier, username) => {
-    if (!window.confirm(`¿Cambiar plan de @${username} a ${newTier.toUpperCase()}?`)) {
-      return;
-    }
+  const safePercent = (p) => {
+    const n = Number(p);
+    if (!Number.isFinite(n)) return 0;
+    return Math.max(0, Math.min(100, Math.round(n)));
+  };
 
-    // Mostrar loading en el usuario específico
-    setUsers(prevUsers => 
-      prevUsers.map(u => 
-        u.userId === targetUserId 
-          ? { ...u, isChangingTier: true }
-          : u
-      )
+  const handleChangeTier = async (targetUserId, newTier, targetUsername) => {
+    if (!window.confirm(`¿Cambiar plan de @${targetUsername} a ${String(newTier).toUpperCase()}?`)) return;
+
+    setUsers((prev) =>
+      prev.map((u) => (u.userId === targetUserId ? { ...u, isChangingTier: true } : u))
     );
 
     try {
@@ -150,36 +184,26 @@ export const AdminDashboard = () => {
         adminId: userId
       });
 
-      // Recargar usuarios
       await fetchUsers();
-      
-      // Notificación de éxito
-      setSuccessMessage(`Plan de @${username} cambiado a ${newTier.toUpperCase()} exitosamente`);
-      setTimeout(() => setSuccessMessage(null), 5000);
+      notifySuccess(`Plan de @${targetUsername} cambiado a ${String(newTier).toUpperCase()} exitosamente`);
     } catch (error) {
       console.error('Error cambiando tier:', error);
-      setUsers(prevUsers => 
-        prevUsers.map(u => 
-          u.userId === targetUserId 
-            ? { ...u, isChangingTier: false }
-            : u
-        )
+      setUsers((prev) =>
+        prev.map((u) => (u.userId === targetUserId ? { ...u, isChangingTier: false } : u))
       );
       alert(error.response?.data?.error || 'Error al cambiar tier');
     }
   };
 
-  const handleResetLimit = async (targetUserId, type, username) => {
+  const handleResetLimit = async (targetUserId, type, targetUsername) => {
     const typeLabels = {
-      'alerts': 'contador de alertas',
-      'tts': 'caracteres TTS usados',
-      'storage': 'storage usado',
-      'all': 'TODOS los límites'
+      alerts: 'contador de alertas',
+      tts: 'caracteres TTS usados',
+      storage: 'storage usado',
+      all: 'TODOS los límites'
     };
 
-    if (!window.confirm(`¿Resetear ${typeLabels[type]} de @${username}?`)) {
-      return;
-    }
+    if (!window.confirm(`¿Resetear ${typeLabels[type]} de @${targetUsername}?`)) return;
 
     try {
       await axios.post(`${API_URL}/api/admin/users/${targetUserId}/reset`, {
@@ -187,49 +211,39 @@ export const AdminDashboard = () => {
         type
       });
 
-      // Recargar usuarios
       await fetchUsers();
-      
-      // Notificación de éxito
-      setSuccessMessage(`Límites de @${username} reseteados exitosamente`);
-      setTimeout(() => setSuccessMessage(null), 5000);
+      notifySuccess(`Límites de @${targetUsername} reseteados exitosamente`);
     } catch (error) {
       console.error('Error reseteando límites:', error);
       alert(error.response?.data?.error || 'Error al resetear límites');
     }
   };
 
-  const handleToggleCreator = async (targetUserId, isCurrentlyCreator, username) => {
+  const handleToggleCreator = async (targetUserId, isCurrentlyCreator, targetUsername) => {
     if (isCurrentlyCreator) {
-      // Remover: pedir confirmación
-      if (!window.confirm(`¿Remover rol de creador de @${username}?`)) {
-        return;
-      }
+      if (!window.confirm(`¿Remover rol de creador de @${targetUsername}?`)) return;
     }
 
     try {
-      console.log(`[Creator Toggle] Toggling creator role for ${targetUserId}, current: ${isCurrentlyCreator}, new: ${!isCurrentlyCreator}`);
       await axios.post(`${API_URL}/api/admin/users/${targetUserId}/creator-role`, {
         adminId: userId,
         isCreator: !isCurrentlyCreator
       });
 
-      // Recargar usuarios
       await fetchUsers();
-      
-      // Notificación de éxito
-      const action = isCurrentlyCreator ? 'removido' : 'asignado';
-      setSuccessMessage(`Rol de creador ${action} a @${username} exitosamente`);
-      setTimeout(() => setSuccessMessage(null), 5000);
+      notifySuccess(`Rol de creador ${isCurrentlyCreator ? 'removido' : 'asignado'} a @${targetUsername} exitosamente`);
     } catch (error) {
       console.error('Error toggling creator role:', error);
       alert(error.response?.data?.error || 'Error al cambiar rol de creador');
     }
   };
 
-  const handleSetCreatorCode = async (targetUserId, currentCode, username) => {
-    const newCode = prompt(`Código de creador para @${username}:\n(Actual: ${currentCode || 'Sin código'})`, currentCode || '');
-    if (newCode === null) return; // Usuario canceló
+  const handleSetCreatorCode = async (targetUserId, currentCode, targetUsername) => {
+    const newCode = prompt(
+      `Código de creador para @${targetUsername}:\n(Actual: ${currentCode || 'Sin código'})`,
+      currentCode || ''
+    );
+    if (newCode === null) return;
 
     const trimmedCode = newCode.trim();
     if (!trimmedCode) {
@@ -238,25 +252,34 @@ export const AdminDashboard = () => {
     }
 
     try {
-      console.log(`[Set Creator Code] Actualizando código para ${targetUserId}`);
       await axios.put(`${API_URL}/api/admin/users/${targetUserId}/creator-code`, {
         adminId: userId,
         code: trimmedCode
       });
 
-      // Recargar usuarios
       await fetchUsers();
-      
-      // Notificación de éxito
-      setSuccessMessage(`Código de creador actualizado a "${trimmedCode.toUpperCase()}" para @${username}`);
-      setTimeout(() => setSuccessMessage(null), 5000);
+      notifySuccess(`Código de creador actualizado a "${trimmedCode.toUpperCase()}" para @${targetUsername}`);
     } catch (error) {
       console.error('Error setting creator code:', error);
       alert(error.response?.data?.error || 'Error al actualizar código de creador');
     }
   };
 
-  if (loading) {
+  const filteredUsers = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return users
+      .filter((u) => (tierFilter === 'all' ? true : (u.tier || 'free') === tierFilter))
+      .filter((u) => {
+        if (!q) return true;
+        const uname = String(u.username || '').toLowerCase();
+        const uid = String(u.userId || '').toLowerCase();
+        const code = String(u.creatorCode || '').toLowerCase();
+        return uname.includes(q) || uid.includes(q) || code.includes(q);
+      });
+  }, [users, search, tierFilter]);
+
+  // --- Screens ---
+  if (loadingUsers) {
     return (
       <div className="min-h-screen bg-dark-bg p-6">
         <div className="text-center text-dark-muted">Cargando...</div>
@@ -269,10 +292,8 @@ export const AdminDashboard = () => {
       <div className="min-h-screen bg-dark-bg p-6 flex items-center justify-center">
         <div className="max-w-md w-full">
           <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-8 text-center">
-            <p className="text-red-400 font-semibold mb-6">
-              {error || 'Acceso denegado'}
-            </p>
-            <button 
+            <p className="text-red-400 font-semibold mb-6">{error || 'Acceso denegado'}</p>
+            <button
               onClick={() => navigate('/')}
               className="w-full px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/80 transition"
             >
@@ -284,6 +305,7 @@ export const AdminDashboard = () => {
     );
   }
 
+  // --- UI ---
   return (
     <div className="min-h-screen bg-gradient-to-br from-dark-bg via-dark-bg to-dark-secondary/30 p-6">
       <div className="max-w-7xl mx-auto">
@@ -297,12 +319,26 @@ export const AdminDashboard = () => {
               Panel de administración · <span className="text-primary font-semibold">{username || 'Admin'}</span>
             </p>
           </div>
-          <button 
-            onClick={() => navigate('/')}
-            className="px-6 py-2.5 bg-dark-card/70 border border-dark-border text-white rounded-lg hover:bg-dark-secondary hover:border-primary/50 transition-all font-semibold"
-          >
-            ← Volver
-          </button>
+
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                fetchUsers();
+                fetchFeedbacks();
+              }}
+              className="px-4 py-2.5 bg-dark-card/70 border border-dark-border text-white rounded-lg hover:bg-dark-secondary hover:border-primary/50 transition-all font-semibold"
+              title="Actualizar todo"
+            >
+              ⟳ Refresh
+            </button>
+
+            <button
+              onClick={() => navigate('/')}
+              className="px-6 py-2.5 bg-dark-card/70 border border-dark-border text-white rounded-lg hover:bg-dark-secondary hover:border-primary/50 transition-all font-semibold"
+            >
+              ← Volver
+            </button>
+          </div>
         </div>
 
         {/* Notificación de éxito */}
@@ -322,12 +358,12 @@ export const AdminDashboard = () => {
               <p className="text-blue-400 text-sm font-semibold mb-3">Alertas</p>
               <p className="text-3xl font-black text-white">{(stats.totalAlerts || 0).toLocaleString()}</p>
             </div>
-            
+
             <div className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border border-purple-500/20 rounded-xl p-6 hover:border-purple-500/40 transition">
               <p className="text-purple-400 text-sm font-semibold mb-3">Caracteres TTS</p>
               <p className="text-3xl font-black text-white">{(stats.totalTTS || 0).toLocaleString()}</p>
             </div>
-            
+
             <div className="bg-gradient-to-br from-green-500/10 to-green-600/5 border border-green-500/20 rounded-xl p-6 hover:border-green-500/40 transition">
               <p className="text-green-400 text-sm font-semibold mb-3">Storage</p>
               <p className="text-3xl font-black text-white">{formatBytes(stats.totalStorage)}</p>
@@ -337,10 +373,10 @@ export const AdminDashboard = () => {
               <p className="text-cyan-400 text-sm font-semibold mb-3">Bandwidth</p>
               <p className="text-3xl font-black text-white">{formatBytes(stats.totalBandwidth)}</p>
             </div>
-            
+
             <div className="bg-gradient-to-br from-orange-500/10 to-orange-600/5 border border-orange-500/20 rounded-xl p-6 hover:border-orange-500/40 transition">
               <p className="text-orange-400 text-sm font-semibold mb-3">Triggers</p>
-              <p className="text-3xl font-black text-white">{stats.totalTriggers}</p>
+              <p className="text-3xl font-black text-white">{stats.totalTriggers || 0}</p>
             </div>
           </div>
         </div>
@@ -351,19 +387,51 @@ export const AdminDashboard = () => {
             <p className="text-dark-muted text-sm font-semibold mb-3">Total Usuarios</p>
             <p className="text-4xl font-black text-white">{users.length}</p>
           </div>
+
           <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-xl p-6 hover:border-purple-500/50 transition">
             <p className="text-purple-400 text-sm font-semibold mb-3">Premium</p>
-            <p className="text-4xl font-black text-white">{users.filter(u => u.tier === 'premium').length}</p>
+            <p className="text-4xl font-black text-white">{users.filter((u) => u.tier === 'premium').length}</p>
           </div>
+
           <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/10 border border-blue-500/30 rounded-xl p-6 hover:border-blue-500/50 transition">
             <p className="text-blue-400 text-sm font-semibold mb-3">Pro</p>
-            <p className="text-4xl font-black text-white">{users.filter(u => u.tier === 'pro').length}</p>
+            <p className="text-4xl font-black text-white">{users.filter((u) => u.tier === 'pro').length}</p>
           </div>
+        </div>
+
+        {/* Filtros */}
+        <div className="mb-4 flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
+          <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Buscar por @username / userId / creatorCode..."
+              className="w-full md:w-96 px-4 py-2 rounded-lg bg-dark-card/70 border border-dark-border text-white placeholder:text-dark-muted focus:outline-none focus:ring-2 focus:ring-primary/50"
+            />
+
+            <select
+              value={tierFilter}
+              onChange={(e) => setTierFilter(e.target.value)}
+              className="px-3 py-2 rounded-lg bg-dark-card/70 border border-dark-border text-white"
+              title="Filtrar por tier"
+            >
+              <option value="all">Todos</option>
+              <option value="free">Free</option>
+              <option value="pro">Pro</option>
+              <option value="premium">Premium</option>
+            </select>
+          </div>
+
+          <p className="text-dark-muted text-sm">
+            Mostrando <span className="text-white font-semibold">{filteredUsers.length}</span> de{' '}
+            <span className="text-white font-semibold">{users.length}</span>
+          </p>
         </div>
 
         {/* Tabla de usuarios */}
         <div>
           <h2 className="text-xl font-bold text-white mb-4">Usuarios Registrados</h2>
+
           <div className="bg-dark-card/70 border border-dark-border rounded-xl overflow-hidden shadow-2xl">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -377,243 +445,300 @@ export const AdminDashboard = () => {
                     <th className="px-6 py-4 text-left font-bold text-white uppercase tracking-wider text-xs">TTS</th>
                     <th className="px-6 py-4 text-left font-bold text-white uppercase tracking-wider text-xs">Storage</th>
                     <th className="px-6 py-4 text-left font-bold text-white uppercase tracking-wider text-xs">Bandwidth</th>
-                    <th className="px-6 py-4 text-left font-bold text-white uppercase tracking-wider text-xs">Triggers</th>                  <th className="px-6 py-4 text-left font-bold text-white uppercase tracking-wider text-xs">Acciones</th>                  </tr>
+                    <th className="px-6 py-4 text-left font-bold text-white uppercase tracking-wider text-xs">Triggers</th>
+                    <th className="px-6 py-4 text-left font-bold text-white uppercase tracking-wider text-xs">Acciones</th>
+                  </tr>
                 </thead>
+
                 <tbody className="divide-y divide-dark-border/30">
-                  {users.map((user) => (
-                    <tr key={user.userId} className="hover:bg-primary/5 transition-colors">
-                      <td className="px-6 py-4">
-                        <div>
-                          <p className="font-bold text-white text-base">@{user.username}</p>
-                          <p className="text-xs text-dark-muted font-mono">{user.userId}</p>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        {user.isChangingTier ? (
-                          <div className="px-3 py-1.5 rounded-full text-xs font-bold text-white bg-gradient-to-r from-gray-600 to-gray-700 shadow-lg animate-pulse border-2 border-white/20">
-                            Cambiando...
+                  {filteredUsers.map((u) => {
+                    const alertsPct = safePercent(u?.alerts?.percentage);
+                    const ttsPct = safePercent(u?.tts?.percentage);
+                    const storagePct = safePercent(u?.storage?.percentage);
+                    const bandwidthPct = safePercent(u?.bandwidth?.percentage);
+
+                    return (
+                      <tr key={u.userId} className="hover:bg-primary/5 transition-colors">
+                        {/* Usuario */}
+                        <td className="px-6 py-4">
+                          <div>
+                            <p className="font-bold text-white text-base">@{u.username}</p>
+                            <p className="text-xs text-dark-muted font-mono">{u.userId}</p>
                           </div>
-                        ) : (
-                          <select
-                            value={user.tier}
-                            onChange={(e) => handleChangeTier(user.userId, e.target.value, user.username)}
-                            className={`px-3 py-1.5 rounded-full text-xs font-bold text-white bg-gradient-to-r ${getTierColor(user.tier)} shadow-lg cursor-pointer hover:opacity-80 transition appearance-none border-2 border-white/20`}
-                          >
-                            <option value="free" className="bg-gray-800">Free</option>
-                            <option value="pro" className="bg-gray-800">Pro</option>
-                            <option value="premium" className="bg-gray-800">Premium</option>
-                          </select>
-                        )}
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-xs space-y-1">
-                          {user.subscription?.currentPeriodStart && (
-                            <>
-                              <div className="flex items-center gap-2">
-                                <span className="text-dark-muted font-semibold">Período:</span>
-                                <span className="text-white font-mono">
-                                  {formatDateShort(user.subscription.currentPeriodStart)} → {formatDateShort(user.subscription.currentPeriodEnd)}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <span className="text-dark-muted font-semibold">Status:</span>
-                                <span className={`px-2 py-0.5 rounded-full font-bold ${
-                                  user.subscription.status === 'active' ? 'bg-green-500/20 text-green-400' :
-                                  user.subscription.status === 'canceled' ? 'bg-red-500/20 text-red-400' :
-                                  'bg-gray-500/20 text-gray-400'
-                                }`}>
-                                  {user.subscription.status}
-                                </span>
-                              </div>
-                            </>
-                          )}
-                          {user.subscription?.cancelAtPeriodEnd && (
-                            <div className="px-2 py-1 bg-amber-500/20 border border-amber-500/40 rounded text-amber-300 font-bold">
-                              ⚠️ Cancelado al fin del período
+                        </td>
+
+                        {/* Plan */}
+                        <td className="px-6 py-4">
+                          {u.isChangingTier ? (
+                            <div className="px-3 py-1.5 rounded-full text-xs font-bold text-white bg-gradient-to-r from-gray-600 to-gray-700 shadow-lg animate-pulse border-2 border-white/20">
+                              Cambiando...
                             </div>
-                          )}
-                          {user.subscription?.requiresManualMpCancellation && (
-                            <div className="px-2 py-1 bg-red-500/20 border border-red-500/40 rounded text-red-300 font-bold">
-                              🔴 Requiere cancelación en MP
-                            </div>
-                          )}
-                          {user.subscription?.stripeSubscriptionId && (
-                            <div className="flex items-center gap-2">
-                              <span className="text-dark-muted font-semibold">MP ID:</span>
-                              <span className="text-white font-mono text-[10px]">
-                                {user.subscription.stripeSubscriptionId.slice(0, 12)}...
-                              </span>
-                            </div>
-                          )}
-                          {!user.subscription?.currentPeriodStart && user.tier === 'free' && (
-                            <span className="text-dark-muted italic">Plan gratuito</span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex gap-2 flex-wrap">
-                          <button
-                            onClick={() => handleToggleCreator(user.userId, user.isCreator, user.username)}
-                            className={`px-3 py-1.5 rounded-full text-xs font-bold text-white transition-all ${
-                              user.isCreator
-                                ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50'
-                                : 'bg-dark-secondary border border-dark-border hover:border-yellow-500/50'
-                            }`}
-                          >
-                            {user.isCreator ? 'Creador' : 'Sin rol'}
-                          </button>
-                          {user.isCreator && (
-                            <button
-                              onClick={() => handleSetCreatorCode(user.userId, user.creatorCode, user.username)}
-                              className="px-2 py-1.5 rounded-full text-xs font-bold text-white bg-dark-secondary border border-cyan-500/50 hover:border-cyan-500 transition-all"
-                              title="Editar código de creador"
+                          ) : (
+                            <select
+                              value={u.tier || 'free'}
+                              onChange={(e) => handleChangeTier(u.userId, e.target.value, u.username)}
+                              className={`px-3 py-1.5 rounded-full text-xs font-bold text-white bg-gradient-to-r ${getTierColor(
+                                u.tier || 'free'
+                              )} shadow-lg cursor-pointer hover:opacity-80 transition appearance-none border-2 border-white/20`}
                             >
-                              {user.creatorCode ? user.creatorCode : 'Agregar código'}
-                            </button>
+                              <option value="free" className="bg-gray-800">
+                                Free
+                              </option>
+                              <option value="pro" className="bg-gray-800">
+                                Pro
+                              </option>
+                              <option value="premium" className="bg-gray-800">
+                                Premium
+                              </option>
+                            </select>
                           )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm">
-                          <p className="text-white font-bold">
-                            {user.alerts?.current || 0}/{(user.alerts?.isUnlimited || user.alerts?.limit == null) ? 'Ilimitado' : (user.alerts?.limit || 0)}
-                          </p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <div className="flex-1 h-1.5 bg-dark-secondary rounded-full overflow-hidden">
-                              <div 
-                                className={`h-full rounded-full transition-all ${
-                                  (user.alerts?.percentage || 0) > 80 ? 'bg-red-500' :
-                                  (user.alerts?.percentage || 0) > 50 ? 'bg-yellow-500' : 'bg-green-500'
-                                }`}
-                                style={{ width: `${user.alerts?.percentage || 0}%` }}
-                              />
-                            </div>
-                            <span className={`text-xs font-bold ${getUsageColor(user.alerts?.percentage || 0)}`}>
-                              {user.alerts?.percentage || 0}%
-                            </span>
+                        </td>
+
+                        {/* Suscripción */}
+                        <td className="px-6 py-4">
+                          <div className="text-xs space-y-1">
+                            {u?.subscription?.currentPeriodStart ? (
+                              <>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-dark-muted font-semibold">Período:</span>
+                                  <span className="text-white font-mono">
+                                    {formatDateShort(u.subscription.currentPeriodStart)} → {formatDateShort(u.subscription.currentPeriodEnd)}
+                                  </span>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                  <span className="text-dark-muted font-semibold">Status:</span>
+                                  <span
+                                    className={`px-2 py-0.5 rounded-full font-bold ${
+                                      u.subscription.status === 'active'
+                                        ? 'bg-green-500/20 text-green-400'
+                                        : u.subscription.status === 'canceled'
+                                        ? 'bg-red-500/20 text-red-400'
+                                        : 'bg-gray-500/20 text-gray-400'
+                                    }`}
+                                  >
+                                    {u.subscription.status}
+                                  </span>
+                                </div>
+
+                                {u.subscription.cancelAtPeriodEnd && (
+                                  <div className="px-2 py-1 bg-amber-500/20 border border-amber-500/40 rounded text-amber-300 font-bold">
+                                    ⚠️ Cancelado al fin del período
+                                  </div>
+                                )}
+
+                                {u.subscription.requiresManualMpCancellation && (
+                                  <div className="px-2 py-1 bg-red-500/20 border border-red-500/40 rounded text-red-300 font-bold">
+                                    🔴 Requiere cancelación en MP
+                                  </div>
+                                )}
+
+                                {u.subscription.stripeSubscriptionId && (
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-dark-muted font-semibold">MP ID:</span>
+                                    <span className="text-white font-mono text-[10px]">
+                                      {String(u.subscription.stripeSubscriptionId).slice(0, 12)}...
+                                    </span>
+                                  </div>
+                                )}
+                              </>
+                            ) : (
+                              <span className="text-dark-muted italic">Plan gratuito</span>
+                            )}
                           </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm">
-                          <p className="text-white font-bold">
-                            {(user.tts.current || 0).toLocaleString()} / {(user.tts?.isUnlimited || user.tts?.limit == null) ? 'Ilimitado' : (user.tts.limit || 0).toLocaleString()}
-                          </p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <div className="flex-1 h-1.5 bg-dark-secondary rounded-full overflow-hidden">
-                              <div 
-                                className={`h-full rounded-full transition-all ${
-                                  (user.tts.percentage || 0) > 80 ? 'bg-red-500' :
-                                  (user.tts.percentage || 0) > 50 ? 'bg-yellow-500' : 'bg-green-500'
-                                }`}
-                                style={{ width: `${user.tts.percentage || 0}%` }}
-                              />
-                            </div>
-                            <span className={`text-xs font-bold ${getUsageColor(user.tts.percentage || 0)}`}>
-                              {user.tts.percentage || 0}%
-                            </span>
+                        </td>
+
+                        {/* Rol */}
+                        <td className="px-6 py-4">
+                          <div className="flex gap-2 flex-wrap">
+                            <button
+                              onClick={() => handleToggleCreator(u.userId, !!u.isCreator, u.username)}
+                              className={`px-3 py-1.5 rounded-full text-xs font-bold text-white transition-all ${
+                                u.isCreator
+                                  ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50'
+                                  : 'bg-dark-secondary border border-dark-border hover:border-yellow-500/50'
+                              }`}
+                            >
+                              {u.isCreator ? 'Creador' : 'Sin rol'}
+                            </button>
+
+                            {u.isCreator && (
+                              <button
+                                onClick={() => handleSetCreatorCode(u.userId, u.creatorCode, u.username)}
+                                className="px-2 py-1.5 rounded-full text-xs font-bold text-white bg-dark-secondary border border-cyan-500/50 hover:border-cyan-500 transition-all"
+                                title="Editar código de creador"
+                              >
+                                {u.creatorCode ? u.creatorCode : 'Agregar código'}
+                              </button>
+                            )}
                           </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm">
-                          <p className="text-white font-bold">
-                            {formatBytes(user.storage?.current || 0)} / {(user.storage?.isUnlimited || user.storage?.limit == null) ? 'Ilimitado' : formatBytes(user.storage?.limit || 0)}
-                          </p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <div className="flex-1 h-1.5 bg-dark-secondary rounded-full overflow-hidden">
-                              <div 
-                                className={`h-full rounded-full transition-all ${
-                                  (user.storage?.percentage || 0) > 80 ? 'bg-red-500' :
-                                  (user.storage?.percentage || 0) > 50 ? 'bg-yellow-500' : 'bg-green-500'
-                                }`}
-                                style={{ width: `${user.storage?.percentage || 0}%` }}
-                              />
+                        </td>
+
+                        {/* Alertas */}
+                        <td className="px-6 py-4">
+                          <div className="text-sm">
+                            <p className="text-white font-bold">
+                              {u?.alerts?.current || 0}/
+                              {u?.alerts?.isUnlimited || u?.alerts?.limit == null ? 'Ilimitado' : u?.alerts?.limit || 0}
+                            </p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <div className="flex-1 h-1.5 bg-dark-secondary rounded-full overflow-hidden">
+                                <div
+                                  className={`h-full rounded-full transition-all ${
+                                    alertsPct > 80 ? 'bg-red-500' : alertsPct > 50 ? 'bg-yellow-500' : 'bg-green-500'
+                                  }`}
+                                  style={{ width: `${alertsPct}%` }}
+                                />
+                              </div>
+                              <span className={`text-xs font-bold ${getUsageColor(alertsPct)}`}>{alertsPct}%</span>
                             </div>
-                            <span className={`text-xs font-bold ${getUsageColor(user.storage?.percentage || 0)}`}>
-                              {user.storage?.percentage || 0}%
-                            </span>
                           </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm">
-                          <p className="text-white font-bold">
-                            {formatBytes(user.bandwidth?.current || 0)} / {(user.bandwidth?.isUnlimited || user.bandwidth?.limit == null) ? 'Ilimitado' : formatBytes(user.bandwidth?.limit || 0)}
-                          </p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <div className="flex-1 h-1.5 bg-dark-secondary rounded-full overflow-hidden">
-                              <div 
-                                className={`h-full rounded-full transition-all ${
-                                  (user.bandwidth?.percentage || 0) > 80 ? 'bg-red-500' :
-                                  (user.bandwidth?.percentage || 0) > 50 ? 'bg-yellow-500' : 'bg-green-500'
-                                }`}
-                                style={{ width: `${user.bandwidth?.percentage || 0}%` }}
-                              />
+                        </td>
+
+                        {/* TTS (✅ no crashea si falta tts) */}
+                        <td className="px-6 py-4">
+                          <div className="text-sm">
+                            <p className="text-white font-bold">
+                              {(u?.tts?.current || 0).toLocaleString()} /{' '}
+                              {u?.tts?.isUnlimited || u?.tts?.limit == null ? 'Ilimitado' : (u?.tts?.limit || 0).toLocaleString()}
+                            </p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <div className="flex-1 h-1.5 bg-dark-secondary rounded-full overflow-hidden">
+                                <div
+                                  className={`h-full rounded-full transition-all ${
+                                    ttsPct > 80 ? 'bg-red-500' : ttsPct > 50 ? 'bg-yellow-500' : 'bg-green-500'
+                                  }`}
+                                  style={{ width: `${ttsPct}%` }}
+                                />
+                              </div>
+                              <span className={`text-xs font-bold ${getUsageColor(ttsPct)}`}>{ttsPct}%</span>
                             </div>
-                            <span className={`text-xs font-bold ${getUsageColor(user.bandwidth?.percentage || 0)}`}>
-                              {user.bandwidth?.percentage || 0}%
-                            </span>
                           </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary/20 text-primary font-black text-base">
-                          {user.triggers || 0}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleResetLimit(user.userId, 'all', user.username)}
-                            className="px-3 py-1.5 bg-red-500/20 border border-red-500/50 text-red-400 rounded-lg hover:bg-red-500/30 transition text-xs font-semibold"
-                            title="Resetear todos los límites"
-                          >
-                            Reset All
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                        </td>
+
+                        {/* Storage */}
+                        <td className="px-6 py-4">
+                          <div className="text-sm">
+                            <p className="text-white font-bold">
+                              {formatBytes(u?.storage?.current || 0)} /{' '}
+                              {u?.storage?.isUnlimited || u?.storage?.limit == null ? 'Ilimitado' : formatBytes(u?.storage?.limit || 0)}
+                            </p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <div className="flex-1 h-1.5 bg-dark-secondary rounded-full overflow-hidden">
+                                <div
+                                  className={`h-full rounded-full transition-all ${
+                                    storagePct > 80 ? 'bg-red-500' : storagePct > 50 ? 'bg-yellow-500' : 'bg-green-500'
+                                  }`}
+                                  style={{ width: `${storagePct}%` }}
+                                />
+                              </div>
+                              <span className={`text-xs font-bold ${getUsageColor(storagePct)}`}>{storagePct}%</span>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Bandwidth */}
+                        <td className="px-6 py-4">
+                          <div className="text-sm">
+                            <p className="text-white font-bold">
+                              {formatBytes(u?.bandwidth?.current || 0)} /{' '}
+                              {u?.bandwidth?.isUnlimited || u?.bandwidth?.limit == null ? 'Ilimitado' : formatBytes(u?.bandwidth?.limit || 0)}
+                            </p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <div className="flex-1 h-1.5 bg-dark-secondary rounded-full overflow-hidden">
+                                <div
+                                  className={`h-full rounded-full transition-all ${
+                                    bandwidthPct > 80 ? 'bg-red-500' : bandwidthPct > 50 ? 'bg-yellow-500' : 'bg-green-500'
+                                  }`}
+                                  style={{ width: `${bandwidthPct}%` }}
+                                />
+                              </div>
+                              <span className={`text-xs font-bold ${getUsageColor(bandwidthPct)}`}>{bandwidthPct}%</span>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Triggers */}
+                        <td className="px-6 py-4">
+                          <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary/20 text-primary font-black text-base">
+                            {u?.triggers || 0}
+                          </span>
+                        </td>
+
+                        {/* Acciones */}
+                        <td className="px-6 py-4">
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleResetLimit(u.userId, 'all', u.username)}
+                              className="px-3 py-1.5 bg-red-500/20 border border-red-500/50 text-red-400 rounded-lg hover:bg-red-500/30 transition text-xs font-semibold"
+                              title="Resetear todos los límites"
+                            >
+                              Reset All
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
+
+            {filteredUsers.length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-dark-muted text-lg">No hay usuarios que coincidan con el filtro</p>
+              </div>
+            )}
           </div>
         </div>
 
-        {users.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-dark-muted text-lg">No hay usuarios registrados</p>
-          </div>
-        )}
-
         <AppFooter />
-              {/* Feedbacks */}
-              <div className="mt-12">
-                <h2 className="text-2xl font-black text-primary mb-4">Feedback de usuarios</h2>
-                {feedbacks.length === 0 ? (
-                  <p className="text-dark-muted">No hay comentarios enviados.</p>
-                ) : (
-                  <div className="space-y-6">
-                    {feedbacks.map(fb => (
-                      <div key={fb._id} className="bg-dark-card border border-primary/20 rounded-xl p-5 shadow">
-                        <div className="flex items-center gap-3 mb-2">
-                          <span className="font-bold text-primary">{fb.username || fb.userId}</span>
-                          {fb.email && <span className="text-xs text-dark-muted">{fb.email}</span>}
-                          <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">{fb.type}</span>
-                          <span className="text-xs text-dark-muted">{formatDate(fb.createdAt)}</span>
-                        </div>
-                        <div className="text-white mb-2">{fb.feedback}</div>
-                        {fb.response ? (
-                          <div className="text-green-400 text-sm">Respuesta: {fb.response}</div>
-                        ) : (
-                          <FeedbackResponseForm feedbackId={fb._id} onRespond={fetchFeedbacks} />
-                        )}
-                      </div>
-                    ))}
+
+        {/* Feedbacks */}
+        <div className="mt-12">
+          <div className="flex items-center justify-between gap-2 mb-4 flex-wrap">
+            <h2 className="text-2xl font-black text-primary">Feedback de usuarios</h2>
+
+            <button
+              onClick={fetchFeedbacks}
+              className="px-3 py-2 bg-dark-card/70 border border-dark-border text-white rounded-lg hover:bg-dark-secondary hover:border-primary/50 transition-all font-semibold"
+            >
+              ⟳ Refresh feedback
+            </button>
+          </div>
+
+          {loadingFeedbacks ? (
+            <p className="text-dark-muted">Cargando feedback...</p>
+          ) : feedbacks.length === 0 ? (
+            <p className="text-dark-muted">No hay comentarios enviados.</p>
+          ) : (
+            <div className="space-y-6">
+              {feedbacks.map((fb) => (
+                <div key={fb._id} className="bg-dark-card border border-primary/20 rounded-xl p-5 shadow">
+                  <div className="flex items-center gap-3 mb-2 flex-wrap">
+                    <span className="font-bold text-primary">{fb.username || fb.userId}</span>
+                    {fb.email && <span className="text-xs text-dark-muted">{fb.email}</span>}
+                    {fb.type && <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">{fb.type}</span>}
+                    <span className="text-xs text-dark-muted">{formatDate(fb.createdAt)}</span>
                   </div>
-                )}
-              </div>
+
+                  <div className="text-white mb-2 whitespace-pre-wrap">{fb.feedback}</div>
+
+                  {fb.response ? (
+                    <div className="text-green-400 text-sm whitespace-pre-wrap">Respuesta: {fb.response}</div>
+                  ) : (
+                    <FeedbackResponseForm
+                      feedbackId={fb._id}
+                      adminId={userId}
+                      onRespond={fetchFeedbacks}
+                      // si tu componente necesita más props, acá se los pasás
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

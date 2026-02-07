@@ -34,7 +34,7 @@ app.use(cors({
   origin: FRONTEND_URL,
   methods: ['GET', 'POST', 'DELETE', 'PUT', 'OPTIONS'],
   credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id']
 }));
 
 // Middleware para parsear body

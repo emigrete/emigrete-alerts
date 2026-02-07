@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import axios from 'axios';
 import { API_URL } from '../constants/config';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 
 export const FeedbackForm = () => {
+  const [userId] = useLocalStorage('twitchUserId');
   const [feedback, setFeedback] = useState('');
   const [email, setEmail] = useState('');
   const [type, setType] = useState('suggestion');
@@ -11,123 +13,127 @@ export const FeedbackForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!feedback.trim()) {
       toast.error('Por favor, detallá tu comentario');
       return;
     }
 
     setSending(true);
-    const TIMEOUT_MS = 20000;
-    const RETRY_DELAY_MS = 1200;
-    const isRetryableError = (err) => {
-      const code = err?.code;
-      return code === 'ECONNABORTED' || code === 'ERR_NETWORK';
-    };
-    try {
-      const payload = { feedback, email, type };
-      try {
-        await axios.post(`${API_URL}/api/feedback`, payload, { timeout: TIMEOUT_MS });
-      } catch (err) {
-        if (!isRetryableError(err)) throw err;
-        await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
-        await axios.post(`${API_URL}/api/feedback`, payload, { timeout: TIMEOUT_MS });
-      }
+    
+    // Configuración de reintentos
+    const MAX_RETRIES = 2;
+    const TIMEOUT_MS = 15000;
+    const RETRY_DELAY_MS = 2000;
 
-      toast.success('Gracias por tu comentario.');
-      setFeedback('');
-      setEmail('');
-      setType('suggestion');
-    } catch (error) {
-      if (error?.code === 'ECONNABORTED' || error?.code === 'ERR_NETWORK') {
-        toast.error('El servidor está lento. Intentá de nuevo en unos segundos.');
-      } else {
-        toast.error('No se pudo enviar el comentario. Intentá de nuevo.');
+    const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+    const sendRequest = async (retryCount = 0) => {
+      try {
+        const payload = { feedback, email, type, userId };
+        await axios.post(`${API_URL}/api/feedback`, payload, {
+          timeout: TIMEOUT_MS,
+          headers: { 'x-user-id': userId }
+        });
+        
+        toast.success('¡Gracias! Tu feedback nos ayuda a mejorar.');
+        setFeedback('');
+        setEmail('');
+        setType('suggestion');
+      } catch (error) {
+        const isNetworkError = error.code === 'ECONNABORTED' || error.code === 'ERR_NETWORK';
+        
+        if (isNetworkError && retryCount < MAX_RETRIES) {
+          await sleep(RETRY_DELAY_MS);
+          return sendRequest(retryCount + 1);
+        }
+
+        if (isNetworkError) {
+          toast.error('El servidor no responde. Revisá tu conexión.');
+        } else {
+          toast.error('No se pudo enviar. Intentá de nuevo más tarde.');
+        }
       }
-    } finally {
-      setSending(false);
-    }
+    };
+
+    await sendRequest();
+    setSending(false);
   };
 
   return (
-    <section className="bg-gradient-to-br from-primary/5 via-pink-500/5 to-dark-secondary border border-primary/30 rounded-3xl p-8 mb-8">
-      <div className="mb-6">
-        <h2 className="text-2xl font-black text-white mb-3">Enviá tu comentario</h2>
-        <p className="text-dark-muted text-sm">
-          Si tenés sugerencias, reportes de fallas o consultas, nos interesa conocer tu opinión sobre la app.
-        </p>
-      </div>
+    <section className="w-full max-w-sm mx-auto bg-dark-card rounded-2xl shadow-2xl p-6 relative border border-dark-border">
+      {/* Botón Cerrar */}
+      <button
+        className="absolute top-3 right-3 text-dark-muted hover:text-white bg-dark-secondary/50 rounded-full p-1.5 transition-colors"
+        onClick={() => setFeedback('')}
+        type="button"
+      >✕</button>
+
+      <header className="mb-6">
+        <h2 className="text-xl font-black text-white">Enviá tu comentario</h2>
+        <p className="text-dark-muted text-sm">Tu opinión ayuda a mejorar la Beta.</p>
+      </header>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Email */}
-          <div>
-            <label className="block mb-2 font-semibold text-dark-muted text-sm uppercase tracking-wider">
-              Correo electrónico (opcional)
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="tu@correo.com"
-              className="w-full p-3 rounded-lg border border-dark-border bg-black text-white outline-none focus:border-primary transition"
-            />
-          </div>
+        {/* Email */}
+        <div>
+          <label className="block mb-1 text-xs font-semibold text-dark-muted uppercase tracking-wider">Email (Opcional)</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="tu@email.com"
+            className="w-full p-2.5 rounded-lg border border-dark-border bg-black text-white outline-none focus:border-primary transition"
+          />
+        </div>
 
-          {/* Tipo de feedback */}
-          <div>
-            <label className="block mb-2 font-semibold text-dark-muted text-sm uppercase tracking-wider">
-              Tipo
-            </label>
-            <select
-              value={type}
-              onChange={(e) => setType(e.target.value)}
-              className="w-full p-3 rounded-lg border-2 border-dark-border bg-gradient-to-br from-dark-card to-dark-secondary text-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all appearance-none cursor-pointer hover:border-primary/50 font-semibold"
-              style={{
-                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239146FF'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'right 0.75rem center',
-                backgroundSize: '1.5em 1.5em',
-                paddingRight: '2.5rem'
-              }}
-            >
-              <option value="suggestion" style={{ backgroundColor: '#1a1a2e', color: '#fff' }}>Sugerencia</option>
-              <option value="bug" style={{ backgroundColor: '#1a1a2e', color: '#fff' }}>Reporte de falla</option>
-              <option value="feature" style={{ backgroundColor: '#1a1a2e', color: '#fff' }}>Solicitud de mejora</option>
-              <option value="other" style={{ backgroundColor: '#1a1a2e', color: '#fff' }}>Otro</option>
-            </select>
-          </div>
+        {/* Tipo de Feedback */}
+        <div>
+          <label className="block mb-1 text-xs font-semibold text-dark-muted uppercase tracking-wider">Tipo</label>
+          <select
+            value={type}
+            onChange={(e) => setType(e.target.value)}
+            className="w-full p-2.5 rounded-lg border border-dark-border bg-dark-secondary text-white outline-none focus:border-primary transition appearance-none cursor-pointer"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239146FF'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'right 0.75rem center',
+              backgroundSize: '1.2em'
+            }}
+          >
+            <option value="suggestion">Sugerencia</option>
+            <option value="bug">Reporte de falla</option>
+            <option value="feature">Solicitud de mejora</option>
+            <option value="other">Otro</option>
+          </select>
         </div>
 
         {/* Mensaje */}
         <div>
-          <label className="block mb-2 font-semibold text-dark-muted text-sm uppercase tracking-wider">
-            Mensaje
-          </label>
+          <label className="block mb-1 text-xs font-semibold text-dark-muted uppercase tracking-wider">Mensaje</label>
           <textarea
             value={feedback}
             onChange={(e) => setFeedback(e.target.value)}
-            placeholder="Contanos tu experiencia o sugerencia."
+            placeholder="Contanos tu experiencia..."
             maxLength={1000}
-            className="w-full p-3 rounded-lg border border-dark-border bg-black text-white outline-none focus:border-primary transition h-28 resize-none"
+            className="w-full p-2.5 rounded-lg border border-dark-border bg-black text-white outline-none focus:border-primary transition h-28 resize-none"
           />
-          <small className="text-dark-muted">{feedback.length}/1000 caracteres</small>
+          <div className="flex justify-end">
+            <small className="text-[10px] text-dark-muted uppercase">{feedback.length}/1000</small>
+          </div>
         </div>
 
-        {/* Botón */}
-        <div className="flex gap-3">
-          <button
-            type="submit"
-            disabled={sending || !feedback.trim()}
-            className="flex-1 bg-gradient-to-r from-primary to-pink-500 text-white font-bold py-3 px-6 rounded-lg hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed transition-all"
-          >
-            {sending ? 'Enviando...' : 'Enviar comentario'}
-          </button>
-        </div>
+        {/* Botón Enviar */}
+        <button
+          type="submit"
+          disabled={sending || !feedback.trim()}
+          className="w-full bg-gradient-to-r from-primary to-pink-500 text-white font-bold py-3 rounded-xl hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:scale-100 transition-all shadow-lg shadow-primary/20"
+        >
+          {sending ? 'Enviando...' : 'Enviar comentario'}
+        </button>
 
-        {/* Info */}
-        <p className="text-xs text-dark-muted text-center">
-          También podés escribir a <strong>teodorowelyczko@gmail.com</strong>
+        <p className="text-[10px] text-dark-muted text-center pt-2">
+          O escribinos a <span className="text-primary/80 font-medium">teodorowelyczko@gmail.com</span>
         </p>
       </form>
     </section>
