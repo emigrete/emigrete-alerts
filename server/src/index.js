@@ -12,30 +12,49 @@ import { getStorage } from 'firebase-admin/storage';
 
 import apiRoutes from './routes/api.js';
 import authRoutes from './routes/auth.js';
-import subscriptionRoutes from './routes/subscription.js';
 import creatorRoutes from './routes/creator.js';
 import billingRoutes from './routes/billing.js';
+
 import { Trigger } from './models/Trigger.js';
 import { startTwitchListener } from './services/twitchListener.js';
 import { UserToken } from './models/UserToken.js';
-import { incrementStorageUsage, getUserSubscriptionStatus, canUploadFile, canUploadStorage, incrementBandwidthUsage, canUseBandwidth, processScheduledCancellations } from './services/subscriptionService.js';
+
+import {
+  incrementStorageUsage,
+  canUploadFile,
+  canUploadStorage,
+  incrementBandwidthUsage,
+  canUseBandwidth,
+  processScheduledCancellations,
+} from './services/subscriptionService.js';
 
 dotenv.config();
 
 const app = express();
+
 // Necesario en entornos con proxy (Railway) para que express-rate-limit y headers funcionen bien
 app.set('trust proxy', 1);
+
 const httpServer = createServer(app);
 
 // ✅ CORS correcto para prod
 const FRONTEND_URL = process.env.FRONTEND_URL || '*';
 
-app.use(cors({
-  origin: FRONTEND_URL,
-  methods: ['GET', 'POST', 'DELETE', 'PUT', 'OPTIONS'],
-  credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id']
-}));
+app.use(
+  cors({
+    origin: FRONTEND_URL,
+    methods: ['GET', 'POST', 'DELETE', 'PUT', 'OPTIONS'],
+    credentials: true,
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'x-user-id',
+      'x-username',
+      'x-admin-id',
+      'x-admin-token',
+    ],
+  })
+);
 
 // Middleware para parsear body
 app.use((req, res, next) => {
@@ -51,15 +70,15 @@ app.use((req, res, next) => {
 export const io = new Server(httpServer, {
   cors: {
     origin: FRONTEND_URL,
-    methods: ['GET', 'POST']
-  }
+    methods: ['GET', 'POST'],
+  },
 });
 
 // Rate limit
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
-  message: 'Demasiadas peticiones desde esta IP, intentá más tarde.'
+  message: 'Demasiadas peticiones desde esta IP, intentá más tarde.',
 });
 
 app.use('/api', limiter);
@@ -69,7 +88,8 @@ app.use('/upload', limiter);
 app.get('/', (req, res) => res.status(200).send('OK'));
 
 // Firebase (service account por env)
-const firebaseJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON || process.env.FIREBASE_CREDENTIALS;
+const firebaseJson =
+  process.env.FIREBASE_SERVICE_ACCOUNT_JSON || process.env.FIREBASE_CREDENTIALS;
 
 if (!firebaseJson) {
   console.error('❌ Falta FIREBASE_SERVICE_ACCOUNT_JSON o FIREBASE_CREDENTIALS');
@@ -96,7 +116,7 @@ try {
 
 initializeApp({
   credential: cert(serviceAccount),
-  storageBucket: 'triggerapp-dd86c.firebasestorage.app'
+  storageBucket: 'triggerapp-dd86c.firebasestorage.app',
 });
 
 const bucket = getStorage().bucket();
@@ -104,27 +124,27 @@ const bucket = getStorage().bucket();
 // Multer - Límite dinámico basado en planes
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 10 * 1024 * 1024 * 1024 } // 10GB máximo (se valida contra el plan en el endpoint)
+  limits: { fileSize: 10 * 1024 * 1024 * 1024 }, // 10GB máximo (se valida contra el plan en el endpoint)
 });
 
 // Middleware para validar storage disponible
 const validateStorageLimit = async (req, res, next) => {
-  if (!req.file || !req.body.userId) {
-    return next();
-  }
+  if (!req.file || !req.body.userId) return next();
 
   try {
     const fileSize = req.file.size;
     const userId = req.body.userId;
-    
+
     // Validar tamaño individual de archivo
     const fileSizeCheck = await canUploadFile(userId, fileSize);
     if (!fileSizeCheck.allowed) {
       return res.status(413).json({
-        error: `${fileSizeCheck.message}. Máximo: ${Math.round(fileSizeCheck.maxFileSize / 1024 / 1024)}MB`,
+        error: `${fileSizeCheck.message}. Máximo: ${Math.round(
+          fileSizeCheck.maxFileSize / 1024 / 1024
+        )}MB`,
         fileSize: Math.round(fileSize / 1024 / 1024),
         maxFileSize: Math.round(fileSizeCheck.maxFileSize / 1024 / 1024),
-        plan: fileSizeCheck.tier
+        plan: fileSizeCheck.tier,
       });
     }
 
@@ -132,10 +152,12 @@ const validateStorageLimit = async (req, res, next) => {
     const storageCheck = await canUploadStorage(userId, fileSize);
     if (!storageCheck.allowed) {
       return res.status(413).json({
-        error: `No tienes suficiente storage. Necesitas ${Math.round(storageCheck.requested / 1024 / 1024)}MB más`,
+        error: `No tienes suficiente storage. Necesitas ${Math.round(
+          storageCheck.requested / 1024 / 1024
+        )}MB más`,
         required: Math.round(storageCheck.requested / 1024 / 1024),
         available: Math.round(storageCheck.remaining / 1024 / 1024),
-        total: Math.round(storageCheck.limit / 1024 / 1024)
+        total: Math.round(storageCheck.limit / 1024 / 1024),
       });
     }
 
@@ -149,10 +171,10 @@ const validateStorageLimit = async (req, res, next) => {
         required: neededGB,
         available: availableGB,
         total: Math.round(bandwidthCheck.limit / 1024 / 1024 / 1024),
-        resetDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1)
+        resetDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1),
       });
     }
-    
+
     next();
   } catch (error) {
     console.error('Error validando storage limit:', error);
@@ -162,8 +184,7 @@ const validateStorageLimit = async (req, res, next) => {
 
 // Rutas
 app.use('/auth', authRoutes);
-app.use('/api', apiRoutes);
-app.use('/api/subscription', subscriptionRoutes);
+app.use('/api', apiRoutes);            // <-- acá adentro ya está /api/subscription, /api/admin, etc.
 app.use('/api/creator', creatorRoutes);
 app.use('/api/billing', billingRoutes);
 
@@ -183,7 +204,7 @@ app.post('/upload', upload.single('video'), validateStorageLimit, async (req, re
       twitchRewardId: req.body.twitchRewardId,
       userId: req.body.userId,
       fileSize: req.file?.size,
-      mimeType: req.file?.mimetype
+      mimeType: req.file?.mimetype,
     });
 
     // Parseo de TTS (si viene, joya)
@@ -215,42 +236,31 @@ app.post('/upload', upload.single('video'), validateStorageLimit, async (req, re
 
       const trigger = await Trigger.findOne({
         twitchRewardId: req.body.twitchRewardId,
-        userId: req.body.userId
+        userId: req.body.userId,
       });
 
       if (trigger) {
-        // Si ya existía, solo actualizamos el TTS
         trigger.ttsConfig = ttsConfig;
-        // Actualizar titulo si viene
         if (req.body.alertTitle) {
           trigger.alertConfig = trigger.alertConfig || {};
           trigger.alertConfig.displayName = req.body.alertTitle;
         }
         await trigger.save();
-        return res.json({
-          status: 'success',
-          trigger,
-          media: null
-        });
+        return res.json({ status: 'success', trigger, media: null });
       }
 
-      // Si no existía, lo creamos sin media pero con TTS
       const newTrigger = await Trigger.create({
         userId: req.body.userId,
         twitchRewardId: req.body.twitchRewardId,
         medias: [],
         ttsConfig,
-        alertConfig: req.body.alertTitle ? { displayName: req.body.alertTitle } : undefined
+        alertConfig: req.body.alertTitle ? { displayName: req.body.alertTitle } : undefined,
       });
 
-      return res.json({
-        status: 'success',
-        trigger: newTrigger,
-        media: null
-      });
+      return res.json({ status: 'success', trigger: newTrigger, media: null });
     }
 
-    // Si hay archivo, seguimos el flujo normal de subida
+    // Si hay archivo, seguimos el flujo normal
     const mediaType = getMediaType(req.file.mimetype);
     const fileName = `triggers/${mediaType}/${Date.now()}_${req.file.originalname}`;
     const file = bucket.file(fileName);
@@ -258,7 +268,7 @@ app.post('/upload', upload.single('video'), validateStorageLimit, async (req, re
     console.log('🔥 Subiendo a Firebase:', fileName);
 
     const stream = file.createWriteStream({
-      metadata: { contentType: req.file.mimetype }
+      metadata: { contentType: req.file.mimetype },
     });
 
     stream.on('error', (e) => {
@@ -273,91 +283,60 @@ app.post('/upload', upload.single('video'), validateStorageLimit, async (req, re
         console.log('✅ Archivo subido, haciendo público...');
         await file.makePublic();
         const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
-        console.log('🌐 URL pública generada:', publicUrl);
 
-        // ✅ Trackear almacenamiento usado
         const fileSize = req.file.size;
+
         console.log(`📊 Incrementando storage: ${fileSize} bytes para usuario ${req.body.userId}`);
         await incrementStorageUsage(req.body.userId, fileSize);
-        
-        // ✅ Trackear bandwidth usado (cuando se descarga el archivo)
+
         console.log(`📊 Incrementando bandwidth: ${fileSize} bytes para usuario ${req.body.userId}`);
         await incrementBandwidthUsage(req.body.userId, fileSize);
 
-        // Agregar nueva media al array de medias
-        console.log('🔍 Buscando trigger existente...');
         const trigger = await Trigger.findOne({
           twitchRewardId: req.body.twitchRewardId,
-          userId: req.body.userId
+          userId: req.body.userId,
         });
 
+        const newMedia = {
+          type: mediaType,
+          url: publicUrl,
+          fileName,
+          volume: 1.0,
+          fileSize,
+        };
+
         if (trigger) {
-          console.log('📝 Actualizando trigger existente:', trigger._id);
-          // Actualizar trigger existente: REEMPLAZAR media (solo 1 por alerta)
-          const newMedia = {
-            type: mediaType,
-            url: publicUrl,
-            fileName,
-            volume: 1.0,
-            fileSize: req.file.size // Guardar tamaño para bandwidth tracking
-          };
-          trigger.medias = [newMedia]; // Reemplazar, no agregar
-          // Mantener compatibilidad con videoUrl si es video
-          if (mediaType === 'video') {
-            trigger.videoUrl = publicUrl;
-          }
-          if (ttsConfig) {
-            trigger.ttsConfig = ttsConfig;
-          }
-          // actualizar título si viene
+          trigger.medias = [newMedia];
+          if (mediaType === 'video') trigger.videoUrl = publicUrl;
+          if (ttsConfig) trigger.ttsConfig = ttsConfig;
           if (req.body.alertTitle) {
             trigger.alertConfig = trigger.alertConfig || {};
             trigger.alertConfig.displayName = req.body.alertTitle;
           }
           await trigger.save();
-          console.log('✅ Trigger actualizado exitosamente');
-          
-          if (!res.headersSent) {
-            res.json({ 
-              status: 'success', 
-              trigger,
-              media: {
-                type: mediaType,
-                url: publicUrl
-              }
-            });
-          }
-        } else {
-          console.log('➕ Creando nuevo trigger...');
-          // Crear nuevo trigger
-          const newTrigger = await Trigger.create({
-            userId: req.body.userId,
-            twitchRewardId: req.body.twitchRewardId,
-            medias: [{
-              type: mediaType,
-              url: publicUrl,
-              fileName,
-              volume: 1.0,
-              fileSize: req.file.size // Guardar tamaño para bandwidth tracking
-            }],
-            videoUrl: mediaType === 'video' ? publicUrl : undefined,
-            fileName: mediaType === 'video' ? fileName : undefined,
-            ttsConfig: ttsConfig,
-            alertConfig: req.body.alertTitle ? { displayName: req.body.alertTitle } : undefined
-          });
-          console.log('✅ Nuevo trigger creado:', newTrigger._id);
 
-          if (!res.headersSent) {
-            res.json({ 
-              status: 'success', 
-              trigger: newTrigger,
-              media: {
-                type: mediaType,
-                url: publicUrl
-              }
-            });
-          }
+          return res.json({
+            status: 'success',
+            trigger,
+            media: { type: mediaType, url: publicUrl },
+          });
         }
+
+        const newTrigger = await Trigger.create({
+          userId: req.body.userId,
+          twitchRewardId: req.body.twitchRewardId,
+          medias: [newMedia],
+          videoUrl: mediaType === 'video' ? publicUrl : undefined,
+          fileName: mediaType === 'video' ? fileName : undefined,
+          ttsConfig,
+          alertConfig: req.body.alertTitle ? { displayName: req.body.alertTitle } : undefined,
+        });
+
+        return res.json({
+          status: 'success',
+          trigger: newTrigger,
+          media: { type: mediaType, url: publicUrl },
+        });
       } catch (error) {
         console.error('❌ Error al guardar en BD:', error);
         if (!res.headersSent) {
@@ -367,7 +346,6 @@ app.post('/upload', upload.single('video'), validateStorageLimit, async (req, re
     });
 
     stream.end(req.file.buffer);
-
   } catch (error) {
     console.error('❌ Error general en /upload:', error);
     if (!res.headersSent) {
@@ -387,9 +365,7 @@ app.post('/test-trigger', async (req, res) => {
   const trigger = await Trigger.findOne({ twitchRewardId, userId });
   if (!trigger) return res.status(404).json({ error: 'Alerta no encontrada.' });
 
-  const lastMedia = trigger.medias?.length
-    ? trigger.medias[trigger.medias.length - 1]
-    : null;
+  const lastMedia = trigger.medias?.length ? trigger.medias[trigger.medias.length - 1] : null;
 
   const type = lastMedia?.type || (trigger.videoUrl ? 'video' : 'tts');
   const url = lastMedia?.url || trigger.videoUrl;
@@ -399,7 +375,7 @@ app.post('/test-trigger', async (req, res) => {
     type,
     volume: lastMedia?.volume ?? 1.0,
     rewardId: twitchRewardId,
-    ttsConfig: trigger.ttsConfig
+    ttsConfig: trigger.ttsConfig,
   });
 
   res.json({ success: true });
@@ -417,7 +393,7 @@ async function restoreListeners() {
   console.log('🔄 Restaurando listeners de Twitch...');
   const users = await UserToken.find({});
   for (const user of users) {
-    startTwitchListener(user.userId).catch(e =>
+    startTwitchListener(user.userId).catch((e) =>
       console.error(`Error listener ${user.userId}`, e)
     );
   }
@@ -436,10 +412,12 @@ const MONGO_URI = process.env.MONGO_URI;
 if (!MONGO_URI) {
   console.error('❌ Falta MONGO_URI');
 } else {
-  mongoose.connect(MONGO_URI)
+  mongoose
+    .connect(MONGO_URI)
     .then(() => {
       console.log('✅ Mongo conectado');
       restoreListeners();
+
       const runSubscriptionMaintenance = async () => {
         try {
           await processScheduledCancellations();
@@ -451,7 +429,7 @@ if (!MONGO_URI) {
       runSubscriptionMaintenance();
       setInterval(runSubscriptionMaintenance, 60 * 60 * 1000);
     })
-    .catch(err => console.error('❌ Error conectando a Mongo:', err));
+    .catch((err) => console.error('❌ Error conectando a Mongo:', err));
 }
 
 export default app;
