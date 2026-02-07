@@ -31,12 +31,10 @@ export const FeedbackResponseForm = ({ feedbackId, adminId, onRespond }) => {
 
     const sendRequest = async (retryCount = 0) => {
       try {
-        await axios.post(
-          `${API_URL}/api/admin/feedback/${feedbackId}/response`,
+        await axios.put(
+          `${API_URL}/api/admin/feedback/${feedbackId}`,
           { adminId, response: trimmed },
-          {
-            timeout: TIMEOUT_MS
-          }
+          { timeout: TIMEOUT_MS }
         );
 
         toast.success('Respuesta enviada');
@@ -100,3 +98,5 @@ export const FeedbackResponseForm = ({ feedbackId, adminId, onRespond }) => {
     </form>
   );
 };
+
+export default FeedbackResponseForm;

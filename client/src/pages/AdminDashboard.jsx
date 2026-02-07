@@ -52,6 +52,12 @@ export const AdminDashboard = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
+  const notifySuccess = (msg) => {
+    setSuccessMessage(msg);
+    window.clearTimeout(notifySuccess._t);
+    notifySuccess._t = window.setTimeout(() => setSuccessMessage(null), 5000);
+  };
+
   const fetchUsers = async () => {
     try {
       setLoadingUsers(true);
@@ -108,12 +114,7 @@ export const AdminDashboard = () => {
     }
   };
 
-  const notifySuccess = (msg) => {
-    setSuccessMessage(msg);
-    window.clearTimeout(notifySuccess._t);
-    notifySuccess._t = window.setTimeout(() => setSuccessMessage(null), 5000);
-  };
-
+  // ---------- helpers ----------
   const formatBytes = (bytes) => {
     const b = Number(bytes || 0);
     if (!b) return '0 B';
@@ -171,6 +172,7 @@ export const AdminDashboard = () => {
     return Math.max(0, Math.min(100, Math.round(n)));
   };
 
+  // ---------- actions: users ----------
   const handleChangeTier = async (targetUserId, newTier, targetUsername) => {
     if (!window.confirm(`¿Cambiar plan de @${targetUsername} a ${String(newTier).toUpperCase()}?`)) return;
 
@@ -231,7 +233,9 @@ export const AdminDashboard = () => {
       });
 
       await fetchUsers();
-      notifySuccess(`Rol de creador ${isCurrentlyCreator ? 'removido' : 'asignado'} a @${targetUsername} exitosamente`);
+      notifySuccess(
+        `Rol de creador ${isCurrentlyCreator ? 'removido' : 'asignado'} a @${targetUsername} exitosamente`
+      );
     } catch (error) {
       console.error('Error toggling creator role:', error);
       alert(error.response?.data?.error || 'Error al cambiar rol de creador');
@@ -265,6 +269,67 @@ export const AdminDashboard = () => {
     }
   };
 
+  // ---------- actions: feedback delete (responded only) ----------
+  const deleteFeedbackWithFallback = async (feedbackId) => {
+    const candidates = [
+      // REST típico
+      { method: 'delete', url: `${API_URL}/api/admin/feedback/${feedbackId}` },
+
+      // variantes comunes
+      { method: 'delete', url: `${API_URL}/api/admin/feedback/${feedbackId}/delete` },
+      { method: 'post', url: `${API_URL}/api/admin/feedback/${feedbackId}/delete` },
+
+      // variante id en body
+      { method: 'post', url: `${API_URL}/api/admin/feedback/delete` }
+    ];
+
+    const payload = { adminId: userId, feedbackId };
+
+    let lastErr = null;
+    for (const c of candidates) {
+      try {
+        await axios({
+          method: c.method,
+          url: c.url,
+          data: payload,
+          params: c.method === 'delete' ? { adminId: userId } : undefined,
+          timeout: 15000
+        });
+        return true;
+      } catch (err) {
+        if (err?.response?.status === 404) {
+          lastErr = err;
+          continue;
+        }
+        throw err;
+      }
+    }
+
+    throw lastErr || new Error('No route matched');
+  };
+
+  const handleDeleteFeedback = async (fb) => {
+    if (!fb?.response) return; // solo respondidos
+    const label = fb.username || fb.userId || 'usuario';
+
+    if (!window.confirm(`¿Eliminar este feedback respondido de ${label}?`)) return;
+
+    const prev = feedbacks;
+    setFeedbacks((cur) => cur.filter((x) => x._id !== fb._id));
+
+    try {
+      await deleteFeedbackWithFallback(fb._id);
+      notifySuccess('Feedback eliminado');
+    } catch (err) {
+      console.error('Error eliminando feedback:', err);
+      setFeedbacks(prev);
+      const status = err?.response?.status;
+      if (status === 404) alert('No existe el endpoint para borrar feedback (404).');
+      else alert(err.response?.data?.error || 'Error al eliminar feedback');
+    }
+  };
+
+  // ---------- filtered users ----------
   const filteredUsers = useMemo(() => {
     const q = search.trim().toLowerCase();
     return users
@@ -509,13 +574,12 @@ export const AdminDashboard = () => {
                                 <div className="flex items-center gap-2">
                                   <span className="text-dark-muted font-semibold">Status:</span>
                                   <span
-                                    className={`px-2 py-0.5 rounded-full font-bold ${
-                                      u.subscription.status === 'active'
+                                    className={`px-2 py-0.5 rounded-full font-bold ${u.subscription.status === 'active'
                                         ? 'bg-green-500/20 text-green-400'
                                         : u.subscription.status === 'canceled'
-                                        ? 'bg-red-500/20 text-red-400'
-                                        : 'bg-gray-500/20 text-gray-400'
-                                    }`}
+                                          ? 'bg-red-500/20 text-red-400'
+                                          : 'bg-gray-500/20 text-gray-400'
+                                      }`}
                                   >
                                     {u.subscription.status}
                                   </span>
@@ -553,11 +617,10 @@ export const AdminDashboard = () => {
                           <div className="flex gap-2 flex-wrap">
                             <button
                               onClick={() => handleToggleCreator(u.userId, !!u.isCreator, u.username)}
-                              className={`px-3 py-1.5 rounded-full text-xs font-bold text-white transition-all ${
-                                u.isCreator
+                              className={`px-3 py-1.5 rounded-full text-xs font-bold text-white transition-all ${u.isCreator
                                   ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50'
                                   : 'bg-dark-secondary border border-dark-border hover:border-yellow-500/50'
-                              }`}
+                                }`}
                             >
                               {u.isCreator ? 'Creador' : 'Sin rol'}
                             </button>
@@ -584,9 +647,8 @@ export const AdminDashboard = () => {
                             <div className="flex items-center gap-2 mt-1">
                               <div className="flex-1 h-1.5 bg-dark-secondary rounded-full overflow-hidden">
                                 <div
-                                  className={`h-full rounded-full transition-all ${
-                                    alertsPct > 80 ? 'bg-red-500' : alertsPct > 50 ? 'bg-yellow-500' : 'bg-green-500'
-                                  }`}
+                                  className={`h-full rounded-full transition-all ${alertsPct > 80 ? 'bg-red-500' : alertsPct > 50 ? 'bg-yellow-500' : 'bg-green-500'
+                                    }`}
                                   style={{ width: `${alertsPct}%` }}
                                 />
                               </div>
@@ -595,7 +657,7 @@ export const AdminDashboard = () => {
                           </div>
                         </td>
 
-                        {/* TTS (✅ no crashea si falta tts) */}
+                        {/* TTS */}
                         <td className="px-6 py-4">
                           <div className="text-sm">
                             <p className="text-white font-bold">
@@ -605,9 +667,8 @@ export const AdminDashboard = () => {
                             <div className="flex items-center gap-2 mt-1">
                               <div className="flex-1 h-1.5 bg-dark-secondary rounded-full overflow-hidden">
                                 <div
-                                  className={`h-full rounded-full transition-all ${
-                                    ttsPct > 80 ? 'bg-red-500' : ttsPct > 50 ? 'bg-yellow-500' : 'bg-green-500'
-                                  }`}
+                                  className={`h-full rounded-full transition-all ${ttsPct > 80 ? 'bg-red-500' : ttsPct > 50 ? 'bg-yellow-500' : 'bg-green-500'
+                                    }`}
                                   style={{ width: `${ttsPct}%` }}
                                 />
                               </div>
@@ -626,9 +687,8 @@ export const AdminDashboard = () => {
                             <div className="flex items-center gap-2 mt-1">
                               <div className="flex-1 h-1.5 bg-dark-secondary rounded-full overflow-hidden">
                                 <div
-                                  className={`h-full rounded-full transition-all ${
-                                    storagePct > 80 ? 'bg-red-500' : storagePct > 50 ? 'bg-yellow-500' : 'bg-green-500'
-                                  }`}
+                                  className={`h-full rounded-full transition-all ${storagePct > 80 ? 'bg-red-500' : storagePct > 50 ? 'bg-yellow-500' : 'bg-green-500'
+                                    }`}
                                   style={{ width: `${storagePct}%` }}
                                 />
                               </div>
@@ -647,9 +707,8 @@ export const AdminDashboard = () => {
                             <div className="flex items-center gap-2 mt-1">
                               <div className="flex-1 h-1.5 bg-dark-secondary rounded-full overflow-hidden">
                                 <div
-                                  className={`h-full rounded-full transition-all ${
-                                    bandwidthPct > 80 ? 'bg-red-500' : bandwidthPct > 50 ? 'bg-yellow-500' : 'bg-green-500'
-                                  }`}
+                                  className={`h-full rounded-full transition-all ${bandwidthPct > 80 ? 'bg-red-500' : bandwidthPct > 50 ? 'bg-yellow-500' : 'bg-green-500'
+                                    }`}
                                   style={{ width: `${bandwidthPct}%` }}
                                 />
                               </div>
@@ -725,15 +784,29 @@ export const AdminDashboard = () => {
                   <div className="text-white mb-2 whitespace-pre-wrap">{fb.feedback}</div>
 
                   {fb.response ? (
-                    <div className="text-green-400 text-sm whitespace-pre-wrap">Respuesta: {fb.response}</div>
+                    <div className="mt-3">
+                      <div className="text-green-400 text-sm whitespace-pre-wrap">Respuesta: {fb.response}</div>
+
+                      <div className="mt-3 flex justify-end">
+                        <button
+                          onClick={async () => {
+                            if (!window.confirm('¿Eliminar este feedback respondido?')) return;
+                            await axios.delete(`${API_URL}/api/admin/feedback/${fb._id}`, {
+                              params: { adminId: userId } // opcional
+                            });
+                            await fetchFeedbacks();
+                            notifySuccess('Feedback eliminado');
+                          }}
+                          className="px-3 py-2 bg-red-500/15 border border-red-500/40 text-red-300 rounded-lg hover:bg-red-500/25 transition text-xs font-semibold"
+                        >
+                          Eliminar
+                        </button>
+                      </div>
+                    </div>
                   ) : (
-                    <FeedbackResponseForm
-                      feedbackId={fb._id}
-                      adminId={userId}
-                      onRespond={fetchFeedbacks}
-                      // si tu componente necesita más props, acá se los pasás
-                    />
+                    <FeedbackResponseForm feedbackId={fb._id} adminId={userId} onRespond={fetchFeedbacks} />
                   )}
+
                 </div>
               ))}
             </div>

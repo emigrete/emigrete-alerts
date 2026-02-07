@@ -22,6 +22,8 @@ import {
   decrementTTSUsage,
   incrementBandwidthUsage,
 } from '../services/subscriptionService.js';
+import adminRoutes from './admin.js';
+
 
 const router = express.Router();
 // Feedback: GET /api/feedback/mine
@@ -52,6 +54,26 @@ router.put('/admin/feedback/:id', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+// Feedback: DELETE /api/admin/feedback/:id (solo si ya fue respondido)
+router.delete('/admin/feedback/:id', async (req, res) => {
+  try {
+    const fb = await Feedback.findById(req.params.id);
+    if (!fb) return res.status(404).json({ error: 'Feedback no encontrado.' });
+
+    if (!fb.responded || !fb.response) {
+      return res.status(400).json({ error: 'Solo se puede eliminar feedback ya respondido.' });
+    }
+
+    await Feedback.deleteOne({ _id: fb._id });
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error eliminando feedback:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
 // Feedback: GET /api/admin/feedback
 router.get('/admin/feedback', async (req, res) => {
   try {
@@ -157,50 +179,7 @@ function getFeedbackTransporter() {
   return cachedTransporter;
 }
 
-router.post('/feedback', async (req, res) => {
-  const { feedback, email, type } = req.body;
 
-  if (!feedback || !feedback.trim()) {
-    return res.status(400).json({ error: 'El comentario es obligatorio.' });
-  }
-
-  const transporter = getFeedbackTransporter();
-  if (!transporter) {
-    return res.status(500).json({ error: 'SMTP no configurado.' });
-  }
-
-  const typeLabels = {
-    suggestion: 'Sugerencia',
-    bug: 'Reporte de falla',
-    feature: 'Solicitud de mejora',
-    other: 'Otro'
-  };
-
-  const label = typeLabels[type] || 'Otro';
-  const recipient = process.env.FEEDBACK_TO || 'teodorowelyczko@gmail.com';
-  const fromAddress = process.env.FEEDBACK_FROM || process.env.SMTP_FROM || process.env.SMTP_USER || 'no-reply@triggerapp.local';
-
-  try {
-    await transporter.sendMail({
-      from: `WelyAlerts <${fromAddress}>`,
-      to: recipient,
-      replyTo: email || undefined,
-      subject: `Feedback - ${label}`,
-      text: `Tipo: ${label}\nCorreo: ${email || 'No informado'}\n\nMensaje:\n${feedback.trim()}`,
-      html: `
-        <p><strong>Tipo:</strong> ${label}</p>
-        <p><strong>Correo:</strong> ${email || 'No informado'}</p>
-        <p><strong>Mensaje:</strong></p>
-        <pre style="white-space:pre-wrap;font-family:inherit;">${feedback.trim()}</pre>
-      `.trim()
-    });
-
-    return res.json({ success: true });
-  } catch (error) {
-    console.error('Error enviando feedback:', error.message);
-    return res.status(500).json({ error: 'No se pudo enviar el comentario.' });
-  }
-});
 
 router.get('/twitch/rewards', async (req, res) => {
   const { userId } = req.query;
