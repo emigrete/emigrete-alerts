@@ -17,8 +17,7 @@ import { AlertsBadge } from '../components/AlertsBadge';
 import { SubscriptionStatus } from '../components/SubscriptionStatus';
 import { AppFooter } from '../components/AppFooter';
 import FeedbackButton from '../components/FeedbackButton';
-import { FeedbackForm } from '../components/FeedbackForm';
-import MyFeedbacks from '../components/MyFeedbacks';
+import { FeedbackModal } from '../components/FeedbackModal';
 import { LoadingScreen } from '../components/LoadingScreen';
 import UsageStatsSidebar from '../components/UsageStatsSidebar';
 
@@ -383,19 +382,13 @@ export default function Dashboard() {
               {/* Botón de feedback fijo */}
               <FeedbackButton onClick={() => setShowFeedback(true)} />
               {/* Modal de feedback */}
-              {showFeedback && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
-                  <div className="bg-dark-card rounded-2xl shadow-2xl p-6 max-w-md w-full relative">
-                    <button
-                      className="absolute top-3 right-3 text-white bg-dark-secondary rounded-full p-2 hover:bg-red-500 transition"
-                      onClick={() => setShowFeedback(false)}
-                      aria-label="Cerrar"
-                    >✕</button>
-                    <FeedbackForm />
-                    <MyFeedbacks userId={userId} />
-                  </div>
-                </div>
-              )}
+<FeedbackButton onClick={() => setShowFeedback(true)} />
+<FeedbackModal
+  isOpen={showFeedback}
+  onClose={() => setShowFeedback(false)}
+  userId={userId}
+/>
+
       </div>
     </div>
   );

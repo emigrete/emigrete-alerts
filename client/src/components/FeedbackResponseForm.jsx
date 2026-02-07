@@ -10,6 +10,11 @@ export const FeedbackResponseForm = ({ feedbackId, adminId, onRespond }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!adminId) {
+      toast.error('No estás autenticado como admin');
+      return;
+    }
+
     const trimmed = response.trim();
     if (!trimmed) {
       toast.error('Escribí una respuesta');
@@ -26,13 +31,11 @@ export const FeedbackResponseForm = ({ feedbackId, adminId, onRespond }) => {
 
     const sendRequest = async (retryCount = 0) => {
       try {
-        //  CAMBIÁ ESTA RUTA SI TU BACKEND USA OTRA
         await axios.post(
           `${API_URL}/api/admin/feedback/${feedbackId}/response`,
           { adminId, response: trimmed },
           {
-            timeout: TIMEOUT_MS,
-            headers: { 'x-admin-id': adminId } // opcional, por si lo usás del lado backend
+            timeout: TIMEOUT_MS
           }
         );
 
@@ -97,4 +100,3 @@ export const FeedbackResponseForm = ({ feedbackId, adminId, onRespond }) => {
     </form>
   );
 };
-export default FeedbackResponseForm;

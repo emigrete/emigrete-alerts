@@ -4,15 +4,31 @@ import axios from 'axios';
 import { API_URL } from '../constants/config';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
-export const FeedbackForm = () => {
+export const FeedbackForm = ({ onClose }) => {
   const [userId] = useLocalStorage('twitchUserId');
   const [feedback, setFeedback] = useState('');
   const [email, setEmail] = useState('');
   const [type, setType] = useState('suggestion');
   const [sending, setSending] = useState(false);
 
+  const reset = () => {
+    setFeedback('');
+    setEmail('');
+    setType('suggestion');
+  };
+
+  const handleClose = () => {
+    reset();
+    onClose?.();
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!userId) {
+      toast.error('Tenés que iniciar sesión para enviar feedback.');
+      return;
+    }
 
     if (!feedback.trim()) {
       toast.error('Por favor, detallá tu comentario');
@@ -20,39 +36,36 @@ export const FeedbackForm = () => {
     }
 
     setSending(true);
-    
-    // Configuración de reintentos
+
     const MAX_RETRIES = 2;
     const TIMEOUT_MS = 15000;
     const RETRY_DELAY_MS = 2000;
 
-    const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+    const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
     const sendRequest = async (retryCount = 0) => {
       try {
         const payload = { feedback, email, type, userId };
+
         await axios.post(`${API_URL}/api/feedback`, payload, {
-          timeout: TIMEOUT_MS,
-          headers: { 'x-user-id': userId }
+          timeout: TIMEOUT_MS
+          // ✅ sin headers custom => menos quilombo de CORS
         });
-        
+
         toast.success('¡Gracias! Tu feedback nos ayuda a mejorar.');
-        setFeedback('');
-        setEmail('');
-        setType('suggestion');
+        reset();
+        onClose?.();
       } catch (error) {
-        const isNetworkError = error.code === 'ECONNABORTED' || error.code === 'ERR_NETWORK';
-        
+        const isNetworkError =
+          error.code === 'ECONNABORTED' || error.code === 'ERR_NETWORK';
+
         if (isNetworkError && retryCount < MAX_RETRIES) {
           await sleep(RETRY_DELAY_MS);
           return sendRequest(retryCount + 1);
         }
 
-        if (isNetworkError) {
-          toast.error('El servidor no responde. Revisá tu conexión.');
-        } else {
-          toast.error('No se pudo enviar. Intentá de nuevo más tarde.');
-        }
+        if (isNetworkError) toast.error('El servidor no responde. Revisá tu conexión.');
+        else toast.error(error.response?.data?.error || 'No se pudo enviar. Intentá de nuevo.');
       }
     };
 
@@ -61,13 +74,15 @@ export const FeedbackForm = () => {
   };
 
   return (
-    <section className="w-full max-w-sm mx-auto bg-dark-card rounded-2xl shadow-2xl p-6 relative border border-dark-border">
-      {/* Botón Cerrar */}
+    <section className="w-full bg-dark-card rounded-2xl shadow-2xl p-6 relative border border-dark-border">
       <button
         className="absolute top-3 right-3 text-dark-muted hover:text-white bg-dark-secondary/50 rounded-full p-1.5 transition-colors"
-        onClick={() => setFeedback('')}
+        onClick={handleClose}
         type="button"
-      >✕</button>
+        aria-label="Cerrar"
+      >
+        ✕
+      </button>
 
       <header className="mb-6">
         <h2 className="text-xl font-black text-white">Enviá tu comentario</h2>
@@ -75,9 +90,10 @@ export const FeedbackForm = () => {
       </header>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Email */}
         <div>
-          <label className="block mb-1 text-xs font-semibold text-dark-muted uppercase tracking-wider">Email (Opcional)</label>
+          <label className="block mb-1 text-xs font-semibold text-dark-muted uppercase tracking-wider">
+            Email (Opcional)
+          </label>
           <input
             type="email"
             value={email}
@@ -87,9 +103,10 @@ export const FeedbackForm = () => {
           />
         </div>
 
-        {/* Tipo de Feedback */}
         <div>
-          <label className="block mb-1 text-xs font-semibold text-dark-muted uppercase tracking-wider">Tipo</label>
+          <label className="block mb-1 text-xs font-semibold text-dark-muted uppercase tracking-wider">
+            Tipo
+          </label>
           <select
             value={type}
             onChange={(e) => setType(e.target.value)}
@@ -108,9 +125,10 @@ export const FeedbackForm = () => {
           </select>
         </div>
 
-        {/* Mensaje */}
         <div>
-          <label className="block mb-1 text-xs font-semibold text-dark-muted uppercase tracking-wider">Mensaje</label>
+          <label className="block mb-1 text-xs font-semibold text-dark-muted uppercase tracking-wider">
+            Mensaje
+          </label>
           <textarea
             value={feedback}
             onChange={(e) => setFeedback(e.target.value)}
@@ -123,7 +141,6 @@ export const FeedbackForm = () => {
           </div>
         </div>
 
-        {/* Botón Enviar */}
         <button
           type="submit"
           disabled={sending || !feedback.trim()}
