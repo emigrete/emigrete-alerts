@@ -16,6 +16,9 @@ import { TriggersTable } from '../components/TriggersTable';
 import { AlertsBadge } from '../components/AlertsBadge';
 import { SubscriptionStatus } from '../components/SubscriptionStatus';
 import { AppFooter } from '../components/AppFooter';
+import FeedbackButton from '../components/FeedbackButton';
+import { FeedbackForm } from '../components/FeedbackForm';
+import MyFeedbacks from '../components/MyFeedbacks';
 import { LoadingScreen } from '../components/LoadingScreen';
 import UsageStatsSidebar from '../components/UsageStatsSidebar';
 

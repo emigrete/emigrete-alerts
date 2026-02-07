@@ -20,6 +20,19 @@ export const AdminDashboard = () => {
     totalBandwidth: 0,
     totalTriggers: 0
   });
+  // Feedback
+  const [feedbacks, setFeedbacks] = useState([]);
+  useEffect(() => {
+    fetchFeedbacks();
+  }, []);
+  const fetchFeedbacks = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/api/admin/feedback`);
+      setFeedbacks(res.data.feedbacks || []);
+    } catch (err) {
+      console.error('Error cargando feedback:', err);
+    }
+  };
 
   useEffect(() => {
     if (!userId) {
@@ -575,6 +588,32 @@ export const AdminDashboard = () => {
         )}
 
         <AppFooter />
+              {/* Feedbacks */}
+              <div className="mt-12">
+                <h2 className="text-2xl font-black text-primary mb-4">Feedback de usuarios</h2>
+                {feedbacks.length === 0 ? (
+                  <p className="text-dark-muted">No hay comentarios enviados.</p>
+                ) : (
+                  <div className="space-y-6">
+                    {feedbacks.map(fb => (
+                      <div key={fb._id} className="bg-dark-card border border-primary/20 rounded-xl p-5 shadow">
+                        <div className="flex items-center gap-3 mb-2">
+                          <span className="font-bold text-primary">{fb.username || fb.userId}</span>
+                          {fb.email && <span className="text-xs text-dark-muted">{fb.email}</span>}
+                          <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">{fb.type}</span>
+                          <span className="text-xs text-dark-muted">{formatDate(fb.createdAt)}</span>
+                        </div>
+                        <div className="text-white mb-2">{fb.feedback}</div>
+                        {fb.response ? (
+                          <div className="text-green-400 text-sm">Respuesta: {fb.response}</div>
+                        ) : (
+                          <FeedbackResponseForm feedbackId={fb._id} onRespond={fetchFeedbacks} />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
       </div>
     </div>
   );
