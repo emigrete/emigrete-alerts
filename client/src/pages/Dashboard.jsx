@@ -23,6 +23,8 @@ import { LoadingScreen } from '../components/LoadingScreen';
 import UsageStatsSidebar from '../components/UsageStatsSidebar';
 
 export default function Dashboard() {
+    // Estado para mostrar el modal de feedback
+    const [showFeedback, setShowFeedback] = useState(false);
   // Modo demo: solo desarrollo
   const isDevelopment = import.meta.env.DEV;
   const isDemo = isDevelopment && new URLSearchParams(window.location.search).get('demo') === 'true';
@@ -378,6 +380,22 @@ export default function Dashboard() {
 
         <UsageStatsSidebar userId={userId} />
         <AppFooter />
+              {/* Botón de feedback fijo */}
+              <FeedbackButton onClick={() => setShowFeedback(true)} />
+              {/* Modal de feedback */}
+              {showFeedback && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
+                  <div className="bg-dark-card rounded-2xl shadow-2xl p-6 max-w-md w-full relative">
+                    <button
+                      className="absolute top-3 right-3 text-white bg-dark-secondary rounded-full p-2 hover:bg-red-500 transition"
+                      onClick={() => setShowFeedback(false)}
+                      aria-label="Cerrar"
+                    >✕</button>
+                    <FeedbackForm />
+                    <MyFeedbacks userId={userId} />
+                  </div>
+                </div>
+              )}
       </div>
     </div>
   );
